@@ -8,9 +8,6 @@ testpaths = "tests"
 [tool.isort]
 profile = "black"
 
-[tool.bandit]
-exclude_dirs = ["tests"]
-
 [tool.mypy]
 exclude = ["tests"]
 check_untyped_defs = true
@@ -28,15 +25,12 @@ requires = ["setuptools >= 40.9.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "my_app"
-version = "0.0.1"
-description = "An example BSGIP app"
+name = "utal"
+version = "0.0.0"
+description = "United Tariff Library"
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["bandit", "flake8", "mypy", "black"]
+dev = ["flake8", "mypy", "black"]
 docs = ["sphinx", "sphinx-click", "sphinx-markdown-builder"]
 test = ["pytest"]
-
-[tool.setuptools.package-data]
-"my_app" = ["py.typed"]
