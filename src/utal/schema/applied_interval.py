@@ -21,7 +21,7 @@ class AppliedInterval(BaseModel):
     days_applied: DaysApplied
     tzinfo: Optional[timezone | ZoneInfo] = None
 
-    @model_validator(mode="after")  # type: ignore
+    @model_validator(mode="after")
     def validate_start_time_aware(self) -> "AppliedInterval":
         if self.start_time is None:
             return self
@@ -31,9 +31,9 @@ class AppliedInterval(BaseModel):
         elif helper.is_naive(self.start_time):
             self.start_time = self.start_time.replace(tzinfo=self.tzinfo)
 
-        return self  # type: ignore
+        return self
 
-    @model_validator(mode="after")  # type: ignore
+    @model_validator(mode="after")
     def validate_end_time_aware(self) -> "AppliedInterval":
         if self.end_time is None:
             return self
@@ -43,7 +43,7 @@ class AppliedInterval(BaseModel):
         elif helper.is_naive(self.end_time):
             self.end_time = self.end_time.replace(tzinfo=self.tzinfo)
 
-        return self  # type: ignore
+        return self
 
     def __contains__(self, other: time | date | datetime) -> bool:
         """
