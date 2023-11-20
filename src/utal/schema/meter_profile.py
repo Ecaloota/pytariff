@@ -1,10 +1,11 @@
-from typing import Iterable, Union
+from typing import Hashable, Iterable, Union
 
+import numpy as np
 import pandas as pd
 import pandera as pa
 from pandera import dtypes
 from pandera.engines import pandas_engine
-from pandera.typing import Index
+from pandera.typing import Index, DataFrame
 
 
 @pandas_engine.Engine.register_dtype()
@@ -77,3 +78,32 @@ class TariffCostSchema(MeterProfileSchema):
     import_cost: float  # the amount paid due to import
     export_cost: float  # the amount paid due to export (negative value is revenue generated)
     billed_total_cost: float  # the cumulative billed amount, levied at each billing interval
+
+
+@pa.check_types
+def resample(df: DataFrame[MeterProfileSchema]) -> DataFrame[MeterProfileSchema]:
+    """"""
+
+    if len(df.index) < 2:
+        raise ValueError
+
+    # get the index keys for each unique value in the resample.groups dict
+    # these will tell us which keys were anchored against in the resample
+    inverted: dict[list[Hashable], list[Hashable]] = {}
+    for k, v in df.resample("1T").groups.items():  # TODO wrong, we want to resample out beyond last anchor too
+        if v in inverted:
+            inverted[v].append(k)
+        else:
+            inverted[v] = [k]
+
+    # replace nan with zero in resampled object
+    resampled = df.resample("1T").asfreq().fillna(0)
+
+    # take mean of df slice for each slice in the index keys found before
+    for k, v in inverted.items():  # type: ignore
+        resampled.loc[inverted[k]] = np.sum(resampled.profile.loc[inverted[k]]) / len(v)  # type: ignore
+
+    # keep the cumulative profile, we will need it
+    resampled["cum_profile"] = resampled.profile.cumsum()
+
+    return resampled  # type: ignore

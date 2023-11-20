@@ -2,7 +2,7 @@ import pandera as pa
 from pandera.typing import DataFrame
 from pydantic import model_validator
 
-from utal.schema.block import ConsumptionBlock
+from utal.schema.block import ExportConsumptionBlock, ImportConsumptionBlock
 from utal.schema.charge import ConsumptionCharge
 from utal.schema.generic_tariff import ConsumptionTariff
 from utal.schema.meter_profile import MeterProfileSchema, TariffCostSchema
@@ -19,7 +19,8 @@ class FlatConsumptionTariff(ConsumptionTariff):
         A FlatConsumptionTariff is distinguished from a GenericTariff by having greater
         restrictions on its children; specifically, a FlatConsumptionTariff should have only a single
         TariffInterval, which itself should have a ConsumptionCharge (only) containing (only) one
-        ConsumptionBlock; the ConsumptionBlock should have a from_quantity = 0 and to_quantity = float("inf")
+        ImportConsumptionBlock and/or ExportConsumptionBlock (each);
+        The ConsumptionBlock should have a from_quantity = 0 and to_quantity = float("inf")
         """
 
         if self.children is None:
@@ -34,10 +35,9 @@ class FlatConsumptionTariff(ConsumptionTariff):
         if not isinstance(self.children[0].charge, ConsumptionCharge):
             raise ValueError
 
-        if len(self.children[0].charge.blocks) != 1:
-            raise ValueError
-
-        if not isinstance(self.children[0].charge.blocks[0], ConsumptionBlock):
+        if not all(
+            isinstance(x, (ImportConsumptionBlock, ExportConsumptionBlock)) for x in self.children[0].charge.blocks
+        ):
             raise ValueError
 
         if not self.children[0].charge.blocks[0].from_quantity == 0:
@@ -50,4 +50,4 @@ class FlatConsumptionTariff(ConsumptionTariff):
 
     @pa.check_types
     def apply(self, meter_profile: DataFrame[MeterProfileSchema]) -> DataFrame[TariffCostSchema]:
-        raise NotImplementedError
+        return super().apply(meter_profile)

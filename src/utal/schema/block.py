@@ -4,7 +4,7 @@ from typing import Generic, Optional
 from pydantic import Field, model_validator
 from pydantic.dataclasses import dataclass
 
-from utal.schema.generic_types import Consumption, Demand, GenericType
+from utal.schema.generic_types import Consumption, Demand, Export, GenericType, Import, LevyType
 from utal.schema.rate import TariffRate
 from utal.schema.unit import ConsumptionUnit, DemandUnit, TariffUnit
 
@@ -32,8 +32,7 @@ class TariffBlock(ABC, Generic[GenericType]):
         raise NotImplementedError
 
 
-@dataclass
-class DemandBlock(TariffBlock, Demand):
+class DemandBlock(TariffBlock, Demand, Generic[LevyType]):
     unit: Optional[DemandUnit]
 
     def __and__(self, other: "DemandBlock") -> "DemandBlock":
@@ -41,8 +40,7 @@ class DemandBlock(TariffBlock, Demand):
         raise NotImplementedError
 
 
-@dataclass
-class ConsumptionBlock(TariffBlock, Consumption):
+class ConsumptionBlock(TariffBlock, Consumption, Generic[LevyType]):
     unit: Optional[ConsumptionUnit]
 
     def __and__(self, other: "ConsumptionBlock") -> Optional["ConsumptionBlock"]:
@@ -84,3 +82,11 @@ class ConsumptionBlock(TariffBlock, Consumption):
         if not isinstance(other, ConsumptionBlock):
             raise NotImplementedError
         return self.from_quantity == other.from_quantity and self.unit == other.unit
+
+
+class ImportConsumptionBlock(ConsumptionBlock, Import):
+    pass
+
+
+class ExportConsumptionBlock(ConsumptionBlock, Export):
+    pass

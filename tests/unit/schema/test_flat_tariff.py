@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from utal.schema.block import ConsumptionBlock
+from utal.schema.block import ConsumptionBlock, ImportConsumptionBlock
 from utal.schema.charge import ConsumptionCharge
 from utal.schema.day_type import DayType
 from utal.schema.days_applied import DaysApplied
@@ -12,6 +12,8 @@ from utal.schema.flat_tariff import FlatConsumptionTariff
 from utal.schema.rate import TariffRate
 from utal.schema.tariff_interval import ConsumptionInterval
 from utal.schema.unit import ConsumptionUnit, RateCurrency
+
+import pandas as pd
 
 
 def not_in(kwargs: defaultdict, key: str) -> bool:
@@ -83,3 +85,76 @@ def test_flat_consumption_tariff_construction(kwargs, raises: bool):
 
     else:
         test()
+
+
+@pytest.mark.parametrize(
+    "profile, import_cost_series, export_cost_series, billed_cost_series",
+    [
+        (
+            pd.DataFrame(
+                index=[
+                    pd.Timestamp(2023, 1, 1, tzinfo=ZoneInfo("UTC"), unit="ns"),
+                    pd.Timestamp(2023, 1, 1, 0, 5, tzinfo=ZoneInfo("UTC"), unit="ns"),
+                ],
+                data={"profile": [1.0, 1.0]},
+            ),
+            None,
+            None,
+            None,
+        ),
+        (
+            pd.DataFrame(
+                index=[
+                    pd.Timestamp(2023, 1, 1, tzinfo=ZoneInfo("UTC"), unit="ns"),
+                    pd.Timestamp(2023, 1, 1, 0, 5, tzinfo=ZoneInfo("UTC"), unit="ns"),
+                ],
+                data={"profile": [1.0, 1.0]},
+            ),
+            None,
+            None,
+            None,
+        ),
+    ],
+)
+def test_flat_consumption_tariff_apply(profile, import_cost_series, export_cost_series, billed_cost_series):
+    """"""
+
+    DEFAULT_CHARGE = ConsumptionCharge(
+        blocks=(
+            ImportConsumptionBlock(
+                from_quantity=0,
+                to_quantity=float("inf"),
+                unit=ConsumptionUnit.kWh,
+                rate=TariffRate(currency=RateCurrency.AUD, value=1),
+            ),
+            # ExportConsumptionBlock(
+            #     from_quantity=0,
+            #     to_quantity=float("inf"),
+            #     unit=ConsumptionUnit.kWh,
+            #     rate=TariffRate(currency=RateCurrency.AUD, value=-0.1),  # value is negative as it's a negative 'cost'
+            # ),
+        ),
+    )
+
+    # Create a default single child
+    DEFAULT_CHILD = (
+        ConsumptionInterval(
+            start_time=time(6),
+            end_time=time(7),
+            days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
+            tzinfo=ZoneInfo("UTC"),
+            charge=DEFAULT_CHARGE,
+        ),
+    )
+
+    # Generate a default FlatConsumptionTariff
+    DEFAULT_TARIFF = FlatConsumptionTariff(
+        start=datetime(2023, 1, 1),
+        end=datetime(2023, 1, 1),
+        tzinfo=ZoneInfo("UTC"),
+        children=DEFAULT_CHILD,
+    )
+
+    output = DEFAULT_TARIFF.apply(profile)
+
+    assert output.total_cost == "foo"  # TODO
