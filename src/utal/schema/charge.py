@@ -1,3 +1,4 @@
+from abc import ABC
 from typing import Generic, TypeVar
 
 from pydantic import model_validator
@@ -5,14 +6,14 @@ from pydantic.dataclasses import dataclass
 
 from utal.schema.block import ConsumptionBlock, DemandBlock
 
-T = TypeVar("T", ConsumptionBlock, DemandBlock)
+BlockType = TypeVar("BlockType", ConsumptionBlock, DemandBlock)
 
 
 @dataclass
-class TariffCharge(Generic[T]):
+class TariffCharge(ABC, Generic[BlockType]):
     """Not to be used directly"""
 
-    blocks: tuple[T, ...]
+    blocks: tuple[BlockType, ...]
 
     @model_validator(mode="after")
     def validate_blocks_cannot_overlap(self) -> "TariffCharge":

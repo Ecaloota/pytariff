@@ -63,7 +63,7 @@ def test_consumption_charge_valid_construction(blocks_tuple: tuple[ConsumptionBl
         ),
     ],
 )
-def test_consumption_charge_invalid_construction(blocks_tuple: tuple[ConsumptionBlock, ...]) -> None:
+def test_consumption_charge_cannot_intersect(blocks_tuple: tuple[ConsumptionBlock, ...]) -> None:
     """"""
     with pytest.raises(ValueError):
         ConsumptionCharge(blocks=blocks_tuple)

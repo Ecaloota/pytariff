@@ -67,6 +67,8 @@ class AppliedInterval(BaseModel):
 
         if isinstance(other, time):
             if self.start_time <= self.end_time:
+                if self.start_time == self.end_time:
+                    return True
                 return self.start_time <= other < self.end_time
             return self.start_time <= other or other < self.end_time
 

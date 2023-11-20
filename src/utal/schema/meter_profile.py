@@ -70,3 +70,10 @@ class AwareDateTime(pandas_engine.DateTime):
 class MeterProfileSchema(pa.DataFrameModel):
     idx: Index[AwareDateTime] = pa.Field(coerce=True)
     profile: float
+
+
+class TariffCostSchema(MeterProfileSchema):
+    total_cost: float  # the sum of import cost + export cost
+    import_cost: float  # the amount paid due to import
+    export_cost: float  # the amount paid due to export (negative value is revenue generated)
+    billed_total_cost: float  # the cumulative billed amount, levied at each billing interval

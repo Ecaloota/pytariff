@@ -1,17 +1,16 @@
 from abc import ABC
-from typing import Generic, Optional, TypeVar
+from typing import Generic, Optional
 
 from pydantic import Field, model_validator
 from pydantic.dataclasses import dataclass
 
-from utal.schema.rate import DemandTariffRate, TariffRate
-from utal.schema.unit import ConsumptionUnit, TariffUnit
-
-T = TypeVar("T")
+from utal.schema.generic_types import Consumption, Demand, GenericType
+from utal.schema.rate import TariffRate
+from utal.schema.unit import ConsumptionUnit, DemandUnit, TariffUnit
 
 
 @dataclass
-class TariffBlock(ABC, Generic[T]):
+class TariffBlock(ABC, Generic[GenericType]):
     """Not to be used directly.
 
     TariffBlocks are right-open intervals over [from_quantity, to_quantity) defined for some unit
@@ -19,7 +18,7 @@ class TariffBlock(ABC, Generic[T]):
     """
 
     unit: Optional[TariffUnit]
-    rate: Optional[TariffRate]
+    rate: Optional[TariffRate[GenericType]]
     from_quantity: float = Field(ge=0)
     to_quantity: float = Field(gt=0)
 
@@ -29,13 +28,13 @@ class TariffBlock(ABC, Generic[T]):
             raise ValueError
         return self
 
-    def __and__(self, other: T) -> T:
+    def __and__(self, other: GenericType) -> GenericType:
         raise NotImplementedError
 
 
 @dataclass
-class DemandBlock(TariffBlock):
-    rate: DemandTariffRate
+class DemandBlock(TariffBlock, Demand):
+    unit: Optional[DemandUnit]
 
     def __and__(self, other: "DemandBlock") -> "DemandBlock":
         """TODO"""
@@ -43,7 +42,7 @@ class DemandBlock(TariffBlock):
 
 
 @dataclass
-class ConsumptionBlock(TariffBlock):
+class ConsumptionBlock(TariffBlock, Consumption):
     unit: Optional[ConsumptionUnit]
 
     def __and__(self, other: "ConsumptionBlock") -> Optional["ConsumptionBlock"]:

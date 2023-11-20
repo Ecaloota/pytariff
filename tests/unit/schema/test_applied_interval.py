@@ -28,6 +28,12 @@ GENERIC_TZ = timezone(offset=timedelta(hours=1))
             None,
             DaysApplied(day_types=(DayType.MONDAY,)),
         ),
+        (
+            time(0, tzinfo=GENERIC_TZ),
+            time(0, tzinfo=GENERIC_TZ),
+            None,
+            DaysApplied(day_types=(DayType.MONDAY,)),
+        ),
     ],
 )
 def test_applied_interval_valid_construction(
@@ -126,6 +132,23 @@ def test_applied_interval_invalid_construction(
             time(12, 0, tzinfo=GENERIC_TZ),
             False,
             time(13, tzinfo=GENERIC_TZ),
+            time(12, tzinfo=GENERIC_TZ),
+            None,
+            DaysApplied(day_types=(DayType.MONDAY,)),
+        ),
+        (  # 9. start == end, we assume interval is 24-hours long (still valid, as interval is right-open)
+            # any candidate time is thus in the interval (provided it has required tzinfo)
+            time(12, 0, tzinfo=GENERIC_TZ),
+            True,
+            time(12, tzinfo=GENERIC_TZ),
+            time(12, tzinfo=GENERIC_TZ),
+            None,
+            DaysApplied(day_types=(DayType.MONDAY,)),
+        ),
+        (  # 10. As above, but without tzinfo
+            time(12, 0),
+            False,
+            time(12, tzinfo=GENERIC_TZ),
             time(12, tzinfo=GENERIC_TZ),
             None,
             DaysApplied(day_types=(DayType.MONDAY,)),

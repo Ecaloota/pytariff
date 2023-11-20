@@ -9,37 +9,29 @@ from utal.schema.unit import ConsumptionUnit, DemandUnit, RateCurrency
 
 
 @pytest.mark.parametrize(
-    "from_quantity, to_quantity, unit, rate",
+    "from_quantity, to_quantity, unit, rate, raises",
     [
-        (0, float("inf"), ConsumptionUnit.kWh, TariffRate(currency=RateCurrency.AUD, value=1)),
+        (0, float("inf"), ConsumptionUnit.kWh, TariffRate(currency=RateCurrency.AUD, value=1), False),
+        (0, float("inf"), DemandUnit.kW, TariffRate(currency=RateCurrency.AUD, value=1), True),
+        (0, float("inf"), DemandUnit.kW, TariffRate(currency=RateCurrency.AUD, value=1), True),
+        (100, 100, DemandUnit.kW, TariffRate(currency=RateCurrency.AUD, value=1), True),
+        (1000, 50, DemandUnit.kW, TariffRate(currency=RateCurrency.AUD, value=1), True),
     ],
 )
-def test_consumption_block_valid_construction(
-    from_quantity: float, to_quantity: float, unit: ConsumptionUnit, rate: TariffRate
+def test_consumption_block_construction(
+    from_quantity: float, to_quantity: float, unit: ConsumptionUnit, rate: TariffRate, raises: bool
 ) -> None:
     """TODO"""
 
-    ConsumptionBlock(
-        from_quantity=from_quantity,
-        to_quantity=to_quantity,
-        unit=unit,
-        rate=rate,
-    )
-
-
-@pytest.mark.parametrize(
-    "from_quantity, to_quantity, unit, rate",
-    [
-        (0, float("inf"), DemandUnit.kW, TariffRate(currency=RateCurrency.AUD, value=1)),
-        (0, float("inf"), DemandUnit.kW, TariffRate(currency=RateCurrency.AUD, value=1)),
-        (100, 100, DemandUnit.kW, TariffRate(currency=RateCurrency.AUD, value=1)),
-        (1000, 50, DemandUnit.kW, TariffRate(currency=RateCurrency.AUD, value=1)),
-    ],
-)
-def test_consumption_block_invalid_construction(from_quantity: Any, to_quantity: Any, unit: Any, rate: Any) -> None:
-    """TODO"""
-
-    with pytest.raises(ValidationError):
+    if raises:
+        with pytest.raises(ValidationError):
+            ConsumptionBlock(
+                from_quantity=from_quantity,
+                to_quantity=to_quantity,
+                unit=unit,
+                rate=rate,
+            )
+    else:
         ConsumptionBlock(
             from_quantity=from_quantity,
             to_quantity=to_quantity,

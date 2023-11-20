@@ -7,7 +7,7 @@ class TariffUnit(Enum):
     pass
 
 
-class ConsumptionUnit(TariffUnit, Enum):
+class ConsumptionUnit(TariffUnit):
     kWh = "KWh"
     _null = "_null"  # for internal use only
 
