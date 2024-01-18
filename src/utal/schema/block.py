@@ -4,21 +4,21 @@ from typing import Generic, Optional
 from pydantic import Field, model_validator
 from pydantic.dataclasses import dataclass
 
-from utal.schema.generic_types import Consumption, Demand, Export, GenericType, Import, LevyType
+from utal.schema.generic_types import Consumption, Demand, MetricType
 from utal.schema.rate import TariffRate
 from utal.schema.unit import ConsumptionUnit, DemandUnit, TariffUnit
 
 
 @dataclass
-class TariffBlock(ABC, Generic[GenericType]):
+class TariffBlock(ABC, Generic[MetricType]):
     """Not to be used directly.
 
     TariffBlocks are right-open intervals over [from_quantity, to_quantity) defined for some unit
     and associated with a rate.
     """
 
-    unit: Optional[TariffUnit]
-    rate: Optional[TariffRate[GenericType]]
+    unit: Optional[TariffUnit[MetricType]]
+    rate: Optional[TariffRate[MetricType]]
     from_quantity: float = Field(ge=0)
     to_quantity: float = Field(gt=0)
 
@@ -28,22 +28,24 @@ class TariffBlock(ABC, Generic[GenericType]):
             raise ValueError
         return self
 
-    def __and__(self, other: GenericType) -> GenericType:
+    def __and__(self, other: "TariffBlock[MetricType]") -> "Optional[TariffBlock[MetricType]]":
         raise NotImplementedError
 
 
-class DemandBlock(TariffBlock, Demand, Generic[LevyType]):
+@dataclass
+class DemandBlock(TariffBlock[Demand]):
     unit: Optional[DemandUnit]
 
-    def __and__(self, other: "DemandBlock") -> "DemandBlock":
+    def __and__(self, other: "TariffBlock[Demand]") -> "Optional[DemandBlock]":
         """TODO"""
         raise NotImplementedError
 
 
-class ConsumptionBlock(TariffBlock, Consumption, Generic[LevyType]):
+@dataclass
+class ConsumptionBlock(TariffBlock[Consumption]):
     unit: Optional[ConsumptionUnit]
 
-    def __and__(self, other: "ConsumptionBlock") -> Optional["ConsumptionBlock"]:
+    def __and__(self, other: "TariffBlock[Consumption]") -> Optional["ConsumptionBlock"]:
         """An intersection between two ConsumptionBlocks [a, b) and [c, d) is defined as the
         ConsumptionBlock with [max(a, c), min(b, d)) iff self.unit == other.unit.
 
@@ -84,9 +86,15 @@ class ConsumptionBlock(TariffBlock, Consumption, Generic[LevyType]):
         return self.from_quantity == other.from_quantity and self.unit == other.unit
 
 
-class ImportConsumptionBlock(ConsumptionBlock, Import):
-    pass
+@dataclass
+class ImportConsumptionBlock(ConsumptionBlock):
+    ...
+
+    # TODO validator here that asserts that unit.trade_direction is Import
 
 
-class ExportConsumptionBlock(ConsumptionBlock, Export):
-    pass
+@dataclass
+class ExportConsumptionBlock(ConsumptionBlock):
+    ...
+
+    # TODO validator here that asserts that unit.trade_direction is Export

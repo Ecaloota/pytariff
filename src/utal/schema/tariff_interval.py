@@ -13,8 +13,8 @@ class TariffInterval(AppliedInterval, Generic[BlockType]):
 
 
 class ConsumptionInterval(TariffInterval[ConsumptionBlock]):
-    pass
+    ...
 
 
 class DemandInterval(TariffInterval[DemandBlock]):
-    pass
+    ...

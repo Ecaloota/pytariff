@@ -1,20 +1,25 @@
+from abc import ABC
 from enum import Enum
+from typing import Generic, Literal
+
+from pydantic.dataclasses import dataclass
+from utal.schema.generic_types import Consumption, Demand, MetricType, TradeDirection
 
 
-class TariffUnit(Enum):
-    """Not to be used directly"""
-
-    pass
-
-
-class ConsumptionUnit(TariffUnit):
-    kWh = "KWh"
-    _null = "_null"  # for internal use only
+@dataclass
+class TariffUnit(ABC, Generic[MetricType]):
+    metric: MetricType
+    direction: TradeDirection
 
 
-class DemandUnit(TariffUnit, Enum):
-    kW = "KW"
-    _null = "_null"  # for internal use only
+@dataclass
+class ConsumptionUnit(TariffUnit[Consumption]):
+    metric: Literal[Consumption.kWh, Consumption._null]
+
+
+@dataclass
+class DemandUnit(TariffUnit[Demand]):
+    metric: Literal[Demand.kW, Demand._null]
 
 
 class RateCurrency(Enum):

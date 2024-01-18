@@ -4,7 +4,7 @@ import pandera as pa
 from pandera.typing import DataFrame
 from utal.schema.block import ImportConsumptionBlock
 from utal.schema.defined_interval import DefinedInterval
-from utal.schema.generic_types import Consumption, Demand, GenericType
+from utal.schema.generic_types import Consumption, Demand, MetricType
 from utal.schema.meter_profile import MeterProfileSchema, TariffCostSchema, resample
 from utal.schema.tariff_interval import (
     ConsumptionInterval,
@@ -13,7 +13,7 @@ from utal.schema.tariff_interval import (
 )
 
 
-class GenericTariff(DefinedInterval, Generic[GenericType]):
+class GenericTariff(DefinedInterval, Generic[MetricType]):
     """A GenericTariff is a closed datetime interval from [start, end]"""
 
     children: Optional[tuple[TariffInterval, ...]] = None
@@ -23,7 +23,7 @@ class GenericTariff(DefinedInterval, Generic[GenericType]):
         raise NotImplementedError
 
 
-class ConsumptionTariff(DefinedInterval, Consumption):
+class ConsumptionTariff(GenericTariff[Consumption]):
     """A ConsumptionTariff is a closed datetime interval from [start, end]"""
 
     children: Optional[tuple[ConsumptionInterval, ...]] = None
@@ -69,7 +69,7 @@ class ConsumptionTariff(DefinedInterval, Consumption):
         return meter_profile  # type: ignore  # TODO this warning is inconvenient but correct
 
 
-class DemandTariff(DefinedInterval, Demand):
+class DemandTariff(GenericTariff[Demand]):
     """A ConsumptionTariff is a closed datetime interval from [start, end]"""
 
     children: Optional[tuple[DemandInterval, ...]] = None

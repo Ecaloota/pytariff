@@ -2,7 +2,7 @@ import pandera as pa
 from pandera.typing import DataFrame
 from pydantic import model_validator
 
-from utal.schema.block import ExportConsumptionBlock, ImportConsumptionBlock
+from utal.schema.block import ConsumptionBlock
 from utal.schema.charge import ConsumptionCharge
 from utal.schema.generic_tariff import ConsumptionTariff
 from utal.schema.meter_profile import MeterProfileSchema, TariffCostSchema
@@ -35,9 +35,7 @@ class FlatConsumptionTariff(ConsumptionTariff):
         if not isinstance(self.children[0].charge, ConsumptionCharge):
             raise ValueError
 
-        if not all(
-            isinstance(x, (ImportConsumptionBlock, ExportConsumptionBlock)) for x in self.children[0].charge.blocks
-        ):
+        if not all(isinstance(x, ConsumptionBlock) for x in self.children[0].charge.blocks):
             raise ValueError
 
         if not self.children[0].charge.blocks[0].from_quantity == 0:

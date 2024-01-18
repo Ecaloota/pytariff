@@ -3,12 +3,12 @@ from typing import Generic
 
 from pydantic.dataclasses import dataclass
 
-from utal.schema.generic_types import Consumption, Demand, GenericType
+from utal.schema.generic_types import Consumption, Demand, MetricType
 from utal.schema.unit import RateCurrency
 
 
 @dataclass
-class TariffRate(ABC, Generic[GenericType]):
+class TariffRate(ABC, Generic[MetricType]):
     """A rate is a value in some registered currency. It has no meaning independent of a parent
     TariffBlock.unit
 
@@ -20,7 +20,7 @@ class TariffRate(ABC, Generic[GenericType]):
 
 
 @dataclass
-class DemandTariffRate(TariffRate, Demand):
+class DemandTariffRate(TariffRate[Demand]):
     """A DemandTariffRate is a TariffRate that accepts information about
     a reset_period.
 
@@ -34,7 +34,7 @@ class DemandTariffRate(TariffRate, Demand):
 
 
 @dataclass
-class ConsumptionTariffRate(TariffRate, Consumption):
+class ConsumptionTariffRate(TariffRate[Consumption]):
     """A ConsumptionTariffRate is a TariffRate that accepts information about
     a consumption reset period.
     """

@@ -1,23 +1,20 @@
-from typing import Generic, TypeVar
-
-T = TypeVar("T", bound=object)
-
-
-class Consumption(Generic[T]):
-    pass
+from enum import Enum
+from typing import TypeVar
 
 
-class Demand(Generic[T]):
-    pass
+class Consumption(str, Enum):
+    kWh = "kWh"
+    _null = "_null"
 
 
-class Import(Generic[T]):
-    pass
+class Demand(str, Enum):
+    kW = "kW"
+    _null = "_null"
 
 
-class Export(Generic[T]):
-    pass
+class TradeDirection(str, Enum):
+    Import = "Import"
+    Export = "Export"
 
 
-GenericType = TypeVar("GenericType", Demand, Consumption)
-LevyType = TypeVar("LevyType", Import, Export)
+MetricType = TypeVar("MetricType", Demand, Consumption)

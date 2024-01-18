@@ -4,22 +4,54 @@ import pytest
 from pydantic import ValidationError
 
 from utal.schema.block import ConsumptionBlock
+from utal.schema.generic_types import Consumption, Demand, TradeDirection
 from utal.schema.rate import TariffRate
 from utal.schema.unit import ConsumptionUnit, DemandUnit, RateCurrency
+from utal.schema.generic_types import MetricType
 
 
 @pytest.mark.parametrize(
     "from_quantity, to_quantity, unit, rate, raises",
     [
-        (0, float("inf"), ConsumptionUnit.kWh, TariffRate(currency=RateCurrency.AUD, value=1), False),
-        (0, float("inf"), DemandUnit.kW, TariffRate(currency=RateCurrency.AUD, value=1), True),
-        (0, float("inf"), DemandUnit.kW, TariffRate(currency=RateCurrency.AUD, value=1), True),
-        (100, 100, DemandUnit.kW, TariffRate(currency=RateCurrency.AUD, value=1), True),
-        (1000, 50, DemandUnit.kW, TariffRate(currency=RateCurrency.AUD, value=1), True),
+        (
+            0,
+            float("inf"),
+            ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
+            TariffRate(currency=RateCurrency.AUD, value=1),
+            False,
+        ),
+        (
+            0,
+            float("inf"),
+            DemandUnit(metric=Demand.kW, direction=TradeDirection.Import),
+            TariffRate(currency=RateCurrency.AUD, value=1),
+            True,
+        ),
+        (
+            0,
+            float("inf"),
+            DemandUnit(metric=Demand.kW, direction=TradeDirection.Import),
+            TariffRate(currency=RateCurrency.AUD, value=1),
+            True,
+        ),
+        (
+            100,
+            100,
+            DemandUnit(metric=Demand.kW, direction=TradeDirection.Import),
+            TariffRate(currency=RateCurrency.AUD, value=1),
+            True,
+        ),
+        (
+            1000,
+            50,
+            DemandUnit(metric=Demand.kW, direction=TradeDirection.Import),
+            TariffRate(currency=RateCurrency.AUD, value=1),
+            True,
+        ),
     ],
 )
 def test_consumption_block_construction(
-    from_quantity: float, to_quantity: float, unit: ConsumptionUnit, rate: TariffRate, raises: bool
+    from_quantity: float, to_quantity: float, unit: MetricType, rate: TariffRate, raises: bool
 ) -> None:
     """TODO"""
 
@@ -47,19 +79,19 @@ def test_consumption_block_construction(
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                unit=ConsumptionUnit.kWh,
+                unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
                 rate=TariffRate(RateCurrency.AUD, value=1),
             ),
             ConsumptionBlock(
                 from_quantity=50,
                 to_quantity=100,
-                unit=ConsumptionUnit.kWh,
+                unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
                 rate=TariffRate(RateCurrency.AUD, value=1),
             ),
             ConsumptionBlock(
                 from_quantity=50,
                 to_quantity=100,
-                unit=ConsumptionUnit.kWh,
+                unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
                 rate=None,
             ),
         ),
@@ -67,19 +99,19 @@ def test_consumption_block_construction(
             ConsumptionBlock(
                 from_quantity=25,
                 to_quantity=75,
-                unit=ConsumptionUnit.kWh,
+                unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
                 rate=TariffRate(RateCurrency.AUD, value=1),
             ),
             ConsumptionBlock(
                 from_quantity=50,
                 to_quantity=100,
-                unit=ConsumptionUnit.kWh,
+                unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
                 rate=TariffRate(RateCurrency.AUD, value=1),
             ),
             ConsumptionBlock(
                 from_quantity=50,
                 to_quantity=75,
-                unit=ConsumptionUnit.kWh,
+                unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
                 rate=None,
             ),
         ),
@@ -87,19 +119,19 @@ def test_consumption_block_construction(
             ConsumptionBlock(
                 from_quantity=50,
                 to_quantity=100,
-                unit=ConsumptionUnit.kWh,
+                unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
                 rate=TariffRate(RateCurrency.AUD, value=1),
             ),
             ConsumptionBlock(
                 from_quantity=50,
                 to_quantity=100,
-                unit=ConsumptionUnit.kWh,
+                unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
                 rate=TariffRate(RateCurrency.AUD, value=1),
             ),
             ConsumptionBlock(
                 from_quantity=50,
                 to_quantity=100,
-                unit=ConsumptionUnit.kWh,
+                unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
                 rate=None,
             ),
         ),
@@ -107,13 +139,13 @@ def test_consumption_block_construction(
             ConsumptionBlock(
                 from_quantity=50,
                 to_quantity=100,
-                unit=ConsumptionUnit.kWh,
+                unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
                 rate=TariffRate(RateCurrency.AUD, value=1),
             ),
             ConsumptionBlock(
                 from_quantity=50,
                 to_quantity=100,
-                unit=ConsumptionUnit._null,
+                unit=ConsumptionUnit(metric=Consumption._null, direction=TradeDirection.Import),
                 rate=TariffRate(RateCurrency.AUD, value=1),
             ),
             None,
@@ -122,13 +154,13 @@ def test_consumption_block_construction(
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=100,
-                unit=ConsumptionUnit.kWh,
+                unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
                 rate=TariffRate(RateCurrency.AUD, value=1),
             ),
             ConsumptionBlock(
                 from_quantity=100,
                 to_quantity=200,
-                unit=ConsumptionUnit._null,
+                unit=ConsumptionUnit(metric=Consumption._null, direction=TradeDirection.Import),
                 rate=TariffRate(RateCurrency.AUD, value=1),
             ),
             None,
@@ -153,8 +185,8 @@ def test_consumption_block_intersection(
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                unit=ConsumptionUnit.kWh,
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
+                rate=TariffRate[Consumption](RateCurrency.AUD, value=1),
             ),
             int(5),
         ),
