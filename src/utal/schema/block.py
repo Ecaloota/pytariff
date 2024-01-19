@@ -4,7 +4,7 @@ from typing import Generic, Optional
 from pydantic import Field, model_validator
 from pydantic.dataclasses import dataclass
 
-from utal.schema.generic_types import Consumption, Demand, MetricType
+from utal.schema.generic_types import Consumption, Demand, MetricType, TradeDirection
 from utal.schema.rate import TariffRate
 from utal.schema.unit import ConsumptionUnit, DemandUnit, TariffUnit
 
@@ -76,7 +76,12 @@ class ConsumptionBlock(TariffBlock[Consumption]):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ConsumptionBlock):
             raise NotImplementedError
-        return self.from_quantity == other.from_quantity and self.unit == other.unit and self.rate == other.rate
+        return (
+            self.from_quantity == other.from_quantity
+            and self.to_quantity == other.to_quantity
+            and self.unit == other.unit
+            and self.rate == other.rate
+        )
 
     def quantities_and_types_equal(self, other: object) -> bool:
         """Weaker assertion of equality between ConsumptionBlocks which does not depend on rate
@@ -88,13 +93,21 @@ class ConsumptionBlock(TariffBlock[Consumption]):
 
 @dataclass
 class ImportConsumptionBlock(ConsumptionBlock):
-    ...
+    unit: ConsumptionUnit
 
-    # TODO validator here that asserts that unit.trade_direction is Import
+    @model_validator(mode="after")  # type: ignore
+    def assert_from_lt_to(self) -> "ImportConsumptionBlock":
+        if self.unit.direction != TradeDirection.Import:
+            raise ValueError
+        return self
 
 
 @dataclass
 class ExportConsumptionBlock(ConsumptionBlock):
-    ...
+    unit: ConsumptionUnit
 
-    # TODO validator here that asserts that unit.trade_direction is Export
+    @model_validator(mode="after")  # type: ignore
+    def assert_from_lt_to(self) -> "ExportConsumptionBlock":
+        if self.unit.direction != TradeDirection.Export:
+            raise ValueError
+        return self

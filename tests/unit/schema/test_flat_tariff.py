@@ -10,6 +10,7 @@ from utal.schema.day_type import DayType
 from utal.schema.days_applied import DaysApplied
 from utal.schema.flat_tariff import FlatConsumptionTariff
 from utal.schema.generic_types import Consumption, TradeDirection
+from utal.schema.period import ConsumptionResetPeriod
 from utal.schema.rate import TariffRate
 from utal.schema.tariff_interval import ConsumptionInterval
 from utal.schema.unit import ConsumptionUnit, RateCurrency
@@ -76,6 +77,7 @@ def test_flat_consumption_tariff_construction(kwargs, raises: bool):
             end=datetime(2023, 1, 1) if not_in(kwargs, "end") else kwargs["end"],
             tzinfo=ZoneInfo("UTC") if not_in(kwargs, "tzinfo") else kwargs["tzinfo"],
             children=DEFAULT_CHILD if not_in(kwargs, "children") else kwargs["children"],
+            reset_period=ConsumptionResetPeriod.ANNUALLY,
         )
 
         return DEFAULT_TARIFF
@@ -154,8 +156,9 @@ def test_flat_consumption_tariff_apply(profile, import_cost_series, export_cost_
         end=datetime(2023, 1, 1),
         tzinfo=ZoneInfo("UTC"),
         children=DEFAULT_CHILD,
+        reset_period=ConsumptionResetPeriod.ANNUALLY,
     )
 
-    output = DEFAULT_TARIFF.apply(profile)  # noqa
+    output = DEFAULT_TARIFF.apply(profile, billing_start=None)  # noqa
 
     # assert output.total_cost == "foo"  # TODO

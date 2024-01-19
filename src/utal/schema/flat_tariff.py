@@ -1,3 +1,4 @@
+from datetime import datetime
 import pandera as pa
 from pandera.typing import DataFrame
 from pydantic import model_validator
@@ -23,6 +24,8 @@ class FlatConsumptionTariff(ConsumptionTariff):
         The ConsumptionBlock should have a from_quantity = 0 and to_quantity = float("inf")
         """
 
+        # TODO some of this could be abstracted out into the class definition if we used the Field args
+
         if self.children is None:
             raise ValueError
 
@@ -47,5 +50,7 @@ class FlatConsumptionTariff(ConsumptionTariff):
         return self
 
     @pa.check_types
-    def apply(self, meter_profile: DataFrame[MeterProfileSchema]) -> DataFrame[TariffCostSchema]:
-        return super().apply(meter_profile)
+    def apply(
+        self, meter_profile: DataFrame[MeterProfileSchema], billing_start: datetime | None
+    ) -> DataFrame[TariffCostSchema]:
+        return super().apply(meter_profile, billing_start)

@@ -11,6 +11,11 @@ class TariffUnit(ABC, Generic[MetricType]):
     metric: MetricType
     direction: TradeDirection
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TariffUnit):
+            raise ValueError
+        return self.metric == other.metric and self.direction == other.direction
+
 
 @dataclass
 class ConsumptionUnit(TariffUnit[Consumption]):

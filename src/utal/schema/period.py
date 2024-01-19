@@ -1,8 +1,14 @@
 from datetime import timedelta
 from enum import Enum
 
+from pydantic.dataclasses import dataclass
 
-class ConsumptionResetPeriod(Enum):
+
+class ResetPeriod(Enum):
+    ...
+
+
+class ConsumptionResetPeriod(ResetPeriod):
     """Allows us to define tariffs of the sort
     $X/kWh for the [N, M] kWh per ConsumptionResetPeriod"""
 
@@ -12,7 +18,8 @@ class ConsumptionResetPeriod(Enum):
     ANNUALLY = "ANNUALLY"
 
 
-class DemandResetPeriod(Enum):
+@dataclass
+class DemandResetPeriod(ResetPeriod):
     """Allows us to define tariffs of the sort
     $X/kWh if kW peak in some range, reset after DemandResetPeriod"""
 

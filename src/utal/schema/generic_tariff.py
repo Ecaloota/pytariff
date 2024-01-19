@@ -1,11 +1,14 @@
+from datetime import datetime
 from typing import Generic, Optional
 
 import pandera as pa
 from pandera.typing import DataFrame
+from pydantic import model_validator
 from utal.schema.block import ImportConsumptionBlock
 from utal.schema.defined_interval import DefinedInterval
 from utal.schema.generic_types import Consumption, Demand, MetricType
 from utal.schema.meter_profile import MeterProfileSchema, TariffCostSchema, resample
+from utal.schema.period import ConsumptionResetPeriod, DemandResetPeriod, ResetPeriod
 from utal.schema.tariff_interval import (
     ConsumptionInterval,
     DemandInterval,
@@ -16,20 +19,42 @@ from utal.schema.tariff_interval import (
 class GenericTariff(DefinedInterval, Generic[MetricType]):
     """A GenericTariff is a closed datetime interval from [start, end]"""
 
-    children: Optional[tuple[TariffInterval, ...]] = None
+    children: Optional[tuple[TariffInterval[MetricType], ...]] = None
+    reset_period: ResetPeriod
 
     @pa.check_types
-    def apply(self, meter_profile: DataFrame[MeterProfileSchema]) -> DataFrame[TariffCostSchema]:
+    def apply(
+        self, meter_profile: DataFrame[MeterProfileSchema], billing_start: datetime | None
+    ) -> DataFrame[TariffCostSchema]:
         raise NotImplementedError
+        # NOTE that in order to apply reset logic, we need to know the start of the first billing period
+        # but this should be passed whenever we apply a Profile to the Tariff. If no billing_start is
+        # provided, we will infer it from the earliest time in the meter_profile
 
 
 class ConsumptionTariff(GenericTariff[Consumption]):
     """A ConsumptionTariff is a closed datetime interval from [start, end]"""
 
     children: Optional[tuple[ConsumptionInterval, ...]] = None
+    reset_period: ConsumptionResetPeriod
+
+    @model_validator(mode="after")
+    def validate_children_are_consumption_intervals(self) -> "ConsumptionTariff":
+        if self.children is not None:
+            if not all(isinstance(x, ConsumptionInterval) for x in self.children):
+                raise ValueError
+        return self
+
+    @model_validator(mode="after")
+    def validate_reset_period_is_consumption(self) -> "ConsumptionTariff":
+        if not isinstance(self.reset_period, ConsumptionResetPeriod):
+            raise ValueError
+        return self
 
     @pa.check_types
-    def apply(self, meter_profile: DataFrame[MeterProfileSchema]) -> DataFrame[TariffCostSchema]:
+    def apply(
+        self, meter_profile: DataFrame[MeterProfileSchema], billing_start: datetime | None
+    ) -> DataFrame[TariffCostSchema]:
         """In the generic case, a ConsumptionTariff is defined over [start, end] and has any
         number of non-overlapping children, which are defined over [start_time, end_time) on
         days_applied and associated with some rate, which itself may contain any number of
@@ -73,7 +98,16 @@ class DemandTariff(GenericTariff[Demand]):
     """A ConsumptionTariff is a closed datetime interval from [start, end]"""
 
     children: Optional[tuple[DemandInterval, ...]] = None
+    reset_period: DemandResetPeriod
 
     @pa.check_types
-    def apply(self, meter_profile: DataFrame[MeterProfileSchema]) -> DataFrame[TariffCostSchema]:
+    def apply(
+        self, meter_profile: DataFrame[MeterProfileSchema], billing_start: datetime | None
+    ) -> DataFrame[TariffCostSchema]:
         raise NotImplementedError
+
+    @model_validator(mode="after")
+    def validate_reset_period_is_demand(self) -> "DemandTariff":
+        if not isinstance(self.reset_period, DemandResetPeriod):
+            raise ValueError
+        return self

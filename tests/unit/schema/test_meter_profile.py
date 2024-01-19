@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 from pandera.errors import SchemaError
 
-from utal.schema.meter_profile import MeterProfileSchema
+from utal.schema.meter_profile import MeterProfileSchema, resample
 
 
 @pytest.mark.parametrize(
@@ -83,3 +83,53 @@ def test_pandera_meter_profile_type(data, raises: bool):
             MeterProfileSchema.validate(data)
     else:
         MeterProfileSchema.validate(data)
+
+
+@pytest.mark.parametrize(
+    "data, expected_resampled_list, raises",
+    [
+        (
+            pd.DataFrame(
+                index=[
+                    pd.Timestamp(year=2023, month=1, day=1, hour=0, minute=0, tzinfo=ZoneInfo("UTC"), unit="ns"),
+                    pd.Timestamp(year=2023, month=1, day=1, hour=0, minute=1, tzinfo=ZoneInfo("UTC"), unit="ns"),
+                ],
+                data={"profile": [0.0, 1.0]},
+            ),
+            [0.0, 1.0],
+            False,
+        ),
+        (
+            pd.DataFrame(
+                index=[
+                    pd.Timestamp(year=2023, month=1, day=1, hour=0, minute=0, tzinfo=ZoneInfo("UTC"), unit="ns"),
+                    pd.Timestamp(year=2023, month=1, day=1, hour=0, minute=2, tzinfo=ZoneInfo("UTC"), unit="ns"),
+                ],
+                data={"profile": [0.0, 2.0]},
+            ),
+            [0.0, 0.0, 2.0],
+            False,
+        ),
+        (
+            pd.DataFrame(
+                index=[
+                    pd.Timestamp(year=2023, month=1, day=1, hour=0, minute=0, tzinfo=ZoneInfo("UTC"), unit="ns"),
+                    pd.Timestamp(year=2023, month=1, day=1, hour=0, minute=2, tzinfo=ZoneInfo("UTC"), unit="ns"),
+                    pd.Timestamp(year=2023, month=1, day=1, hour=0, minute=4, tzinfo=ZoneInfo("UTC"), unit="ns"),
+                ],
+                data={"profile": [0.0, 2.0, 0.0]},
+            ),
+            [0.0, 0.0, 1.0, 1.0, 0.0],
+            False,
+        ),
+    ],
+)
+def test_meter_profile_schema_resample_method(
+    data: pd.DataFrame, expected_resampled_list: list[float], raises: bool
+) -> None:
+    """TODO"""
+
+    resampled = resample(data)
+    assert list(resampled.profile) == expected_resampled_list
+
+    print("wow")

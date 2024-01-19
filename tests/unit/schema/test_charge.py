@@ -1,6 +1,7 @@
+from pydantic import ValidationError
 import pytest
 
-from utal.schema.block import ConsumptionBlock
+from utal.schema.block import ConsumptionBlock, TariffBlock
 from utal.schema.charge import ConsumptionCharge
 from utal.schema.generic_types import Consumption, TradeDirection
 from utal.schema.rate import TariffRate
@@ -8,7 +9,7 @@ from utal.schema.unit import ConsumptionUnit, RateCurrency
 
 
 @pytest.mark.parametrize(
-    "blocks_tuple",
+    "blocks_tuple, raises",
     [
         (
             (
@@ -18,7 +19,8 @@ from utal.schema.unit import ConsumptionUnit, RateCurrency
                     from_quantity=0,
                     to_quantity=100,
                 ),
-            )
+            ),
+            False,
         ),
         (
             (
@@ -34,13 +36,29 @@ from utal.schema.unit import ConsumptionUnit, RateCurrency
                     from_quantity=100,
                     to_quantity=200,
                 ),
-            )
+            ),
+            False,
+        ),
+        (
+            (  # parameterized generics can't be used in the isinstance validation check
+                TariffBlock[Consumption](
+                    unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
+                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    from_quantity=0,
+                    to_quantity=100,
+                ),
+            ),
+            True,
         ),
     ],
 )
-def test_consumption_charge_valid_construction(blocks_tuple: tuple[ConsumptionBlock, ...]) -> None:
+def test_consumption_charge_valid_construction(blocks_tuple: tuple[ConsumptionBlock, ...], raises: bool) -> None:
     """"""
-    ConsumptionCharge(blocks=blocks_tuple)
+    if raises:
+        with pytest.raises(ValidationError):
+            ConsumptionCharge(blocks=blocks_tuple)
+    else:
+        assert ConsumptionCharge(blocks=blocks_tuple)
 
 
 @pytest.mark.parametrize(
