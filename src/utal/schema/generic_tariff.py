@@ -4,11 +4,9 @@ from typing import Generic, Optional
 import pandera as pa
 from pandera.typing import DataFrame
 from pydantic import model_validator
-from utal.schema.block import ImportConsumptionBlock
 from utal.schema.defined_interval import DefinedInterval
 from utal.schema.generic_types import Consumption, Demand, MetricType
 from utal.schema.meter_profile import MeterProfileSchema, TariffCostSchema, resample
-from utal.schema.period import ConsumptionResetPeriod, DemandResetPeriod, ResetPeriod
 from utal.schema.tariff_interval import (
     ConsumptionInterval,
     DemandInterval,
@@ -20,7 +18,6 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
     """A GenericTariff is a closed datetime interval from [start, end]"""
 
     children: Optional[tuple[TariffInterval[MetricType], ...]] = None
-    reset_period: ResetPeriod
 
     @pa.check_types
     def apply(
@@ -36,19 +33,12 @@ class ConsumptionTariff(GenericTariff[Consumption]):
     """A ConsumptionTariff is a closed datetime interval from [start, end]"""
 
     children: Optional[tuple[ConsumptionInterval, ...]] = None
-    reset_period: ConsumptionResetPeriod
 
     @model_validator(mode="after")
     def validate_children_are_consumption_intervals(self) -> "ConsumptionTariff":
         if self.children is not None:
             if not all(isinstance(x, ConsumptionInterval) for x in self.children):
                 raise ValueError
-        return self
-
-    @model_validator(mode="after")
-    def validate_reset_period_is_consumption(self) -> "ConsumptionTariff":
-        if not isinstance(self.reset_period, ConsumptionResetPeriod):
-            raise ValueError
         return self
 
     @pa.check_types
@@ -64,7 +54,10 @@ class ConsumptionTariff(GenericTariff[Consumption]):
         at that datetime (or None).
         """
 
-        # always resample to 1T
+        # Always resample to 1T. Note that it is only appropriate to use the resampled profile to calculate
+        # energy usage over some period, not power, because resampling will average out the peak
+        # power statistics. Note also that resampling to 1T will be problematic is the user provides e.g. 1 year of
+        # usage = ~526k rows
         meter_profile = resample(meter_profile)
 
         if self.children is None or len(self.children) == 0:
@@ -80,8 +73,11 @@ class ConsumptionTariff(GenericTariff[Consumption]):
                 if ctime in intvl:
                     # get block in charge that overlaps [from_quantity, to_quantity)
                     for bl in intvl.charge.blocks:
+                        # TODO below line is wrong. Only correct when billed once at end of profile.
+                        # e.g. what if the blocks reset monthly, but we still levy using usage stats from previous
+                        # months? That would be overcharged.
                         if bl.from_quantity <= meter_profile["cum_profile"].loc[ctime] < bl.to_quantity:
-                            nstr = "import" if isinstance(bl, ImportConsumptionBlock) else "export"
+                            nstr = "import"  # "import" if isinstance(bl, ImportConsumptionBlock) else "export"  # TODO wrong, direction is now in charge  # noqa
                             # apply cost at ctime
                             meter_profile[f"{nstr}_cost"].loc[ctime] = (
                                 bl.rate.value * meter_profile["profile"].loc[ctime]  # type: ignore
@@ -98,16 +94,9 @@ class DemandTariff(GenericTariff[Demand]):
     """A ConsumptionTariff is a closed datetime interval from [start, end]"""
 
     children: Optional[tuple[DemandInterval, ...]] = None
-    reset_period: DemandResetPeriod
 
     @pa.check_types
     def apply(
         self, meter_profile: DataFrame[MeterProfileSchema], billing_start: datetime | None
     ) -> DataFrame[TariffCostSchema]:
         raise NotImplementedError
-
-    @model_validator(mode="after")
-    def validate_reset_period_is_demand(self) -> "DemandTariff":
-        if not isinstance(self.reset_period, DemandResetPeriod):
-            raise ValueError
-        return self

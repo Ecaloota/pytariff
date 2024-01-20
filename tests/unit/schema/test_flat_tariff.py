@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from utal.schema.block import ConsumptionBlock, ImportConsumptionBlock
+from utal.schema.block import ConsumptionBlock
 from utal.schema.charge import ConsumptionCharge
 from utal.schema.day_type import DayType
 from utal.schema.days_applied import DaysApplied
@@ -46,16 +46,17 @@ def test_flat_consumption_tariff_construction(kwargs, raises: bool):
     def test() -> FlatConsumptionTariff:
         # Create a default FlatConsumptionTariff ConsumptionCharge
         DEFAULT_CHARGE = ConsumptionCharge(
+            unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
+            reset_period=None,
             blocks=(
                 ConsumptionBlock(
                     from_quantity=0 if not_in(kwargs, "from_quantity") else kwargs["from_quantity"],
                     to_quantity=float("inf") if not_in(kwargs, "to_quantity") else kwargs["to_quantity"],
-                    unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
                     rate=TariffRate(currency=RateCurrency.AUD, value=1),
                 ),
             )
             if not_in(kwargs, "blocks")
-            else kwargs["blocks"]
+            else kwargs["blocks"],
         )
 
         # Create a default single child
@@ -124,19 +125,14 @@ def test_flat_consumption_tariff_apply(profile, import_cost_series, export_cost_
 
     DEFAULT_CHARGE = ConsumptionCharge(
         blocks=(
-            ImportConsumptionBlock(
+            ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
                 rate=TariffRate(currency=RateCurrency.AUD, value=1),
             ),
-            # ExportConsumptionBlock(
-            #     from_quantity=0,
-            #     to_quantity=float("inf"),
-            #     unit=ConsumptionUnit.kWh,
-            #     rate=TariffRate(currency=RateCurrency.AUD, value=-0.1),  # value is negative as it's a negative 'cost'
-            # ),
         ),
+        unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
+        reset_period=None,
     )
 
     # Create a default single child

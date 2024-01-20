@@ -36,11 +36,14 @@ def test_consumption_tariff_valid_construction(block_fixture: str, raises: bool,
                         start_time=time(6),
                         end_time=time(12),
                         days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                        charge=ConsumptionCharge(blocks=(block,)),
+                        charge=ConsumptionCharge(
+                            blocks=(block,),
+                            unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
+                            reset_period=ConsumptionResetPeriod.ANNUALLY,
+                        ),
                         tzinfo=timezone(timedelta(hours=1)),
                     ),
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
             )
 
     else:
@@ -53,11 +56,14 @@ def test_consumption_tariff_valid_construction(block_fixture: str, raises: bool,
                     start_time=time(6),
                     end_time=time(12),
                     days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                    charge=ConsumptionCharge(blocks=(block,)),
+                    charge=ConsumptionCharge(
+                        blocks=(block,),
+                        unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
+                        reset_period=ConsumptionResetPeriod.ANNUALLY,
+                    ),
                     tzinfo=timezone(timedelta(hours=1)),
                 ),
             ),
-            reset_period=ConsumptionResetPeriod.ANNUALLY,
         )
 
 
@@ -86,16 +92,16 @@ def test_consumption_tariff_apply_method():
                         ConsumptionBlock(
                             from_quantity=0,
                             to_quantity=float("inf"),
-                            unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
                             rate=TariffRate(currency=RateCurrency.AUD, value=1),
                         ),
-                    )
+                    ),
+                    unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
+                    reset_period=ConsumptionResetPeriod.ANNUALLY,
                 ),
                 tzinfo=timezone(timedelta(hours=1)),
             ),
         ),
-        reset_period=ConsumptionResetPeriod.ANNUALLY,
     )
 
-    cost_schema = tariff.apply(meter_profile, billing_start=None)
+    cost_schema = tariff.apply(meter_profile, billing_start=None)  # noqa
     print("foo")
