@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 from pandera.errors import SchemaError
 
-from utal.schema.meter_profile import MeterProfileSchema, resample
+from utal._internal.meter_profile import MeterProfileSchema, resample
 
 
 @pytest.mark.parametrize(

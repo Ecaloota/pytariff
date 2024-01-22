@@ -3,10 +3,10 @@ from typing import Any, Optional
 import pytest
 from pydantic import ValidationError
 
-from utal.schema.block import ConsumptionBlock
-from utal.schema.generic_types import Consumption
-from utal.schema.rate import TariffRate
-from utal.schema.unit import RateCurrency
+from utal._internal.block import ConsumptionBlock
+from utal._internal.generic_types import Consumption
+from utal._internal.rate import TariffRate
+from utal._internal.unit import RateCurrency
 
 
 @pytest.mark.parametrize(
@@ -213,35 +213,3 @@ def test_consumption_block_invalid_intersection(block_1: ConsumptionBlock, obj: 
 )
 def test_consumption_block_equality(block1: ConsumptionBlock, block2: ConsumptionBlock, is_equal: bool) -> None:
     assert (block1 == block2) is is_equal
-
-
-# TODO trade direction is now a constraint on a TariffCharge, not child Blocks
-# so move to there
-# @pytest.mark.parametrize(
-#     "unit, raises",
-#     [
-#         (ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import), False),
-#         (ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Export), True),
-#     ],
-# )
-# def test_import_consumption_block_enforces_trade_import(unit: ConsumptionUnit, raises: bool) -> None:
-#     if raises:
-#         with pytest.raises(ValidationError):
-#             ImportConsumptionBlock(unit=unit, rate=None, from_quantity=0, to_quantity=1)
-#     else:
-#         assert ImportConsumptionBlock(unit=unit, rate=None, from_quantity=0, to_quantity=1)
-
-
-# @pytest.mark.parametrize(
-#     "unit, raises",
-#     [
-#         (ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import), True),
-#         (ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Export), False),
-#     ],
-# )
-# def test_export_consumption_block_enforces_trade_export(unit: ConsumptionUnit, raises: bool) -> None:
-#     if raises:
-#         with pytest.raises(ValidationError):
-#             ExportConsumptionBlock(unit=unit, rate=None, from_quantity=0, to_quantity=1)
-#     else:
-#         assert ExportConsumptionBlock(unit=unit, rate=None, from_quantity=0, to_quantity=1)

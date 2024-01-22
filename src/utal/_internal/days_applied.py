@@ -5,7 +5,7 @@ from holidays import HolidayBase
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from utal import helper
-from utal.schema.day_type import DayType
+from utal._internal.day_type import DayType
 
 
 class DaysApplied(BaseModel):

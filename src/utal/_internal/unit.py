@@ -3,13 +3,14 @@ from enum import Enum
 from typing import Generic, Literal
 
 from pydantic.dataclasses import dataclass
-from utal.schema.generic_types import Consumption, Demand, MetricType, TradeDirection
+from utal._internal.generic_types import Consumption, Demand, MetricType, TradeDirection, SignConvention
 
 
 @dataclass
 class TariffUnit(ABC, Generic[MetricType]):
     metric: MetricType
     direction: TradeDirection
+    convention: SignConvention
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TariffUnit):
@@ -49,3 +50,11 @@ class RateCurrency(Enum):
     @property
     def iso(self) -> str:
         return self._iso
+
+
+class UsageChargeMetric(Enum):
+    """Defines how the TariffUnit provided in a TariffCharge definition is to be charged"""
+
+    mean = "mean"
+    peak = "peak"
+    rolling_mean = "rolling_mean"

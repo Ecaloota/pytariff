@@ -3,8 +3,8 @@ from typing import Generic
 
 from pydantic.dataclasses import dataclass
 
-from utal.schema.generic_types import MetricType
-from utal.schema.unit import RateCurrency
+from utal._internal.generic_types import MetricType
+from utal._internal.unit import RateCurrency
 
 
 @dataclass

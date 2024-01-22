@@ -2,9 +2,9 @@ from typing import Generic
 
 from pydantic import model_validator
 
-from utal.schema.applied_interval import AppliedInterval
-from utal.schema.charge import ConsumptionCharge, DemandCharge, TariffCharge
-from utal.schema.generic_types import Consumption, Demand, MetricType
+from utal._internal.applied_interval import AppliedInterval
+from utal._internal.charge import ConsumptionCharge, DemandCharge, TariffCharge
+from utal._internal.generic_types import Consumption, Demand, MetricType
 
 
 class TariffInterval(AppliedInterval, Generic[MetricType]):

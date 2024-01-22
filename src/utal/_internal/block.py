@@ -4,8 +4,8 @@ from typing import Generic, Optional
 from pydantic import Field, model_validator
 from pydantic.dataclasses import dataclass
 
-from utal.schema.generic_types import Consumption, Demand, MetricType
-from utal.schema.rate import TariffRate
+from utal._internal.generic_types import Consumption, Demand, MetricType
+from utal._internal.rate import TariffRate
 
 
 @dataclass
@@ -53,15 +53,15 @@ class ConsumptionBlock(TariffBlock[Consumption]):
         if not isinstance(other, ConsumptionBlock):
             raise ValueError
 
-        # # The intersection between two blocks defined in different units is empty
-        # if self.unit != other.unit:
-        #     return None
-
         from_intersection = max(self.from_quantity, other.from_quantity)
         to_intersection = min(self.to_quantity, other.to_quantity)
 
         # right-open intersection edge condition, when self.to_quantity == other.from_quantity
         if from_intersection == to_intersection:
+            return None
+
+        # # if from < to, no intersection
+        if to_intersection < from_intersection:
             return None
 
         return ConsumptionBlock(

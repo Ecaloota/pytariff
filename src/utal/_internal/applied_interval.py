@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from utal import helper
-from utal.schema.days_applied import DaysApplied
+from utal._internal.days_applied import DaysApplied
 
 
 class AppliedInterval(BaseModel):

@@ -17,4 +17,14 @@ class TradeDirection(str, Enum):
     Export = "Export"
 
 
+class SignConvention(str, Enum):
+    """
+    Passive convention: Load export is defined as positive
+    Active convention: Load export is defined as negative
+    """
+
+    Passive = "Passive"
+    Active = "Active"
+
+
 MetricType = TypeVar("MetricType", Demand, Consumption)

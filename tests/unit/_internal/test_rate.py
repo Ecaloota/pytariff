@@ -3,8 +3,8 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from utal.schema.rate import TariffRate
-from utal.schema.unit import RateCurrency
+from utal._internal.rate import TariffRate
+from utal._internal.unit import RateCurrency
 
 
 @pytest.mark.parametrize(

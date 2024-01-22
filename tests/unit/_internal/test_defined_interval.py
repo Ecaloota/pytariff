@@ -4,10 +4,10 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from utal.schema.applied_interval import AppliedInterval
-from utal.schema.day_type import DayType
-from utal.schema.days_applied import DaysApplied
-from utal.schema.defined_interval import DefinedInterval
+from utal._internal.applied_interval import AppliedInterval
+from utal._internal.day_type import DayType
+from utal._internal.days_applied import DaysApplied
+from utal._internal.defined_interval import DefinedInterval
 
 
 @pytest.mark.parametrize(

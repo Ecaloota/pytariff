@@ -1,6 +1,6 @@
 import pytest
 
-from utal.schema.day_type import DayType
+from utal._internal.day_type import DayType
 
 
 @pytest.mark.parametrize(

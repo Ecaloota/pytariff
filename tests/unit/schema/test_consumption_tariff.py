@@ -3,18 +3,18 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 from pydantic import ValidationError
-from utal.schema.block import ConsumptionBlock
-from utal.schema.charge import ConsumptionCharge
-from utal.schema.day_type import DayType
-from utal.schema.days_applied import DaysApplied
-from utal.schema.generic_tariff import ConsumptionTariff
-from utal.schema.generic_types import Consumption, TradeDirection
-from utal.schema.period import ConsumptionResetPeriod
-from utal.schema.rate import TariffRate
-from utal.schema.tariff_interval import ConsumptionInterval
+from utal._internal.block import ConsumptionBlock
+from utal._internal.charge import ConsumptionCharge
+from utal._internal.day_type import DayType
+from utal._internal.days_applied import DaysApplied
+from utal.schema.consumption_tariff import ConsumptionTariff
+from utal._internal.generic_types import Consumption, SignConvention, TradeDirection
+from utal._internal.period import ConsumptionResetPeriod
+from utal._internal.rate import TariffRate
+from utal._internal.tariff_interval import ConsumptionInterval
 import pytest
 
-from utal.schema.unit import ConsumptionUnit, RateCurrency
+from utal._internal.unit import ConsumptionUnit, RateCurrency
 
 
 @pytest.mark.parametrize(
@@ -38,7 +38,11 @@ def test_consumption_tariff_valid_construction(block_fixture: str, raises: bool,
                         days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
                         charge=ConsumptionCharge(
                             blocks=(block,),
-                            unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
+                            unit=ConsumptionUnit(
+                                metric=Consumption.kWh,
+                                direction=TradeDirection.Import,
+                                convention=SignConvention.Passive,
+                            ),
                             reset_period=ConsumptionResetPeriod.ANNUALLY,
                         ),
                         tzinfo=timezone(timedelta(hours=1)),
@@ -58,7 +62,9 @@ def test_consumption_tariff_valid_construction(block_fixture: str, raises: bool,
                     days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
                     charge=ConsumptionCharge(
                         blocks=(block,),
-                        unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
+                        unit=ConsumptionUnit(
+                            metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
+                        ),
                         reset_period=ConsumptionResetPeriod.ANNUALLY,
                     ),
                     tzinfo=timezone(timedelta(hours=1)),
@@ -95,7 +101,9 @@ def test_consumption_tariff_apply_method():
                             rate=TariffRate(currency=RateCurrency.AUD, value=1),
                         ),
                     ),
-                    unit=ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import),
+                    unit=ConsumptionUnit(
+                        metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
+                    ),
                     reset_period=ConsumptionResetPeriod.ANNUALLY,
                 ),
                 tzinfo=timezone(timedelta(hours=1)),

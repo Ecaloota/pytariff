@@ -3,19 +3,20 @@ from typing import Generic, Optional
 
 import pandera as pa
 from pandera.typing import DataFrame
-from pydantic import model_validator
-from utal.schema.defined_interval import DefinedInterval
-from utal.schema.generic_types import Consumption, Demand, MetricType
-from utal.schema.meter_profile import MeterProfileSchema, TariffCostSchema, resample
-from utal.schema.tariff_interval import (
-    ConsumptionInterval,
-    DemandInterval,
-    TariffInterval,
-)
+from utal._internal.defined_interval import DefinedInterval
+from utal._internal.generic_types import MetricType
+from utal._internal.meter_profile import MeterProfileSchema, TariffCostSchema, resample
+from utal._internal.tariff_interval import TariffInterval
 
 
 class GenericTariff(DefinedInterval, Generic[MetricType]):
-    """A GenericTariff is a closed datetime interval from [start, end]"""
+    """A GenericTariff is a generalised model of an electrical tariff defined as a closed
+    timezone-aware datetime interval. It contains child TariffIntervals, which are right-open
+    timezone-aware time intervals which are levied on their DaysApplied and associated with a
+    single TariffCharge.
+
+    A TariffCharge contains a tuple of TariffBlocks, each of which define the right-open interval
+    of some unit over which a given TariffRate is to be applied."""
 
     children: Optional[tuple[TariffInterval[MetricType], ...]] = None
 
@@ -23,36 +24,11 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
     def apply(
         self, meter_profile: DataFrame[MeterProfileSchema], billing_start: datetime | None
     ) -> DataFrame[TariffCostSchema]:
-        raise NotImplementedError
+        """"""
+
         # NOTE that in order to apply reset logic, we need to know the start of the first billing period
         # but this should be passed whenever we apply a Profile to the Tariff. If no billing_start is
         # provided, we will infer it from the earliest time in the meter_profile
-
-
-class ConsumptionTariff(GenericTariff[Consumption]):
-    """A ConsumptionTariff is a closed datetime interval from [start, end]"""
-
-    children: Optional[tuple[ConsumptionInterval, ...]] = None
-
-    @model_validator(mode="after")
-    def validate_children_are_consumption_intervals(self) -> "ConsumptionTariff":
-        if self.children is not None:
-            if not all(isinstance(x, ConsumptionInterval) for x in self.children):
-                raise ValueError
-        return self
-
-    @pa.check_types
-    def apply(
-        self, meter_profile: DataFrame[MeterProfileSchema], billing_start: datetime | None
-    ) -> DataFrame[TariffCostSchema]:
-        """In the generic case, a ConsumptionTariff is defined over [start, end] and has any
-        number of non-overlapping children, which are defined over [start_time, end_time) on
-        days_applied and associated with some rate, which itself may contain any number of
-        non-overlapping blocks.
-
-        The cost at any datetime in the meter_profile.idx in [start, end] is thus just the rate
-        at that datetime (or None).
-        """
 
         # Always resample to 1T. Note that it is only appropriate to use the resampled profile to calculate
         # energy usage over some period, not power, because resampling will average out the peak
@@ -88,15 +64,3 @@ class ConsumptionTariff(GenericTariff[Consumption]):
         meter_profile["billed_total_cost"] = float(0)  # TODO NotImplemented
 
         return meter_profile  # type: ignore  # TODO this warning is inconvenient but correct
-
-
-class DemandTariff(GenericTariff[Demand]):
-    """A ConsumptionTariff is a closed datetime interval from [start, end]"""
-
-    children: Optional[tuple[DemandInterval, ...]] = None
-
-    @pa.check_types
-    def apply(
-        self, meter_profile: DataFrame[MeterProfileSchema], billing_start: datetime | None
-    ) -> DataFrame[TariffCostSchema]:
-        raise NotImplementedError
