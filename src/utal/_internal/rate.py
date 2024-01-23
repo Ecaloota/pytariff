@@ -22,3 +22,6 @@ class TariffRate(ABC, Generic[MetricType]):
         if not isinstance(other, TariffRate):
             raise ValueError
         return self.currency == other.currency and self.value == other.value
+
+    def __hash__(self) -> int:
+        return hash(self.currency) ^ hash(self.value)

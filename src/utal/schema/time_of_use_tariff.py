@@ -23,7 +23,27 @@ class TimeOfUseTariff(GenericTariff[MetricType]):
 
     @model_validator(mode="after")
     def validate_time_of_use_tariff(self) -> "TimeOfUseTariff":
-        # TODO
+        if len(self.children) < 2 or len(set(self.children)) < 2:
+            raise ValueError
+
+        for i, child_a in enumerate(self.children):
+            for j, child_b in enumerate(self.children):
+                if i != j:
+                    # Tariff intervals must share days_applied and timezone attrs
+                    if not (child_a.days_applied == child_b.days_applied and child_a.tzinfo == child_b.tzinfo):
+                        raise ValueError
+
+                    # Tariff intervals must contain unique, non-overlapping [start, end) intervals
+                    if child_a.start_time is None or child_a.end_time is None:
+                        raise ValueError
+                    if child_b.start_time is None or child_b.end_time is None:
+                        raise ValueError
+
+                    start_intersection = max(child_a.start_time, child_b.start_time)
+                    end_intersection = min(child_a.end_time, child_b.end_time)
+                    if start_intersection < end_intersection:
+                        raise ValueError  # TODO verify this
+
         return self
 
     @pa.check_types

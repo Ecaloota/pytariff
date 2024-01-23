@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from pydantic import model_validator
+from utal._internal.charge import DemandCharge
 from utal._internal.generic_types import Demand
 from utal._internal.meter_profile import MeterProfileSchema, TariffCostSchema
 from utal._internal.tariff_interval import DemandInterval
@@ -22,7 +23,13 @@ class DemandTariff(GenericTariff[Demand]):
 
     @model_validator(mode="after")
     def validate_demand_tariff(self) -> "DemandTariff":
-        # TODO
+        if len(self.children) < 1:
+            raise ValueError
+
+        for child in self.children:
+            if not issubclass(DemandCharge, type(child.charge)):
+                raise ValueError
+
         return self
 
     @pa.check_types

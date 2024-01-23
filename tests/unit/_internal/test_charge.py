@@ -496,3 +496,132 @@ def test_consumption_charge_intersection_method(
     expected_intersection: ConsumptionCharge | None,
 ) -> None:
     assert (charge_a & charge_b) == expected_intersection
+
+
+@pytest.mark.parametrize(
+    "charge_a, charge_b, is_equal",
+    [
+        (
+            TariffCharge(
+                blocks=(
+                    TariffBlock(
+                        from_quantity=0,
+                        to_quantity=float("inf"),
+                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    ),
+                ),
+                unit=TariffUnit(
+                    metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
+                ),
+                reset_period=ConsumptionResetPeriod.ANNUALLY,
+            ),
+            TariffCharge(
+                blocks=(
+                    TariffBlock(
+                        from_quantity=0,
+                        to_quantity=float("inf"),
+                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    ),
+                ),
+                unit=TariffUnit(
+                    metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
+                ),
+                reset_period=ConsumptionResetPeriod.ANNUALLY,
+            ),
+            True,
+        ),
+        (  # different child blocks
+            TariffCharge(
+                blocks=(
+                    TariffBlock(
+                        from_quantity=0,
+                        to_quantity=float("inf"),
+                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    ),
+                ),
+                unit=TariffUnit(
+                    metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
+                ),
+                reset_period=ConsumptionResetPeriod.ANNUALLY,
+            ),
+            TariffCharge(
+                blocks=(
+                    TariffBlock(
+                        from_quantity=0,
+                        to_quantity=float("inf"),
+                        rate=TariffRate(currency=RateCurrency.AUD, value=2),
+                    ),
+                ),
+                unit=TariffUnit(
+                    metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
+                ),
+                reset_period=ConsumptionResetPeriod.ANNUALLY,
+            ),
+            False,
+        ),
+        (  # different unit directions
+            TariffCharge(
+                blocks=(
+                    TariffBlock(
+                        from_quantity=0,
+                        to_quantity=float("inf"),
+                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    ),
+                ),
+                unit=TariffUnit(
+                    metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
+                ),
+                reset_period=ConsumptionResetPeriod.ANNUALLY,
+            ),
+            TariffCharge(
+                blocks=(
+                    TariffBlock(
+                        from_quantity=0,
+                        to_quantity=float("inf"),
+                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    ),
+                ),
+                unit=TariffUnit(
+                    metric=Consumption.kWh, direction=TradeDirection.Export, convention=SignConvention.Passive
+                ),
+                reset_period=ConsumptionResetPeriod.ANNUALLY,
+            ),
+            False,
+        ),
+        (  # different reset_periods
+            TariffCharge(
+                blocks=(
+                    TariffBlock(
+                        from_quantity=0,
+                        to_quantity=float("inf"),
+                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    ),
+                ),
+                unit=TariffUnit(
+                    metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
+                ),
+                reset_period=ConsumptionResetPeriod.ANNUALLY,
+            ),
+            TariffCharge(
+                blocks=(
+                    TariffBlock(
+                        from_quantity=0,
+                        to_quantity=float("inf"),
+                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    ),
+                ),
+                unit=TariffUnit(
+                    metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
+                ),
+                reset_period=ConsumptionResetPeriod.DAILY,
+            ),
+            False,
+        ),
+    ],
+)
+def test_tariff_charge_hash(charge_a: TariffCharge, charge_b: TariffCharge, is_equal: bool) -> None:
+    assert (charge_a == charge_b) is is_equal
+    if is_equal:
+        assert hash(charge_a) == hash(charge_b)
+    else:
+        assert hash(charge_a) != hash(charge_b)

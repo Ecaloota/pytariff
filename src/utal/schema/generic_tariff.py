@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Generic, Optional
+from typing import Generic
 
 import pandera as pa
 from pandera.typing import DataFrame
@@ -18,7 +18,7 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
     A TariffCharge contains a tuple of TariffBlocks, each of which define the right-open interval
     of some unit over which a given TariffRate is to be applied."""
 
-    children: Optional[tuple[TariffInterval[MetricType], ...]] = None
+    children: tuple[TariffInterval[MetricType], ...]
 
     @pa.check_types
     def apply(

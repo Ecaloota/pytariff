@@ -3,7 +3,7 @@ from typing import Any, Optional
 import pytest
 from pydantic import ValidationError
 
-from utal._internal.block import ConsumptionBlock
+from utal._internal.block import ConsumptionBlock, TariffBlock
 from utal._internal.generic_types import Consumption
 from utal._internal.rate import TariffRate
 from utal._internal.unit import RateCurrency
@@ -213,3 +213,35 @@ def test_consumption_block_invalid_intersection(block_1: ConsumptionBlock, obj: 
 )
 def test_consumption_block_equality(block1: ConsumptionBlock, block2: ConsumptionBlock, is_equal: bool) -> None:
     assert (block1 == block2) is is_equal
+
+
+@pytest.mark.parametrize(
+    "block_a, block_b, is_equal",
+    [
+        (
+            TariffBlock(
+                rate=TariffRate(currency=RateCurrency.AUD, value=1.0), from_quantity=0.0, to_quantity=float("inf")
+            ),
+            TariffBlock(
+                rate=TariffRate(currency=RateCurrency.AUD, value=1.0), from_quantity=0.0, to_quantity=float("inf")
+            ),
+            True,
+        ),
+        (
+            TariffBlock(
+                rate=TariffRate(currency=RateCurrency.AUD, value=2.0), from_quantity=0.0, to_quantity=float("inf")
+            ),
+            TariffBlock(
+                rate=TariffRate(currency=RateCurrency.AUD, value=1.0), from_quantity=0.0, to_quantity=float("inf")
+            ),
+            False,
+        ),
+    ],
+)
+def test_tariff_block_hash(block_a: TariffBlock, block_b: TariffBlock, is_equal: bool) -> None:
+    if is_equal:
+        assert (block_a == block_b) is is_equal
+        assert hash(block_a) == hash(block_b)
+    else:
+        assert (block_a == block_b) is is_equal
+        assert hash(block_a) != hash(block_b)

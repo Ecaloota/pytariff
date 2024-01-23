@@ -78,6 +78,9 @@ class DaysApplied(BaseModel):
             raise NotImplementedError
         return self.day_types == other.day_types and self.holidays == other.holidays
 
+    def __hash__(self) -> int:
+        return hash(self.day_types)  # TODO this is not strictly correct, but avoids hashing of external library objs
+
     def day_types_equal(self, other: object) -> bool:
         """A weaker assertion of equality, for when equality between holidays is not important"""
         if not isinstance(other, DaysApplied):

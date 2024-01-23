@@ -1,4 +1,4 @@
-from typing import Generic
+from typing import Generic, Optional
 
 from pydantic import model_validator
 
@@ -12,6 +12,39 @@ class TariffInterval(AppliedInterval, Generic[MetricType]):
     associated with a single TariffCharge"""
 
     charge: TariffCharge[MetricType]
+
+    # TODO resolve the type error in line below
+    def __and__(self, other: "TariffInterval") -> Optional["TariffInterval"]:  # type: ignore
+        """The intersection between two TariffIntervals is the superclass intersection and
+        the intersection between self.charge and other.charge
+
+        If the superclass intersection is None, there can be no intersection between the TariffIntervals.
+        Likewise, if there is no charge intersection, there is no intersection between the TariffIntervals.
+        """
+
+        super_intersection = super().__and__(other)
+        if super_intersection is None:
+            return super_intersection
+
+        charge_intersection = self.charge & other.charge
+        if charge_intersection is None:
+            return charge_intersection
+
+        return TariffInterval(
+            start_time=super_intersection.start_time,
+            end_time=super_intersection.end_time,
+            days_applied=super_intersection.days_applied,
+            tzinfo=super_intersection.tzinfo,
+            charge=charge_intersection,
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TariffInterval):
+            return False
+        return super().__eq__(other) and self.charge == other.charge
+
+    def __hash__(self) -> int:
+        return super().__hash__() ^ hash(self.charge)
 
 
 class ConsumptionInterval(TariffInterval[Consumption]):

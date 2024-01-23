@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Generic, Optional, Any
+from typing import Generic, Optional
 
 from pydantic import model_validator
 from pydantic.dataclasses import dataclass
@@ -16,7 +16,7 @@ class TariffCharge(ABC, Generic[MetricType]):
     """Not to be used directly"""
 
     blocks: tuple[TariffBlock[MetricType], ...]
-    unit: Optional[TariffUnit[MetricType]]
+    unit: TariffUnit[MetricType]
     reset_period: Optional[ResetPeriod]
     method: UsageChargeMetric = UsageChargeMetric.mean
     resolution: str = "5T"  # TODO this should be one of a subset of valid pandas unit strings e.g. 5T
@@ -39,32 +39,14 @@ class TariffCharge(ABC, Generic[MetricType]):
             raise ValueError
         return self
 
-    def __and__(self, other: Any) -> Any:
-        raise NotImplementedError
-
-
-@dataclass
-class ConsumptionCharge(TariffCharge[Consumption]):
-    blocks: tuple[ConsumptionBlock, ...]
-    unit: Optional[ConsumptionUnit]
-    reset_period: Optional[ConsumptionResetPeriod]
-
-    @model_validator(mode="after")
-    def validate_blocks_are_consumption_blocks(self) -> "ConsumptionCharge":
-        if not all(isinstance(x, ConsumptionBlock) for x in self.blocks):
-            raise ValueError
-        return self
-
-    def __and__(self, other: "ConsumptionCharge") -> Optional["ConsumptionCharge"]:
-        if not isinstance(other, ConsumptionCharge):
-            raise ValueError
+    def __and__(self, other: "TariffCharge[MetricType]") -> "Optional[TariffCharge[MetricType]]":
+        """The intersection between two TariffCharges self and other is defined to be the overlap between
+        their child blocks iff self.unit == other.unit"""
 
         # The intersection between two blocks defined in different units is empty
         if self.unit != other.unit:
             return None
 
-        # I think a simple pair-wise comparison is valid here, if inefficient. Assuming no blocks in
-        # tuple(a, ...) or tuple(b, ...) overlap with themselves, it should be fine
         block_overlaps = []
         for block_a in self.blocks:
             for block_b in other.blocks:
@@ -78,6 +60,70 @@ class ConsumptionCharge(TariffCharge[Consumption]):
         if len(block_tuple) < 1:
             return None
 
+        # TODO note this will contain default data such as resolution, which is meaningless in this context
+        return TariffCharge(
+            blocks=block_tuple,
+            unit=self.unit,
+            reset_period=None,  # intersection between reset periods is ill-defined
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TariffCharge):
+            return False
+
+        return (
+            self.blocks == other.blocks
+            and self.unit == other.unit
+            and self.reset_period == other.reset_period
+            and self.method == other.method
+            and self.resolution == other.resolution
+            and self.window == other.window
+        )
+
+    def __hash__(self) -> int:
+        # Just some cumbersome XORs
+        return (
+            hash(self.blocks)
+            ^ hash(self.unit)
+            ^ hash(self.reset_period)
+            ^ hash(self.method)
+            ^ hash(self.resolution)
+            ^ hash(self.window)
+        )
+
+
+@dataclass
+class ConsumptionCharge(TariffCharge[Consumption]):
+    blocks: tuple[ConsumptionBlock, ...]
+    unit: ConsumptionUnit
+    reset_period: Optional[ConsumptionResetPeriod]
+
+    @model_validator(mode="after")
+    def validate_blocks_are_consumption_blocks(self) -> "ConsumptionCharge":
+        if not all(isinstance(x, ConsumptionBlock) for x in self.blocks):
+            raise ValueError
+        return self
+
+    def __and__(self, other: "TariffCharge[Consumption]") -> Optional["ConsumptionCharge"]:
+        """"""
+        # The intersection between two blocks defined in different units is empty
+        if self.unit != other.unit:
+            return None
+
+        block_overlaps = []
+        for block_a in self.blocks:
+            for block_b in other.blocks:
+                intersection = block_a & block_b
+                if intersection is not None:
+                    block_overlaps.append(intersection)
+
+        block_tuple = tuple(sorted(block_overlaps, key=lambda x: x.from_quantity))
+
+        # if no overlaps
+        if len(block_tuple) < 1:
+            return None
+
+        # TODO note this will contain default data such as resolution, which is meaningless in this context
         return ConsumptionCharge(
             blocks=block_tuple,
             unit=self.unit,
@@ -88,14 +134,39 @@ class ConsumptionCharge(TariffCharge[Consumption]):
 @dataclass
 class DemandCharge(TariffCharge[Demand]):
     blocks: tuple[DemandBlock, ...]
-    unit: Optional[DemandUnit]
-    reset_period: DemandResetPeriod
+    unit: DemandUnit
+    reset_period: Optional[DemandResetPeriod]
 
     @model_validator(mode="after")
     def validate_blocks_are_demand_blocks(self) -> "DemandCharge":
         if not all(isinstance(x, DemandBlock) for x in self.blocks):
             raise ValueError
         return self
+
+    def __and__(self, other: "TariffCharge[Demand]") -> Optional["DemandCharge"]:
+        # The intersection between two blocks defined in different units is empty
+        if self.unit != other.unit:
+            return None
+
+        block_overlaps = []
+        for block_a in self.blocks:
+            for block_b in other.blocks:
+                intersection = block_a & block_b
+                if intersection is not None:
+                    block_overlaps.append(intersection)
+
+        block_tuple = tuple(sorted(block_overlaps, key=lambda x: x.from_quantity))
+
+        # if no overlaps
+        if len(block_tuple) < 1:
+            return None
+
+        # TODO note this will contain default data such as resolution, which is meaningless in this context
+        return DemandCharge(
+            blocks=block_tuple,
+            unit=self.unit,
+            reset_period=None,  # intersection between reset periods is ill-defined
+        )
 
 
 @dataclass

@@ -1,101 +1,153 @@
-# TODO revisit this at some later date
+from datetime import datetime, time
+from typing import Any
+from zoneinfo import ZoneInfo
+from pydantic import ValidationError
 
-# from collections import defaultdict
-# from datetime import datetime, time
-# from zoneinfo import ZoneInfo
+import pytest
+from utal._internal.block import TariffBlock
+from utal._internal.charge import TariffCharge
+from utal._internal.day_type import DayType
+from utal._internal.days_applied import DaysApplied
+from utal._internal.generic_types import Demand, SignConvention, TradeDirection
+from utal._internal.period import DemandResetPeriod
+from utal._internal.rate import TariffRate
+from utal._internal.tariff_interval import TariffInterval
+from utal._internal.unit import RateCurrency, TariffUnit, UsageChargeMetric
 
-# import pytest
-
-# from utal._internal.block import ConsumptionBlock
-# from utal._internal.charge import ConsumptionCharge
-# from utal._internal.day_type import DayType
-# from utal._internal.days_applied import DaysApplied
-# from utal._internal.generic_types import Consumption, SignConvention, TradeDirection
-# from utal._internal.period import ConsumptionResetPeriod
-# from utal._internal.rate import TariffRate
-# from utal._internal.tariff_interval import ConsumptionInterval
-# from utal._internal.unit import ConsumptionUnit, RateCurrency
-
-# import pandas as pd
-
-# from utal.schema.single_rate_tariff import SingleRateTariff
+from utal.schema.single_rate_tariff import SingleRateTariff
 
 
-# def not_in(kwargs: defaultdict, key: str) -> bool:
-#     """Returns True if key is not present in kwargs and if kwargs[key] does not
-#     return None"""
-#     return not kwargs[key] and kwargs[key] is not None
+@pytest.mark.parametrize(
+    "children, raises",
+    [
+        (  # must have at least one tariff interval
+            (),
+            True,
+        ),
+        (  # Only one block per charge allowed
+            (
+                TariffInterval(
+                    start_time=time(0, 0),
+                    end_time=time(23, 59),
+                    days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
+                    tzinfo=ZoneInfo("UTC"),
+                    charge=TariffCharge(
+                        blocks=(
+                            TariffBlock(
+                                rate=TariffRate(currency=RateCurrency.AUD, value=1.0),
+                                from_quantity=0,
+                                to_quantity=100,
+                            ),
+                            TariffBlock(
+                                rate=TariffRate(currency=RateCurrency.AUD, value=2.0),
+                                from_quantity=100,
+                                to_quantity=float("inf"),
+                            ),
+                        ),
+                        unit=TariffUnit(
+                            metric=Demand.kW, direction=TradeDirection.Import, convention=SignConvention.Passive
+                        ),
+                        reset_period=DemandResetPeriod.DAILY,
+                        method=UsageChargeMetric.mean,
+                        resolution="5min",
+                        window=None,
+                    ),
+                ),
+            ),
+            True,
+        ),
+        (
+            (
+                TariffInterval(
+                    start_time=time(0, 0),
+                    end_time=time(23, 59),
+                    days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
+                    tzinfo=ZoneInfo("UTC"),
+                    charge=TariffCharge(
+                        blocks=(
+                            TariffBlock(
+                                rate=TariffRate(currency=RateCurrency.AUD, value=2.0),
+                                from_quantity=0,
+                                to_quantity=float("inf"),
+                            ),
+                        ),
+                        unit=TariffUnit(
+                            metric=Demand.kW, direction=TradeDirection.Import, convention=SignConvention.Passive
+                        ),
+                        reset_period=DemandResetPeriod.DAILY,
+                        method=UsageChargeMetric.mean,
+                        resolution="5min",
+                        window=None,
+                    ),
+                ),
+            ),
+            False,
+        ),
+        (  # two tariff intervals (each with one block) is allowed with opposite TradeDirections
+            (
+                TariffInterval(
+                    start_time=time(0, 0),
+                    end_time=time(23, 59),
+                    days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
+                    tzinfo=ZoneInfo("UTC"),
+                    charge=TariffCharge(
+                        blocks=(
+                            TariffBlock(
+                                rate=TariffRate(currency=RateCurrency.AUD, value=2.0),
+                                from_quantity=0,
+                                to_quantity=float("inf"),
+                            ),
+                        ),
+                        unit=TariffUnit(
+                            metric=Demand.kW, direction=TradeDirection.Import, convention=SignConvention.Passive
+                        ),
+                        reset_period=DemandResetPeriod.DAILY,
+                        method=UsageChargeMetric.mean,
+                        resolution="5min",
+                        window=None,
+                    ),
+                ),
+                TariffInterval(
+                    start_time=time(0, 0),
+                    end_time=time(23, 59),
+                    days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
+                    tzinfo=ZoneInfo("UTC"),
+                    charge=TariffCharge(
+                        blocks=(
+                            TariffBlock(
+                                rate=TariffRate(currency=RateCurrency.AUD, value=2.0),
+                                from_quantity=0,
+                                to_quantity=float("inf"),
+                            ),
+                        ),
+                        unit=TariffUnit(
+                            metric=Demand.kW, direction=TradeDirection.Export, convention=SignConvention.Passive
+                        ),
+                        reset_period=DemandResetPeriod.DAILY,
+                        method=UsageChargeMetric.mean,
+                        resolution="5min",
+                        window=None,
+                    ),
+                ),
+            ),
+            False,
+        ),
+    ],
+)
+def test_single_rate_tariff_construction(children: Any, raises: bool):
+    if raises:
+        with pytest.raises(ValidationError):
+            SingleRateTariff(
+                start=datetime(2023, 1, 1), end=datetime(2024, 1, 1), tzinfo=ZoneInfo("UTC"), children=children
+            )
+
+    else:
+        assert SingleRateTariff(
+            start=datetime(2023, 1, 1), end=datetime(2024, 1, 1), tzinfo=ZoneInfo("UTC"), children=children
+        )
 
 
-# @pytest.mark.parametrize(
-#     "kwargs, raises",
-#     [
-#         (defaultdict(bool, {}), False),
-#         (defaultdict(bool, {"charge": None}), True),  # charge of None is invalid
-#         (defaultdict(bool, {"children": None}), True),  # children = None is invalid for SingleRateTariff
-#         (defaultdict(bool, {"children": ["a", "b"]}), True),  # len(children) > 1 is invalid for SingleRateTariff
-#         (defaultdict(bool, {"children": "a"}), True),  # children must be ConsumptionIntervals
-#         (defaultdict(bool, {"charge": "a"}), True),  # children charges must be ConsumptionCharges
-#         (defaultdict(bool, {"charge": "a"}), True),  # children charges must be ConsumptionCharges
-#         (defaultdict(bool, {"blocks": None}), True),  # children charge blocks cannot be None
-#         (defaultdict(bool, {"blocks": "a"}), True),  # children charge blocks must be ConsumptionBlocks
-#         (defaultdict(bool, {"from_quantity": 1}), True),  # from_quantity in ConsumptionCharge Blocks must be 0
-#         (defaultdict(bool, {"to_quantity": 1}), True),  # to_quantity in ConsumptionCharge Blocks must be +inf
-#     ],
-# )
-# def test_single_rate_tariff_construction(kwargs, raises: bool):
-#     """"""
-
-#     def test() -> SingleRateTariff:
-#         # Create a default SingleRateTariff ConsumptionCharge
-#         DEFAULT_CHARGE = ConsumptionCharge(
-#             unit=ConsumptionUnit(
-#                 metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
-#             ),
-#             reset_period=None,
-#             blocks=(
-#                 ConsumptionBlock(
-#                     from_quantity=0 if not_in(kwargs, "from_quantity") else kwargs["from_quantity"],
-#                     to_quantity=float("inf") if not_in(kwargs, "to_quantity") else kwargs["to_quantity"],
-#                     rate=TariffRate(currency=RateCurrency.AUD, value=1),
-#                 ),
-#             )
-#             if not_in(kwargs, "blocks")
-#             else kwargs["blocks"],
-#         )
-
-#         # Create a default single child
-#         DEFAULT_CHILD = (
-#             ConsumptionInterval(
-#                 start_time=time(6) if not_in(kwargs, "start_time") else kwargs["start_time"],
-#                 end_time=time(7) if not_in(kwargs, "end_time") else kwargs["end_time"],
-#                 days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,))
-#                 if not_in(kwargs, "days_applied")
-#                 else kwargs["days_applied"],
-#                 tzinfo=ZoneInfo("UTC") if not_in(kwargs, "tzinfo") else kwargs["tzinfo"],
-#                 charge=DEFAULT_CHARGE if not_in(kwargs, "charge") else kwargs["charge"],
-#             ),
-#         )
-
-#         # Generate a default SingleRateTariff
-#         DEFAULT_TARIFF = SingleRateTariff(
-#             start=datetime(2023, 1, 1) if not_in(kwargs, "start") else kwargs["start"],  # given dt
-#             end=datetime(2023, 1, 1) if not_in(kwargs, "end") else kwargs["end"],
-#             tzinfo=ZoneInfo("UTC") if not_in(kwargs, "tzinfo") else kwargs["tzinfo"],
-#             children=DEFAULT_CHILD if not_in(kwargs, "children") else kwargs["children"],
-#             reset_period=ConsumptionResetPeriod.ANNUALLY,
-#         )
-
-#         return DEFAULT_TARIFF
-
-#     if raises:
-#         with pytest.raises(ValueError):
-#             test()
-
-#     else:
-#         test()
-
-
+# TODO move this to tests of GenericTariff
 # @pytest.mark.parametrize(
 #     "profile, import_cost_series, export_cost_series, billed_cost_series",
 #     [

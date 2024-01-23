@@ -179,3 +179,59 @@ def test_demand_interval_charges_must_be_demand_charges(charge: ConsumptionCharg
             charge=charge,
             tzinfo=timezone(timedelta(hours=1)),
         )
+
+
+@pytest.mark.parametrize(
+    "interval_a, interval_b, is_equal",
+    [
+        (
+            TariffInterval(
+                start_time=time(6),
+                end_time=time(12),
+                days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
+                charge=TariffCharge(
+                    blocks=(
+                        ConsumptionBlock(
+                            from_quantity=0,
+                            to_quantity=float("inf"),
+                            rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                        ),
+                    ),
+                    unit=TariffUnit(
+                        metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
+                    ),
+                    reset_period=ConsumptionResetPeriod.DAILY,
+                ),
+                tzinfo=timezone(timedelta(hours=1)),
+            ),
+            TariffInterval(
+                start_time=time(6),
+                end_time=time(12),
+                days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
+                charge=TariffCharge(
+                    blocks=(
+                        ConsumptionBlock(
+                            from_quantity=0,
+                            to_quantity=float("inf"),
+                            rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                        ),
+                    ),
+                    unit=TariffUnit(
+                        metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
+                    ),
+                    reset_period=ConsumptionResetPeriod.DAILY,
+                ),
+                tzinfo=timezone(timedelta(hours=1)),
+            ),
+            True,
+        ),
+    ],
+)
+def test_tariff_interval_hash(interval_a: TariffInterval, interval_b: TariffInterval, is_equal: bool) -> None:
+    assert (interval_a == interval_b) is is_equal
+    if is_equal:
+        assert hash(interval_a) == hash(interval_b)
+    else:
+        assert hash(interval_a) != hash(interval_b)
+
+    # TODO test the contrapositive

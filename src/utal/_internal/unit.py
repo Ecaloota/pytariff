@@ -17,6 +17,9 @@ class TariffUnit(ABC, Generic[MetricType]):
             raise ValueError
         return self.metric == other.metric and self.direction == other.direction
 
+    def __hash__(self) -> int:
+        return hash(self.metric) ^ hash(self.direction) ^ hash(self.convention)
+
 
 @dataclass
 class ConsumptionUnit(TariffUnit[Consumption]):

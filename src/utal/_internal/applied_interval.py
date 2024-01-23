@@ -137,6 +137,20 @@ class AppliedInterval(BaseModel):
             tzinfo=self.tzinfo,
         )
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, AppliedInterval):
+            return False
+
+        return (
+            self.start_time == other.start_time
+            and self.end_time == other.end_time
+            and self.days_applied == other.days_applied
+            and self.tzinfo == other.tzinfo
+        )
+
+    def __hash__(self) -> int:
+        return hash(self.start_time) ^ hash(self.end_time) ^ hash(self.days_applied) ^ hash(self.tzinfo)
+
     def _is_empty(self) -> bool:
         """An AppliedInterval is empty if the following are all True:
         (a) self.start_time is None

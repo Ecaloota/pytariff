@@ -23,7 +23,7 @@ class SingleRateTariff(GenericTariff, Generic[MetricType]):
     @model_validator(mode="after")
     def validate_single_rate_tariff(self) -> "SingleRateTariff":
         # Assert we have at least one and at most 2 TariffIntervals
-        if len(self.children) != 1 or len(self.children) != 2:
+        if not (1 <= len(self.children) <= 2):
             raise ValueError
 
         for child in self.children:

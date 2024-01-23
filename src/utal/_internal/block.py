@@ -60,6 +60,9 @@ class TariffBlock(ABC, Generic[MetricType]):
             and self.rate == other.rate
         )
 
+    def __hash__(self) -> int:
+        return hash(self.rate) ^ hash(self.from_quantity) ^ hash(self.to_quantity)
+
 
 @dataclass
 class DemandBlock(TariffBlock[Demand]):
@@ -82,6 +85,9 @@ class DemandBlock(TariffBlock[Demand]):
             and self.rate == other.rate
         )
 
+    def __hash__(self) -> int:
+        return super().__hash__()
+
 
 @dataclass
 class ConsumptionBlock(TariffBlock[Consumption]):
@@ -103,3 +109,6 @@ class ConsumptionBlock(TariffBlock[Consumption]):
             and self.to_quantity == other.to_quantity
             and self.rate == other.rate
         )
+
+    def __hash__(self) -> int:
+        return super().__hash__()
