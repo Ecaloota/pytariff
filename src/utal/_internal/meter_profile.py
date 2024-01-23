@@ -90,14 +90,14 @@ def resample(df: DataFrame[MeterProfileSchema]) -> DataFrame[MeterProfileSchema]
     # get the index keys for each unique value in the resample.groups dict
     # these will tell us which keys were anchored against in the resample
     inverted: dict[list[Hashable], list[Hashable]] = {}
-    for k, v in df.resample("1T").groups.items():  # TODO wrong, we want to resample out beyond last anchor too
+    for k, v in df.resample("1min").groups.items():  # TODO wrong, we want to resample out beyond last anchor too
         if v in inverted:
             inverted[v].append(k)
         else:
             inverted[v] = [k]
 
     # replace nan with zero in resampled object
-    resampled = df.resample("1T").asfreq().fillna(0)
+    resampled = df.resample("1min").asfreq().fillna(0)
 
     # take mean of df slice for each slice in the index keys found before
     for k, v in inverted.items():  # type: ignore
