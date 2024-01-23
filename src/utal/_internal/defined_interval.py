@@ -1,6 +1,7 @@
 from datetime import date, datetime, time, timezone
 from typing import Optional
 from zoneinfo import ZoneInfo
+import pandas as pd
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
@@ -87,7 +88,7 @@ class DefinedInterval(BaseModel):
                         raise ValueError
         return self
 
-    def __contains__(self, other: datetime | date, tzinfo: Optional[timezone | ZoneInfo] = None) -> bool:
+    def __contains__(self, other: datetime | date | pd.Timestamp, tzinfo: Optional[timezone | ZoneInfo] = None) -> bool:
         """
         A DefinedInterval contains a datetime iff the datetime is within
             self.start <= other <= self.end.
@@ -101,6 +102,9 @@ class DefinedInterval(BaseModel):
 
         if helper.is_date_type(other) and tzinfo is None:
             raise ValueError
+
+        elif isinstance(other, date) and isinstance(other, pd.Timestamp):
+            other: pd.Timestamp = other.to_pydatetime()  # type: ignore
 
         elif isinstance(other, date):
             other = datetime.combine(date=other, time=time(0, 0, 0), tzinfo=tzinfo)

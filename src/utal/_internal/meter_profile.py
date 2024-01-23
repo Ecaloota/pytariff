@@ -7,6 +7,8 @@ from pandera import dtypes
 from pandera.engines import pandas_engine
 from pandera.typing import Index, DataFrame
 
+from utal._internal.charge import TariffCharge
+
 
 @pandas_engine.Engine.register_dtype()
 @dtypes.immutable
@@ -81,7 +83,7 @@ class TariffCostSchema(MeterProfileSchema):
 
 
 @pa.check_types
-def resample(df: DataFrame[MeterProfileSchema]) -> DataFrame[MeterProfileSchema]:
+def resample(df: DataFrame[MeterProfileSchema], charge: TariffCharge) -> DataFrame[MeterProfileSchema]:
     """"""
 
     if len(df.index) < 2:
@@ -104,6 +106,15 @@ def resample(df: DataFrame[MeterProfileSchema]) -> DataFrame[MeterProfileSchema]
         resampled.loc[inverted[k]] = np.sum(resampled.profile.loc[inverted[k]]) / len(v)  # type: ignore
 
     # keep the cumulative profile, we will need it
+    # NOTE TODO we need to generalise this to allow for cumulative sums to be reset
+    # at the start of reset_period(s)
+    # One way to do this would be to keep track of the integer ID of the current reset_period..?
     resampled["cum_profile"] = resampled.profile.cumsum()
 
     return resampled  # type: ignore
+
+
+# TODO prescribe the returned dict more strictly: it should have specific keys
+@pa.check_types
+def meter_statistics(df: DataFrame[MeterProfileSchema], charge: TariffCharge) -> dict:
+    return {}

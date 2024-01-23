@@ -1,3 +1,4 @@
+from datetime import date, datetime, time
 from typing import Generic, Optional
 
 from pydantic import model_validator
@@ -45,6 +46,9 @@ class TariffInterval(AppliedInterval, Generic[MetricType]):
 
     def __hash__(self) -> int:
         return super().__hash__() ^ hash(self.charge)
+
+    def __contains__(self, other: time | date | datetime) -> bool:
+        return super().__contains__(other)
 
 
 class ConsumptionInterval(TariffInterval[Consumption]):

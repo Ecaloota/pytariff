@@ -63,6 +63,10 @@ class TariffBlock(ABC, Generic[MetricType]):
     def __hash__(self) -> int:
         return hash(self.rate) ^ hash(self.from_quantity) ^ hash(self.to_quantity)
 
+    def __contains__(self, other: float) -> bool:
+        # TODO test the equality condition on to_quantity
+        return self.from_quantity <= other < self.to_quantity
+
 
 @dataclass
 class DemandBlock(TariffBlock[Demand]):

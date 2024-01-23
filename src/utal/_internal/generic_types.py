@@ -15,6 +15,7 @@ class Demand(str, Enum):
 class TradeDirection(str, Enum):
     Import = "Import"
     Export = "Export"
+    _null = "_null_direction"  # when providing meter profiles, nonsensical to provide import/export
 
 
 class SignConvention(str, Enum):
