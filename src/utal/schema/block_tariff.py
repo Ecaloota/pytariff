@@ -19,7 +19,13 @@ class BlockTariff(GenericTariff[MetricType]):
 
     @model_validator(mode="after")
     def validate_block_tariff(self) -> "BlockTariff":
-        # TODO
+        if len(self.children) < 1:
+            raise ValueError
+
+        for child in self.children:
+            if len(child.charge.blocks) < 2:
+                raise ValueError
+
         return self
 
     @pa.check_types

@@ -27,30 +27,11 @@ class TariffBlock(ABC, Generic[MetricType]):
         return self
 
     def __and__(self, other: "TariffBlock[MetricType]") -> "Optional[TariffBlock[MetricType]]":
-        raise NotImplementedError
-
-
-@dataclass
-class DemandBlock(TariffBlock[Demand]):
-    ...
-
-    def __and__(self, other: "TariffBlock[Demand]") -> "Optional[DemandBlock]":
-        """TODO"""
-        raise NotImplementedError
-
-
-@dataclass
-class ConsumptionBlock(TariffBlock[Consumption]):
-    ...
-
-    def __and__(self, other: "TariffBlock[Consumption]") -> Optional["ConsumptionBlock"]:
-        """An intersection between two ConsumptionBlocks [a, b) and [c, d) is defined as the
-        ConsumptionBlock with [max(a, c), min(b, d)).
-
-        The intersection between any two TariffRates is always None.
+        """An intersection between two TariffBlocks [a, b) and [c, d) is defined as the
+        TariffBlock with [max(a, c), min(b, d)). The intersection between any two TariffRates is
+        always None.
         """
-
-        if not isinstance(other, ConsumptionBlock):
+        if not isinstance(other, TariffBlock):
             raise ValueError
 
         from_intersection = max(self.from_quantity, other.from_quantity)
@@ -64,10 +45,54 @@ class ConsumptionBlock(TariffBlock[Consumption]):
         if to_intersection < from_intersection:
             return None
 
-        return ConsumptionBlock(
+        return TariffBlock(
             from_quantity=from_intersection,
             to_quantity=to_intersection,
             rate=None,
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TariffBlock):
+            raise NotImplementedError
+        return (
+            self.from_quantity == other.from_quantity
+            and self.to_quantity == other.to_quantity
+            and self.rate == other.rate
+        )
+
+
+@dataclass
+class DemandBlock(TariffBlock[Demand]):
+    ...
+
+    def __and__(self, other: "TariffBlock[Demand]") -> "Optional[DemandBlock]":
+        generic_block = super().__and__(other)
+        if generic_block is None:
+            return generic_block
+        return DemandBlock(
+            from_quantity=generic_block.from_quantity, to_quantity=generic_block.to_quantity, rate=generic_block.rate
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, DemandBlock):
+            raise NotImplementedError
+        return (
+            self.from_quantity == other.from_quantity
+            and self.to_quantity == other.to_quantity
+            and self.rate == other.rate
+        )
+
+
+@dataclass
+class ConsumptionBlock(TariffBlock[Consumption]):
+    ...
+
+    def __and__(self, other: "TariffBlock[Consumption]") -> Optional["ConsumptionBlock"]:
+        generic_block = super().__and__(other)
+        if generic_block is None:
+            return generic_block
+        return ConsumptionBlock(
+            from_quantity=generic_block.from_quantity, to_quantity=generic_block.to_quantity, rate=generic_block.rate
         )
 
     def __eq__(self, other: object) -> bool:
