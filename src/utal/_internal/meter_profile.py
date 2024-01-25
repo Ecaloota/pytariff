@@ -1,4 +1,5 @@
-from typing import Hashable, Iterable, Union
+from datetime import datetime
+from typing import Hashable, Iterable, Literal, Union
 
 import numpy as np
 import pandas as pd
@@ -8,6 +9,8 @@ from pandera.engines import pandas_engine
 from pandera.typing import Index, DataFrame
 
 from utal._internal.charge import TariffCharge
+from utal._internal.generic_types import SignConvention
+from utal._internal.unit import TariffUnit
 
 
 @pandas_engine.Engine.register_dtype()
@@ -83,38 +86,77 @@ class TariffCostSchema(MeterProfileSchema):
 
 
 @pa.check_types
-def resample(df: DataFrame[MeterProfileSchema], charge: TariffCharge) -> DataFrame[MeterProfileSchema]:
-    """"""
+def resample(
+    df: DataFrame[MeterProfileSchema], charge: TariffCharge, min_resolution: str = "1min"
+) -> MeterProfileSchema:
+    """
+    Resample the provided DataFrame, first by sampling at min_resolution and interpolating
+    the result, then sampling at the provided charge.resolution.
+
+    NOTE This approach is undesirable when the minimum resolution (default = '1min') is less than the implied resolution
+    of the provided DataFrame.
+    """
 
     if len(df.index) < 2:
         raise ValueError
 
-    # get the index keys for each unique value in the resample.groups dict
-    # these will tell us which keys were anchored against in the resample
-    inverted: dict[list[Hashable], list[Hashable]] = {}
-    for k, v in df.resample("1min").groups.items():  # TODO wrong, we want to resample out beyond last anchor too
-        if v in inverted:
-            inverted[v].append(k)
-        else:
-            inverted[v] = [k]
+    min_resolution_df = df.resample(min_resolution).interpolate(method="linear")
+    resampled = min_resolution_df.resample(charge.resolution).mean()
+    new_df = MeterProfileSchema(resampled)
 
-    # replace nan with zero in resampled object
-    resampled = df.resample("1min").asfreq().fillna(0)
-
-    # take mean of df slice for each slice in the index keys found before
-    for k, v in inverted.items():  # type: ignore
-        resampled.loc[inverted[k]] = np.sum(resampled.profile.loc[inverted[k]]) / len(v)  # type: ignore
-
-    # keep the cumulative profile, we will need it
-    # NOTE TODO we need to generalise this to allow for cumulative sums to be reset
-    # at the start of reset_period(s)
-    # One way to do this would be to keep track of the integer ID of the current reset_period..?
-    resampled["cum_profile"] = resampled.profile.cumsum()
-
-    return resampled  # type: ignore
+    return new_df
 
 
 # TODO prescribe the returned dict more strictly: it should have specific keys
 @pa.check_types
 def meter_statistics(df: DataFrame[MeterProfileSchema], charge: TariffCharge) -> dict:
     return {}
+
+
+@pa.check_types
+def transform(
+    df: DataFrame[MeterProfileSchema], charge: TariffCharge, billing_start: datetime, meter_unit: TariffUnit
+) -> DataFrame[MeterProfileSchema]:
+    """Calculate properties of the provided dataframe that are useful for tariff application.
+    Specifically, divide the profile into _import and _export quantities, and calculate cumulative
+    profiles for each, such that it is possible to determine costings for the given charge."""
+
+    def is_export(value: float) -> bool:
+        is_passive_export = meter_unit.convention == SignConvention.Passive and value > 0
+        is_active_export = meter_unit.convention == SignConvention.Active and value < 0
+        return is_passive_export or is_active_export
+
+    def is_import(value: float) -> bool:
+        is_passive_import = meter_unit.convention == SignConvention.Passive and value < 0
+        is_active_import = meter_unit.convention == SignConvention.Active and value > 0
+        return is_passive_import or is_active_import
+
+    def calculate_reset_periods(start_datetime: datetime) -> DataFrame:
+        if charge.reset_period:
+            df["reset_periods"] = ((df.index - start_datetime) / pd.to_timedelta(charge.reset_period.value)).astype(int)
+        return df
+
+    def calculate_reset_cumsum(col_name: str) -> DataFrame:
+        df[f"{col_name}_cumsum"] = df.groupby((df["reset_periods"] != df["reset_periods"].shift()).cumsum())[
+            col_name
+        ].cumsum()
+        return df
+
+    def _import_sign() -> Literal[-1, 1]:
+        return -1 if meter_unit.convention == SignConvention.Passive else 1
+
+    def _export_sign() -> Literal[-1, 1]:
+        return -1 if meter_unit.convention == SignConvention.Active else 1
+
+    # TODO this whole func needs work -- not robust
+
+    df["_import_profile"] = df["profile"].apply(lambda x: _import_sign() * x if is_import(x) else 0)
+    df["_export_profile"] = df["profile"].apply(lambda x: _export_sign() * x if is_export(x) else 0)
+
+    df = calculate_reset_periods(billing_start)
+    df = calculate_reset_cumsum("_import_profile")
+    df = calculate_reset_cumsum("_export_profile")
+
+    return df
+
+    # resampled["cum_profile"] = resampled.profile.cumsum()

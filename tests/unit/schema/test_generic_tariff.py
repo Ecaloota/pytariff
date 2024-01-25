@@ -70,7 +70,7 @@ def test_generic_tariff_valid_construction(DEFAULT_CONSUMPTION_BLOCK):
         ),
     ],
 )
-def test_flat_consumption_tariff_apply(profile, import_cost_series, export_cost_series, billed_cost_series):
+def test_generic_tariff_apply(profile, import_cost_series, export_cost_series, billed_cost_series):
     """"""
 
     DEFAULT_CHARGE = TariffCharge(

@@ -1,11 +1,12 @@
 from datetime import date, datetime, timezone
 from typing import Generic, Optional
 from zoneinfo import ZoneInfo
+import pandas as pd
 
 import pandera as pa
 from pandera.typing import DataFrame
 from utal._internal.defined_interval import DefinedInterval
-from utal._internal.generic_types import MetricType
+from utal._internal.generic_types import MetricType, SignConvention
 from utal._internal.meter_profile import MeterProfileSchema, TariffCostSchema, meter_statistics, resample
 from utal._internal.tariff_interval import TariffInterval
 from utal._internal.unit import TariffUnit
@@ -48,17 +49,40 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
         # so we need to resample potentially once for each unique set of these parameters?
 
         for child in self.children:
-            if child.charge.unit != profile_unit:
-                # TODO return zeroed charge_profile -- no charge can be levied on different units
+            if child.charge.unit.metric != profile_unit.metric:
+                # TODO return zeroed charge_profile -- no charge can be levied on different metrics
                 pass
 
+            # TODO verify sign parity here, this is just a filler
+            # sign_parity = 1 if profile_unit.convention == SignConvention.Passive else -1
+
+            # resample the meter profile given charge information
             charge_profile = resample(meter_profile, child.charge)
+
+            # calculate the cumulative profile including reset_period tracking given charge information
+            # also split the profile into _import and _export quantities so we can determine cost sign for given charge
+            charge_profile = transform(charge_profile, child.charge, billing_start, profile_unit)
+
+            # calculate stats for original meter profile given charge resolution. keep this information so we know
+            # how to apply demand charges, for example
             charge_statistics = meter_statistics(meter_profile, child.charge)
+
+            # The charge map denotes whether the charge profile indices are contained within the meter profile given
             charge_map = charge_profile.index.map(self.__contains__)
+            # NOTE the charge used to generate the charge_map has an uuid associated with it
 
             for block in child.charge.blocks:
                 block_map = charge_profile.cum_profile.map(block.__contains__)
-                # where both charge_map and block map == 1, cost is block rate
+                # NOTE the block used to generate the block_map has an uuid associated with it
+
+                # Where both charge_map and block map are True, cost at index is block rate
+                # TODO work out the correct types here
+                charge_profile.loc[charge_map & block_map, "foo"] = block.rate.value  # type: ignore
+
+                # We can identify this map identifier by the combination of the:
+                # charge uuid + block uuid = 64 chars
+                # which pseudo-uniquely (~1/(billion**2)) identifies the combination used to assign the rate
+                print("foo")
 
             # TODO find a way to vectorise the value mapping onto a dataframe...
             # each time in the charge_profile index maps to exactly one rate in the current charge

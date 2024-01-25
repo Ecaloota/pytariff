@@ -1,6 +1,5 @@
-from abc import ABC
-from typing import Generic
-
+from datetime import datetime, time
+from typing import Literal, Optional
 from pydantic.dataclasses import dataclass
 
 from utal._internal.generic_types import MetricType
@@ -8,11 +7,9 @@ from utal._internal.unit import RateCurrency
 
 
 @dataclass
-class TariffRate(ABC, Generic[MetricType]):
+class TariffRate:
     """A rate is a value in some registered currency. It has no meaning independent of a parent
     TariffBlock.unit
-
-    Not to be used directly
     """
 
     currency: RateCurrency
@@ -20,6 +17,30 @@ class TariffRate(ABC, Generic[MetricType]):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TariffRate):
+            raise ValueError
+        return self.currency == other.currency and self.value == other.value
+
+    def __hash__(self) -> int:
+        return hash(self.currency) ^ hash(self.value)
+
+
+# TODO test this
+@dataclass
+class MarketRate:
+    """A MarketRate is a TariffRate defined with a default currency of _null and a value
+    of None. The value of a MarketRate tariff is determined on-the-fly when applied to
+    MeterData.
+    """
+
+    currency: RateCurrency = RateCurrency._null
+    value: float | None = None
+
+    def get_value(self, t: datetime) -> Optional[float]:
+        # TODO
+        raise NotImplementedError
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, MarketRate):
             raise ValueError
         return self.currency == other.currency and self.value == other.value
 

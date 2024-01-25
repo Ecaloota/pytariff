@@ -1,24 +1,26 @@
 from abc import ABC
-from typing import Generic, Optional
+from typing import Optional
+from uuid import uuid4
 
-from pydantic import Field, model_validator
+from pydantic import UUID4, Field, model_validator
 from pydantic.dataclasses import dataclass
 
-from utal._internal.generic_types import Consumption, Demand, MetricType
-from utal._internal.rate import TariffRate
+from utal._internal.rate import MarketRate, TariffRate
 
 
 @dataclass
-class TariffBlock(ABC, Generic[MetricType]):
+class TariffBlock(ABC):
     """Not to be used directly.
 
     TariffBlocks are right-open intervals over [from_quantity, to_quantity) defined for some unit
     and associated with a rate.
     """
 
-    rate: Optional[TariffRate[MetricType]]
+    rate: Optional[TariffRate | MarketRate]
     from_quantity: float = Field(ge=0)
     to_quantity: float = Field(gt=0)
+
+    uuid: UUID4 = uuid4()
 
     @model_validator(mode="after")  # type: ignore
     def assert_from_lt_to(self) -> "TariffBlock":
@@ -26,7 +28,7 @@ class TariffBlock(ABC, Generic[MetricType]):
             raise ValueError
         return self
 
-    def __and__(self, other: "TariffBlock[MetricType]") -> "Optional[TariffBlock[MetricType]]":
+    def __and__(self, other: "TariffBlock") -> "Optional[TariffBlock]":
         """An intersection between two TariffBlocks [a, b) and [c, d) is defined as the
         TariffBlock with [max(a, c), min(b, d)). The intersection between any two TariffRates is
         always None.
@@ -69,10 +71,10 @@ class TariffBlock(ABC, Generic[MetricType]):
 
 
 @dataclass
-class DemandBlock(TariffBlock[Demand]):
+class DemandBlock(TariffBlock):
     ...
 
-    def __and__(self, other: "TariffBlock[Demand]") -> "Optional[DemandBlock]":
+    def __and__(self, other: "TariffBlock") -> "Optional[DemandBlock]":
         generic_block = super().__and__(other)
         if generic_block is None:
             return generic_block
@@ -94,10 +96,10 @@ class DemandBlock(TariffBlock[Demand]):
 
 
 @dataclass
-class ConsumptionBlock(TariffBlock[Consumption]):
+class ConsumptionBlock(TariffBlock):
     ...
 
-    def __and__(self, other: "TariffBlock[Consumption]") -> Optional["ConsumptionBlock"]:
+    def __and__(self, other: "TariffBlock") -> Optional["ConsumptionBlock"]:
         generic_block = super().__and__(other)
         if generic_block is None:
             return generic_block

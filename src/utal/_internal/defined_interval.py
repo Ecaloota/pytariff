@@ -1,9 +1,10 @@
 from datetime import date, datetime, time, timezone
 from typing import Optional
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 import pandas as pd
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import UUID4, BaseModel, ConfigDict, model_validator
 
 from utal import helper
 from utal._internal.applied_interval import AppliedInterval
@@ -23,6 +24,8 @@ class DefinedInterval(BaseModel):
     end: datetime | date
     tzinfo: Optional[timezone | ZoneInfo] = None
     children: Optional[tuple[AppliedInterval, ...]] = None
+
+    uuid: UUID4 = uuid4()
 
     @model_validator(mode="after")
     def validate_model_is_aware(self) -> "DefinedInterval":

@@ -1,7 +1,8 @@
 from abc import ABC
 from typing import Generic, Optional
+from uuid import uuid4
 
-from pydantic import model_validator
+from pydantic import UUID4, model_validator
 from pydantic.dataclasses import dataclass
 
 
@@ -15,12 +16,14 @@ from utal._internal.unit import ConsumptionUnit, DemandUnit, TariffUnit, UsageCh
 class TariffCharge(ABC, Generic[MetricType]):
     """Not to be used directly"""
 
-    blocks: tuple[TariffBlock[MetricType], ...]
+    blocks: tuple[TariffBlock, ...]
     unit: TariffUnit[MetricType]
     reset_period: Optional[ResetPeriod]
     method: UsageChargeMetric = UsageChargeMetric.mean
     resolution: str = "5T"  # TODO this should be one of a subset of valid pandas unit strings e.g. 5T
     window: Optional[str] = None  # as above. window is only relevant when method = rolling_mean
+
+    uuid: UUID4 = uuid4()
 
     @model_validator(mode="after")
     def validate_blocks_cannot_overlap(self) -> "TariffCharge":

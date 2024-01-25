@@ -105,18 +105,6 @@ def test_tariff_charge_valid_construction():
             None,
             True,
         ),
-        (
-            (  # parameterized generics can't be used in the isinstance validation check
-                TariffBlock[Consumption](
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
-                    from_quantity=0,
-                    to_quantity=100,
-                ),
-            ),
-            ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive),
-            None,
-            True,
-        ),
         (  # consumption charge cannot contain DemandUnit
             (
                 ConsumptionBlock(
