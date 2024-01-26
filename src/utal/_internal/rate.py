@@ -1,8 +1,7 @@
-from datetime import datetime, time
-from typing import Literal, Optional
+from datetime import datetime
+from typing import Any
 from pydantic.dataclasses import dataclass
 
-from utal._internal.generic_types import MetricType
 from utal._internal.unit import RateCurrency
 
 
@@ -23,6 +22,9 @@ class TariffRate:
     def __hash__(self) -> int:
         return hash(self.currency) ^ hash(self.value)
 
+    def get_value(self, *args: Any) -> float:
+        return self.value
+
 
 # TODO test this
 @dataclass
@@ -32,10 +34,11 @@ class MarketRate:
     MeterData.
     """
 
+    rate_lookup: dict[datetime, float]
     currency: RateCurrency = RateCurrency._null
     value: float | None = None
 
-    def get_value(self, t: datetime) -> Optional[float]:
+    def get_value(self, t: datetime) -> float:
         # TODO
         raise NotImplementedError
 

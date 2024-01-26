@@ -12,7 +12,7 @@ from utal._internal.period import ConsumptionResetPeriod, DemandResetPeriod
 from utal._internal.rate import TariffRate
 
 from utal._internal.tariff_interval import ConsumptionInterval, DemandInterval
-from utal._internal.unit import ConsumptionUnit, DemandUnit, RateCurrency, UsageChargeMetric
+from utal._internal.unit import ConsumptionUnit, DemandUnit, RateCurrency, UsageChargeMethod
 from utal.schema.demand_tariff import DemandTariff
 
 
@@ -44,7 +44,7 @@ from utal.schema.demand_tariff import DemandTariff
                             metric=Demand.kW, direction=TradeDirection.Import, convention=SignConvention.Passive
                         ),
                         reset_period=DemandResetPeriod.DAILY,
-                        method=UsageChargeMetric.mean,
+                        method=UsageChargeMethod.mean,
                         resolution="5min",
                         window=None,
                     ),
@@ -76,7 +76,7 @@ from utal.schema.demand_tariff import DemandTariff
                             metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                         ),
                         reset_period=ConsumptionResetPeriod.DAILY,
-                        method=UsageChargeMetric.mean,
+                        method=UsageChargeMethod.mean,
                         resolution="5min",
                         window=None,
                     ),

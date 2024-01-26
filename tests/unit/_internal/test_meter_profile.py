@@ -178,17 +178,18 @@ def test_meter_profile_schema_resample_method(
 
 
 @pytest.mark.parametrize(
-    "data, charge, billing_start, meter_unit, exp_import_profile, exp_export_profile, exp_cumsum_import, exp_cumsum_export",
+    "data, charge, billing_start, meter_unit, exp_import_profile, exp_export_profile, exp_cumsum_import, exp_cumsum_export, exp_import_max, exp_export_max",  # noqa
     [
-        (
+        (  # check basic usage; assert that import and export profiles are given the appropriate sign
+            # and that the cumulative profiles are being calculated correctly
             pd.DataFrame(
-                index=[
-                    pd.Timestamp(year=2023, month=1, day=1, hour=0, minute=0, tzinfo=ZoneInfo("UTC"), unit="ns"),
-                    pd.Timestamp(year=2023, month=1, day=1, hour=0, minute=1, tzinfo=ZoneInfo("UTC"), unit="ns"),
-                    pd.Timestamp(year=2023, month=1, day=1, hour=0, minute=2, tzinfo=ZoneInfo("UTC"), unit="ns"),
-                    pd.Timestamp(year=2023, month=1, day=1, hour=0, minute=3, tzinfo=ZoneInfo("UTC"), unit="ns"),
-                    pd.Timestamp(year=2023, month=1, day=1, hour=0, minute=4, tzinfo=ZoneInfo("UTC"), unit="ns"),
-                ],
+                index=pd.date_range(
+                    start="2023-01-01T00:00:00",
+                    end="2023-01-01T00:05:00",
+                    tz=ZoneInfo("UTC"),
+                    freq="1min",
+                    inclusive="left",
+                ),
                 data={"profile": [0.0, 1.0, -1.0, 1.0, 0.0]},
             ),
             mock.Mock(spec=TariffCharge, reset_period=ConsumptionResetPeriod.DAILY),
@@ -198,6 +199,72 @@ def test_meter_profile_schema_resample_method(
             [0.0, 1.0, 0.0, 1.0, 0.0],
             [0.0, 0.0, 1.0, 1.0, 1.0],
             [0.0, 1.0, 1.0, 2.0, 2.0],
+            [1.0, 1.0, 1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0, 1.0, 1.0],
+        ),
+        (  # verify that the cumulative profiles are reset according to the provided reset_period
+            pd.DataFrame(
+                index=pd.date_range(
+                    start="2023-01-01T00:00:00",
+                    end="2023-01-04T00:00:00",
+                    tz=ZoneInfo("UTC"),
+                    freq="1h",
+                    inclusive="left",
+                ),
+                data={"profile": np.tile(np.array([0.0] * 8 + [1.0] * 8 + [-1.0] * 8), 3)},
+            ),
+            mock.Mock(spec=TariffCharge, reset_period=ConsumptionResetPeriod.DAILY),
+            datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")),
+            mock.Mock(spec=TariffUnit, convention=SignConvention.Passive),
+            list(np.tile(np.array([0.0] * 8 + [0.0] * 8 + [1.0] * 8), 3)),
+            list(np.tile(np.array([0.0] * 8 + [1.0] * 8 + [0.0] * 8), 3)),
+            list(np.tile(np.array([0.0] * 8 + [0.0] * 8 + list(np.arange(1, 9))), 3)),
+            list(np.tile(np.array([0.0] * 8 + list(np.arange(1, 9)) + [8.0] * 8), 3)),
+            list(np.array([1.0] * 72)),
+            list(np.array([1.0] * 72)),
+        ),
+        (  # verify that the import and export columns are switched relative to the
+            # first example when the SignConvention of the MeterProfile is set to Active
+            pd.DataFrame(
+                index=pd.date_range(
+                    start="2023-01-01T00:00:00",
+                    end="2023-01-01T00:05:00",
+                    tz=ZoneInfo("UTC"),
+                    freq="1min",
+                    inclusive="left",
+                ),
+                data={"profile": [0.0, 1.0, -1.0, 1.0, 0.0]},
+            ),
+            mock.Mock(spec=TariffCharge, reset_period=ConsumptionResetPeriod.DAILY),
+            datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")),
+            mock.Mock(spec=TariffUnit, convention=SignConvention.Active),
+            [0.0, 1.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0, 0.0],
+            [0.0, 1.0, 1.0, 2.0, 2.0],
+            [0.0, 0.0, 1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0, 1.0, 1.0],
+            [1.0, 1.0, 1.0, 1.0, 1.0],
+        ),
+        (  # verify that the import and export max columns are calculated correctly
+            pd.DataFrame(
+                index=pd.date_range(
+                    start="2023-01-01T00:00:00",
+                    end="2023-01-04T00:00:00",
+                    tz=ZoneInfo("UTC"),
+                    freq="1h",
+                    inclusive="left",
+                ),
+                data={"profile": np.tile(np.array([0.0] * 8 + [5.0] * 8 + [-1.0] * 8), 3)},
+            ),
+            mock.Mock(spec=TariffCharge, reset_period=ConsumptionResetPeriod.DAILY),
+            datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")),
+            mock.Mock(spec=TariffUnit, convention=SignConvention.Passive),
+            list(np.tile(np.array([0.0] * 8 + [0.0] * 8 + [1.0] * 8), 3)),
+            list(np.tile(np.array([0.0] * 8 + [5.0] * 8 + [0.0] * 8), 3)),
+            list(np.tile(np.array([0.0] * 8 + [0.0] * 8 + list(np.arange(1, 9))), 3)),
+            list(np.tile(np.array([0.0] * 8 + list(np.arange(5, 45, 5)) + [40.0] * 8), 3)),
+            list(np.array([1.0] * 72)),
+            list(np.array([5.0] * 72)),
         ),
     ],
 )
@@ -210,6 +277,8 @@ def test_meter_profile_schema_transform_method(
     exp_export_profile: list[float],
     exp_cumsum_import: list[float],
     exp_cumsum_export: list[float],
+    exp_import_max: list[float],
+    exp_export_max: list[float],
 ) -> None:
     """TODO"""
 
@@ -219,3 +288,5 @@ def test_meter_profile_schema_transform_method(
     assert list(transformed._export_profile) == exp_export_profile
     assert list(transformed._import_profile_cumsum) == exp_cumsum_import
     assert list(transformed._export_profile_cumsum) == exp_cumsum_export
+    assert list(transformed._import_profile_max) == exp_import_max
+    assert list(transformed._export_profile_max) == exp_export_max

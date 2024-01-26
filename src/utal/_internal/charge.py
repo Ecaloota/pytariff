@@ -9,7 +9,7 @@ from pydantic.dataclasses import dataclass
 from utal._internal.block import ConsumptionBlock, DemandBlock, TariffBlock
 from utal._internal.generic_types import Consumption, Demand, MetricType, TradeDirection
 from utal._internal.period import ConsumptionResetPeriod, DemandResetPeriod, ResetPeriod
-from utal._internal.unit import ConsumptionUnit, DemandUnit, TariffUnit, UsageChargeMetric
+from utal._internal.unit import ConsumptionUnit, DemandUnit, TariffUnit, UsageChargeMethod
 
 
 @dataclass
@@ -19,7 +19,7 @@ class TariffCharge(ABC, Generic[MetricType]):
     blocks: tuple[TariffBlock, ...]
     unit: TariffUnit[MetricType]
     reset_period: Optional[ResetPeriod]
-    method: UsageChargeMetric = UsageChargeMetric.mean
+    method: UsageChargeMethod = UsageChargeMethod.mean
     resolution: str = "5T"  # TODO this should be one of a subset of valid pandas unit strings e.g. 5T
     window: Optional[str] = None  # as above. window is only relevant when method = rolling_mean
 
@@ -38,7 +38,7 @@ class TariffCharge(ABC, Generic[MetricType]):
 
     @model_validator(mode="after")
     def validate_window_is_non_none_when_method_rolling_mean(self) -> "TariffCharge":
-        if self.method == UsageChargeMetric.rolling_mean and self.window is None:
+        if self.method == UsageChargeMethod.rolling_mean and self.window is None:
             raise ValueError
         return self
 

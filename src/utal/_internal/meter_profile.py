@@ -1,7 +1,6 @@
 from datetime import datetime
-from typing import Hashable, Iterable, Literal, Union
+from typing import Iterable, Literal, Union
 
-import numpy as np
 import pandas as pd
 import pandera as pa
 from pandera import dtypes
@@ -87,7 +86,7 @@ class TariffCostSchema(MeterProfileSchema):
 
 @pa.check_types
 def resample(
-    df: DataFrame[MeterProfileSchema], charge: TariffCharge, min_resolution: str = "1min"
+    df: DataFrame[MeterProfileSchema], charge_resolution: str, min_resolution: str = "1min"
 ) -> MeterProfileSchema:
     """
     Resample the provided DataFrame, first by sampling at min_resolution and interpolating
@@ -101,25 +100,23 @@ def resample(
         raise ValueError
 
     min_resolution_df = df.resample(min_resolution).interpolate(method="linear")
-    resampled = min_resolution_df.resample(charge.resolution).mean()
+    resampled = min_resolution_df.resample(charge_resolution).mean()
     new_df = MeterProfileSchema(resampled)
 
     return new_df
 
 
-# TODO prescribe the returned dict more strictly: it should have specific keys
-@pa.check_types
-def meter_statistics(df: DataFrame[MeterProfileSchema], charge: TariffCharge) -> dict:
-    return {}
-
-
 @pa.check_types
 def transform(
-    df: DataFrame[MeterProfileSchema], charge: TariffCharge, billing_start: datetime, meter_unit: TariffUnit
-) -> DataFrame[MeterProfileSchema]:
+    df: DataFrame[MeterProfileSchema], charge: TariffCharge, billing_start: datetime | None, meter_unit: TariffUnit
+) -> MeterProfileSchema:
     """Calculate properties of the provided dataframe that are useful for tariff application.
     Specifically, divide the profile into _import and _export quantities, and calculate cumulative
-    profiles for each, such that it is possible to determine costings for the given charge."""
+    profiles for each, such that it is possible to determine costings for the given charge.
+
+    By convention, the quantity imported or exported is defined to be positive in the _import_profile and
+    _export_profile columns, respectively.
+    """
 
     def is_export(value: float) -> bool:
         is_passive_export = meter_unit.convention == SignConvention.Passive and value > 0
@@ -131,9 +128,16 @@ def transform(
         is_active_import = meter_unit.convention == SignConvention.Active and value > 0
         return is_passive_import or is_active_import
 
-    def calculate_reset_periods(start_datetime: datetime) -> DataFrame:
+    def calculate_reset_periods(start_datetime: datetime | None) -> DataFrame:
         if charge.reset_period:
-            df["reset_periods"] = ((df.index - start_datetime) / pd.to_timedelta(charge.reset_period.value)).astype(int)
+            as_dt = pd.to_timedelta(charge.reset_period.value)
+            if start_datetime:
+                df["reset_periods"] = ((df.index - start_datetime) / as_dt).astype(int)
+            else:
+                df["reset_periods"] = ((df.index - df.index[0]) / as_dt).astype(int)
+        else:
+            df["reset_periods"] = 1
+
         return df
 
     def calculate_reset_cumsum(col_name: str) -> DataFrame:
@@ -142,13 +146,19 @@ def transform(
         ].cumsum()
         return df
 
+    def calculate_reset_max(col_name: str) -> DataFrame:
+        df[f"{col_name}_max"] = df.groupby((df["reset_periods"] != df["reset_periods"].shift()).cumsum())[
+            col_name
+        ].transform("max")
+        return df
+
     def _import_sign() -> Literal[-1, 1]:
         return -1 if meter_unit.convention == SignConvention.Passive else 1
 
     def _export_sign() -> Literal[-1, 1]:
         return -1 if meter_unit.convention == SignConvention.Active else 1
 
-    # TODO this whole func needs work -- not robust
+    # TODO this whole func needs work
 
     df["_import_profile"] = df["profile"].apply(lambda x: _import_sign() * x if is_import(x) else 0)
     df["_export_profile"] = df["profile"].apply(lambda x: _export_sign() * x if is_export(x) else 0)
@@ -157,6 +167,7 @@ def transform(
     df = calculate_reset_cumsum("_import_profile")
     df = calculate_reset_cumsum("_export_profile")
 
-    return df
+    df = calculate_reset_max("_import_profile")
+    df = calculate_reset_max("_export_profile")
 
-    # resampled["cum_profile"] = resampled.profile.cumsum()
+    return MeterProfileSchema(df)

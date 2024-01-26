@@ -6,6 +6,15 @@ from pydantic.dataclasses import dataclass
 from utal._internal.generic_types import Consumption, Demand, MetricType, TradeDirection, SignConvention
 
 
+class UsageChargeMethod(Enum):
+    """Defines how the TariffUnit provided in a TariffCharge definition is to be charged"""
+
+    mean = "mean"
+    peak = "peak"
+    rolling_mean = "rolling_mean"
+    cumsum = "cumsum"
+
+
 @dataclass
 class TariffUnit(ABC, Generic[MetricType]):
     metric: MetricType
@@ -53,11 +62,3 @@ class RateCurrency(Enum):
     @property
     def iso(self) -> str:
         return self._iso
-
-
-class UsageChargeMetric(Enum):
-    """Defines how the TariffUnit provided in a TariffCharge definition is to be charged"""
-
-    mean = "mean"
-    peak = "peak"
-    rolling_mean = "rolling_mean"

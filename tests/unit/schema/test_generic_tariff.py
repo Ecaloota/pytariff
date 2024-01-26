@@ -78,7 +78,7 @@ def test_generic_tariff_apply(profile, import_cost_series, export_cost_series, b
             TariffBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                rate=TariffRate(currency=RateCurrency.AUD, value=0.998),
             ),
         ),
         unit=ConsumptionUnit(

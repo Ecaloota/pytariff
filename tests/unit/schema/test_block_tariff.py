@@ -12,7 +12,7 @@ from utal._internal.generic_types import Consumption, SignConvention, TradeDirec
 from utal._internal.period import ConsumptionResetPeriod
 from utal._internal.rate import TariffRate
 from utal._internal.tariff_interval import TariffInterval
-from utal._internal.unit import RateCurrency, TariffUnit, UsageChargeMetric
+from utal._internal.unit import RateCurrency, TariffUnit, UsageChargeMethod
 from utal.schema.block_tariff import BlockTariff
 
 
@@ -44,7 +44,7 @@ from utal.schema.block_tariff import BlockTariff
                             metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                         ),
                         reset_period=ConsumptionResetPeriod.ANNUALLY,
-                        method=UsageChargeMetric.mean,
+                        method=UsageChargeMethod.mean,
                         resolution="5min",
                         window=None,
                     ),
@@ -71,7 +71,7 @@ from utal.schema.block_tariff import BlockTariff
                             metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                         ),
                         reset_period=ConsumptionResetPeriod.ANNUALLY,
-                        method=UsageChargeMetric.mean,
+                        method=UsageChargeMethod.mean,
                         resolution="5min",
                         window=None,
                     ),
