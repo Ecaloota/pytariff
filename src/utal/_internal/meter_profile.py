@@ -81,13 +81,14 @@ class TariffCostSchema(MeterProfileSchema):
     total_cost: float  # the sum of import cost + export cost
     import_cost: float  # the amount paid due to import
     export_cost: float  # the amount paid due to export (negative value is revenue generated)
-    billed_total_cost: float  # the cumulative billed amount, levied at each billing interval
+    # billed_total_cost: float  # the cumulative billed amount, levied at each billing interval
+    # TODO billing is complex. leave it for later
 
 
 @pa.check_types
 def resample(
-    df: DataFrame[MeterProfileSchema], charge_resolution: str, min_resolution: str = "1min"
-) -> MeterProfileSchema:
+    df: DataFrame[MeterProfileSchema], charge_resolution: str, min_resolution: str = "1min", window: str | None = None
+) -> DataFrame[MeterProfileSchema]:
     """
     Resample the provided DataFrame, first by sampling at min_resolution and interpolating
     the result, then sampling at the provided charge.resolution.
@@ -99,16 +100,18 @@ def resample(
     if len(df.index) < 2:
         raise ValueError
 
+    window = "1min" if not window else window
+
     min_resolution_df = df.resample(min_resolution).interpolate(method="linear")
-    resampled = min_resolution_df.resample(charge_resolution).mean()
+    resampled = min_resolution_df.rolling(window).mean().resample(charge_resolution).mean()
     new_df = MeterProfileSchema(resampled)
 
-    return new_df
+    return new_df  # type: ignore
 
 
 @pa.check_types
 def transform(
-    df: DataFrame[MeterProfileSchema], charge: TariffCharge, billing_start: datetime | None, meter_unit: TariffUnit
+    tariff_start: datetime, df: DataFrame[MeterProfileSchema], charge: TariffCharge, meter_unit: TariffUnit
 ) -> MeterProfileSchema:
     """Calculate properties of the provided dataframe that are useful for tariff application.
     Specifically, divide the profile into _import and _export quantities, and calculate cumulative
@@ -128,13 +131,11 @@ def transform(
         is_active_import = meter_unit.convention == SignConvention.Active and value > 0
         return is_passive_import or is_active_import
 
-    def calculate_reset_periods(start_datetime: datetime | None) -> DataFrame:
-        if charge.reset_period:
-            as_dt = pd.to_timedelta(charge.reset_period.value)
-            if start_datetime:
-                df["reset_periods"] = ((df.index - start_datetime) / as_dt).astype(int)
-            else:
-                df["reset_periods"] = ((df.index - df.index[0]) / as_dt).astype(int)
+    def calculate_reset_periods() -> DataFrame:
+        if charge.reset_data:
+            df["reset_periods"] = df.index.to_series().apply(
+                charge.reset_data.period.count_occurences, reference=tariff_start
+            )
         else:
             df["reset_periods"] = 1
 
@@ -163,7 +164,7 @@ def transform(
     df["_import_profile"] = df["profile"].apply(lambda x: _import_sign() * x if is_import(x) else 0)
     df["_export_profile"] = df["profile"].apply(lambda x: _export_sign() * x if is_export(x) else 0)
 
-    df = calculate_reset_periods(billing_start)
+    df = calculate_reset_periods()
     df = calculate_reset_cumsum("_import_profile")
     df = calculate_reset_cumsum("_export_profile")
 
@@ -171,3 +172,23 @@ def transform(
     df = calculate_reset_max("_export_profile")
 
     return MeterProfileSchema(df)
+
+
+# def num_billing_events(billing_data: BillingData, meter_end: datetime) -> int:
+#     """"""
+
+#     current_dt = billing_data.start
+#     billing_events = 0
+
+#     while current_dt <= meter_end:
+#         billing_events += 1
+#         delta_time: str = billing_data.frequency._to_days(current_dt)
+
+#         if billing_data.frequency._is_day_suffix():
+#             as_int = int(delta_time.replace("D", ""))
+#             current_dt += timedelta(days=as_int)
+
+#         else:
+#             raise NotImplementedError
+
+#     return billing_events

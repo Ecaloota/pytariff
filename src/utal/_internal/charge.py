@@ -8,7 +8,7 @@ from pydantic.dataclasses import dataclass
 
 from utal._internal.block import ConsumptionBlock, DemandBlock, TariffBlock
 from utal._internal.generic_types import Consumption, Demand, MetricType, TradeDirection
-from utal._internal.period import ConsumptionResetPeriod, DemandResetPeriod, ResetPeriod
+from utal._internal.period import ResetData
 from utal._internal.unit import ConsumptionUnit, DemandUnit, TariffUnit, UsageChargeMethod
 
 
@@ -18,10 +18,10 @@ class TariffCharge(ABC, Generic[MetricType]):
 
     blocks: tuple[TariffBlock, ...]
     unit: TariffUnit[MetricType]
-    reset_period: Optional[ResetPeriod]
+    reset_data: Optional[ResetData]
     method: UsageChargeMethod = UsageChargeMethod.mean
-    resolution: str = "5T"  # TODO this should be one of a subset of valid pandas unit strings e.g. 5T
-    window: Optional[str] = None  # as above. window is only relevant when method = rolling_mean
+    resolution: str = "5T"
+    window: Optional[str] = None
 
     uuid: UUID4 = uuid4()
 
@@ -67,7 +67,7 @@ class TariffCharge(ABC, Generic[MetricType]):
         return TariffCharge(
             blocks=block_tuple,
             unit=self.unit,
-            reset_period=None,  # intersection between reset periods is ill-defined
+            reset_data=None,  # intersection between reset data is ill-defined
         )
 
     def __eq__(self, other: object) -> bool:
@@ -77,7 +77,7 @@ class TariffCharge(ABC, Generic[MetricType]):
         return (
             self.blocks == other.blocks
             and self.unit == other.unit
-            and self.reset_period == other.reset_period
+            and self.reset_data == other.reset_data
             and self.method == other.method
             and self.resolution == other.resolution
             and self.window == other.window
@@ -88,7 +88,7 @@ class TariffCharge(ABC, Generic[MetricType]):
         return (
             hash(self.blocks)
             ^ hash(self.unit)
-            ^ hash(self.reset_period)
+            ^ hash(self.reset_data)
             ^ hash(self.method)
             ^ hash(self.resolution)
             ^ hash(self.window)
@@ -99,7 +99,6 @@ class TariffCharge(ABC, Generic[MetricType]):
 class ConsumptionCharge(TariffCharge[Consumption]):
     blocks: tuple[ConsumptionBlock, ...]
     unit: ConsumptionUnit
-    reset_period: Optional[ConsumptionResetPeriod]
 
     @model_validator(mode="after")
     def validate_blocks_are_consumption_blocks(self) -> "ConsumptionCharge":
@@ -130,7 +129,7 @@ class ConsumptionCharge(TariffCharge[Consumption]):
         return ConsumptionCharge(
             blocks=block_tuple,
             unit=self.unit,
-            reset_period=None,  # intersection between reset periods is ill-defined
+            reset_data=None,  # intersection between reset periods is ill-defined
         )
 
 
@@ -138,7 +137,6 @@ class ConsumptionCharge(TariffCharge[Consumption]):
 class DemandCharge(TariffCharge[Demand]):
     blocks: tuple[DemandBlock, ...]
     unit: DemandUnit
-    reset_period: Optional[DemandResetPeriod]
 
     @model_validator(mode="after")
     def validate_blocks_are_demand_blocks(self) -> "DemandCharge":
@@ -168,7 +166,7 @@ class DemandCharge(TariffCharge[Demand]):
         return DemandCharge(
             blocks=block_tuple,
             unit=self.unit,
-            reset_period=None,  # intersection between reset periods is ill-defined
+            reset_data=None,  # intersection between reset periods is ill-defined
         )
 
 

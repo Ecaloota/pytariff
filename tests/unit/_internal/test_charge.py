@@ -1,10 +1,12 @@
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from pydantic import ValidationError
 import pytest
 
 from utal._internal.block import ConsumptionBlock, DemandBlock, TariffBlock
 from utal._internal.charge import ConsumptionCharge, ExportConsumptionCharge, ImportConsumptionCharge, TariffCharge
 from utal._internal.generic_types import Consumption, Demand, SignConvention, TradeDirection
-from utal._internal.period import ConsumptionResetPeriod, DemandResetPeriod, ResetPeriod
+from utal._internal.period import ResetData, ResetPeriod
 from utal._internal.rate import TariffRate
 from utal._internal.unit import ConsumptionUnit, DemandUnit, RateCurrency, TariffUnit
 
@@ -23,12 +25,12 @@ def test_tariff_charge_valid_construction():
             ),
         ),
         unit=TariffUnit(metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive),
-        reset_period=ConsumptionResetPeriod.ANNUALLY,
+        reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
     ),
 
 
 @pytest.mark.parametrize(
-    "blocks_tuple, unit, reset_period, raises",
+    "blocks_tuple, unit, reset_data, raises",
     [
         (
             (
@@ -39,7 +41,7 @@ def test_tariff_charge_valid_construction():
                 ),
             ),
             ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive),
-            None,
+            ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             False,
         ),
         (
@@ -51,7 +53,7 @@ def test_tariff_charge_valid_construction():
                 ),
             ),
             ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive),
-            ConsumptionResetPeriod.DAILY,
+            ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             False,
         ),
         (
@@ -68,7 +70,7 @@ def test_tariff_charge_valid_construction():
                 ),
             ),
             ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive),
-            None,
+            ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             False,
         ),
         (  # blocks with same parent charge cannot overlap (this would be an overlap in quantity + unit)
@@ -85,7 +87,7 @@ def test_tariff_charge_valid_construction():
                 ),
             ),
             ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive),
-            None,
+            ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             False,
         ),
         (  # blocks with same parent charge cannot overlap (this would be an overlap in quantity + unit)
@@ -102,7 +104,7 @@ def test_tariff_charge_valid_construction():
                 ),
             ),
             ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive),
-            None,
+            ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             True,
         ),
         (  # consumption charge cannot contain DemandUnit
@@ -114,7 +116,7 @@ def test_tariff_charge_valid_construction():
                 ),
             ),
             DemandUnit(metric=Demand.kW, direction=TradeDirection.Import, convention=SignConvention.Passive),
-            None,
+            ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             True,
         ),
         (  # consumption charge cannot contain DemandBlock
@@ -126,19 +128,7 @@ def test_tariff_charge_valid_construction():
                 ),
             ),
             ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive),
-            None,
-            True,
-        ),
-        (  # ConsumptionCharge cannot contain DemandResetPeriod
-            (
-                ConsumptionBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
-                    from_quantity=0,
-                    to_quantity=100,
-                ),
-            ),
-            ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive),
-            DemandResetPeriod.DAILY,
+            ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             True,
         ),
     ],
@@ -146,22 +136,18 @@ def test_tariff_charge_valid_construction():
 def test_consumption_charge_valid_construction(
     blocks_tuple: tuple[ConsumptionBlock, ...],
     unit: ConsumptionUnit | DemandUnit | None,
-    reset_period: ResetPeriod,
+    reset_data: ResetData,
     raises: bool,
 ) -> None:
     """Assert that it is possible to instantiate a valid instance of a ConsumptionCharge using valid
     inputs, and otherwise that it is not possible. Specifically, child blocks cannot overlap in
     a single charge and must be ConsumptionBlocks, the unit must be an instance of a Consumption unit,
-    and the reset period must be a ConsumptionResetPeriod"""
+    and the reset data must be a ResetData"""
     if raises:
         with pytest.raises(ValidationError):
-            ConsumptionCharge(
-                blocks=blocks_tuple,
-                unit=unit,
-                reset_period=reset_period,
-            )
+            ConsumptionCharge(blocks=blocks_tuple, unit=unit, reset_data=reset_data)
     else:
-        assert ConsumptionCharge(blocks=blocks_tuple, unit=unit, reset_period=reset_period)
+        assert ConsumptionCharge(blocks=blocks_tuple, unit=unit, reset_data=reset_data)
 
 
 @pytest.mark.parametrize(
@@ -192,11 +178,17 @@ def test_consumption_charge_valid_construction(
 def test_consumption_charge_cannot_intersect(blocks_tuple: tuple[ConsumptionBlock, ...]) -> None:
     """"""
     with pytest.raises(ValueError):
-        ConsumptionCharge(blocks=blocks_tuple)
+        ConsumptionCharge(
+            blocks=blocks_tuple,
+            unit=ConsumptionUnit(
+                metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
+            ),
+            reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
+        )
 
 
 @pytest.mark.parametrize(
-    "blocks_tuple, unit, reset_period, raises",
+    "blocks_tuple, unit, reset_data, raises",
     [
         (
             (
@@ -207,7 +199,7 @@ def test_consumption_charge_cannot_intersect(blocks_tuple: tuple[ConsumptionBloc
                 ),
             ),
             ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive),
-            None,
+            ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             False,
         ),
         (
@@ -219,7 +211,7 @@ def test_consumption_charge_cannot_intersect(blocks_tuple: tuple[ConsumptionBloc
                 ),
             ),
             ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Export, convention=SignConvention.Passive),
-            None,
+            ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             True,
         ),
     ],
@@ -227,7 +219,7 @@ def test_consumption_charge_cannot_intersect(blocks_tuple: tuple[ConsumptionBloc
 def test_import_consumption_charge_must_import(
     blocks_tuple: tuple[ConsumptionBlock, ...],
     unit: ConsumptionUnit | DemandUnit | None,
-    reset_period: ResetPeriod,
+    reset_data: ResetData,
     raises: bool,
 ) -> None:
     """"""
@@ -236,14 +228,14 @@ def test_import_consumption_charge_must_import(
             ImportConsumptionCharge(
                 blocks=blocks_tuple,
                 unit=unit,
-                reset_period=reset_period,
+                reset_data=reset_data,
             )
     else:
-        assert ImportConsumptionCharge(blocks=blocks_tuple, unit=unit, reset_period=reset_period)
+        assert ImportConsumptionCharge(blocks=blocks_tuple, unit=unit, reset_data=reset_data)
 
 
 @pytest.mark.parametrize(
-    "blocks_tuple, unit, reset_period, raises",
+    "blocks_tuple, unit, reset_data, raises",
     [
         (
             (
@@ -254,7 +246,7 @@ def test_import_consumption_charge_must_import(
                 ),
             ),
             ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Export, convention=SignConvention.Passive),
-            None,
+            ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             False,
         ),
         (
@@ -266,7 +258,7 @@ def test_import_consumption_charge_must_import(
                 ),
             ),
             ConsumptionUnit(metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive),
-            None,
+            ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             True,
         ),
     ],
@@ -274,7 +266,7 @@ def test_import_consumption_charge_must_import(
 def test_export_consumption_charge_must_export(
     blocks_tuple: tuple[ConsumptionBlock, ...],
     unit: ConsumptionUnit | DemandUnit | None,
-    reset_period: ResetPeriod,
+    reset_data: ResetData,
     raises: bool,
 ) -> None:
     """"""
@@ -283,10 +275,10 @@ def test_export_consumption_charge_must_export(
             ExportConsumptionCharge(
                 blocks=blocks_tuple,
                 unit=unit,
-                reset_period=reset_period,
+                reset_data=reset_data,
             )
     else:
-        assert ExportConsumptionCharge(blocks=blocks_tuple, unit=unit, reset_period=reset_period)
+        assert ExportConsumptionCharge(blocks=blocks_tuple, unit=unit, reset_data=reset_data)
 
 
 @pytest.mark.parametrize(
@@ -302,7 +294,7 @@ def test_export_consumption_charge_must_export(
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             ConsumptionCharge(  # charge_b
                 blocks=(
@@ -313,14 +305,14 @@ def test_export_consumption_charge_must_export(
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             ConsumptionCharge(  # expected
                 blocks=(ConsumptionBlock(rate=None, from_quantity=50, to_quantity=100),),
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=None,
+                reset_data=None,
             ),
         ),
         (  # charge_a right-overhangs charge_b
@@ -333,7 +325,7 @@ def test_export_consumption_charge_must_export(
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             ConsumptionCharge(  # charge_b
                 blocks=(
@@ -344,14 +336,14 @@ def test_export_consumption_charge_must_export(
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             ConsumptionCharge(  # expected
                 blocks=(ConsumptionBlock(rate=None, from_quantity=50, to_quantity=100),),
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=None,
+                reset_data=None,
             ),
         ),
         (  # charge_a left-overhangs charge_b
@@ -364,7 +356,7 @@ def test_export_consumption_charge_must_export(
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             ConsumptionCharge(  # charge_b
                 blocks=(
@@ -375,14 +367,14 @@ def test_export_consumption_charge_must_export(
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             ConsumptionCharge(  # expected
                 blocks=(ConsumptionBlock(rate=None, from_quantity=50, to_quantity=100),),
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=None,
+                reset_data=None,
             ),
         ),
         (  # no overlaps from quantity
@@ -395,7 +387,7 @@ def test_export_consumption_charge_must_export(
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             ConsumptionCharge(  # charge_b
                 blocks=(
@@ -406,7 +398,7 @@ def test_export_consumption_charge_must_export(
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             None,
         ),
@@ -420,7 +412,7 @@ def test_export_consumption_charge_must_export(
                 unit=ConsumptionUnit(
                     metric=Consumption._null, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             ConsumptionCharge(  # charge_b
                 blocks=(
@@ -431,7 +423,7 @@ def test_export_consumption_charge_must_export(
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             None,
         ),
@@ -448,7 +440,7 @@ def test_export_consumption_charge_must_export(
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             ConsumptionCharge(  # charge_b
                 blocks=(
@@ -462,7 +454,7 @@ def test_export_consumption_charge_must_export(
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             ConsumptionCharge(  # expected: overlap from a[0]&b[0], a[1]&b[0], and a[1]&b[1]
                 blocks=(
@@ -473,7 +465,7 @@ def test_export_consumption_charge_must_export(
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=None,
+                reset_data=None,
             ),
         ),
     ],
@@ -501,7 +493,7 @@ def test_consumption_charge_intersection_method(
                 unit=TariffUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             TariffCharge(
                 blocks=(
@@ -514,7 +506,7 @@ def test_consumption_charge_intersection_method(
                 unit=TariffUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             True,
         ),
@@ -530,7 +522,7 @@ def test_consumption_charge_intersection_method(
                 unit=TariffUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             TariffCharge(
                 blocks=(
@@ -543,7 +535,7 @@ def test_consumption_charge_intersection_method(
                 unit=TariffUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             False,
         ),
@@ -559,7 +551,7 @@ def test_consumption_charge_intersection_method(
                 unit=TariffUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             TariffCharge(
                 blocks=(
@@ -572,11 +564,11 @@ def test_consumption_charge_intersection_method(
                 unit=TariffUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Export, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             False,
         ),
-        (  # different reset_periods
+        (  # different reset_data
             TariffCharge(
                 blocks=(
                     TariffBlock(
@@ -588,7 +580,7 @@ def test_consumption_charge_intersection_method(
                 unit=TariffUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.ANNUALLY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             TariffCharge(
                 blocks=(
@@ -601,7 +593,9 @@ def test_consumption_charge_intersection_method(
                 unit=TariffUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.DAILY,
+                reset_data=ResetData(
+                    anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.HALF_HOURLY
+                ),
             ),
             False,
         ),

@@ -11,7 +11,7 @@ from utal._internal.charge import TariffCharge
 from utal._internal.generic_types import SignConvention
 
 from utal._internal.meter_profile import MeterProfileSchema, resample, transform
-from utal._internal.period import ConsumptionResetPeriod
+from utal._internal.period import ResetData, ResetPeriod
 from utal._internal.unit import TariffUnit
 
 
@@ -101,7 +101,7 @@ def test_pandera_meter_profile_type(data, raises: bool):
 
 
 @pytest.mark.parametrize(
-    "data, charge, expected_resampled_list, raises",
+    "data, charge_resolution, expected_resampled_list, raises",
     [
         (
             pd.DataFrame(
@@ -111,7 +111,7 @@ def test_pandera_meter_profile_type(data, raises: bool):
                 ],
                 data={"profile": [0.0, 1.0]},
             ),
-            mock.Mock(spec=TariffCharge, resolution="5min"),
+            "5min",
             [0.5],
             False,
         ),
@@ -123,7 +123,7 @@ def test_pandera_meter_profile_type(data, raises: bool):
                 ],
                 data={"profile": [0.0, 2.0]},
             ),
-            mock.Mock(spec=TariffCharge, resolution="5min"),
+            "5min",
             [0.8, 2.0],
             False,
         ),
@@ -136,7 +136,7 @@ def test_pandera_meter_profile_type(data, raises: bool):
                 ],
                 data={"profile": [0.0, 2.0, 0.0]},
             ),
-            mock.Mock(spec=TariffCharge, resolution="1min"),
+            "1min",
             [0.0, 1.0, 2.0, 1.0, 0.0],
             False,
         ),
@@ -149,7 +149,7 @@ def test_pandera_meter_profile_type(data, raises: bool):
                 ],
                 data={"profile": [0.0, 2.0, 0.0]},
             ),
-            mock.Mock(spec=TariffCharge, resolution="5min"),
+            "5min",
             [0.8],
             False,
         ),
@@ -162,23 +162,23 @@ def test_pandera_meter_profile_type(data, raises: bool):
                 ],
                 data={"profile": [0.0, 10.0, -10.0]},
             ),
-            mock.Mock(spec=TariffCharge, resolution="5min"),
+            "5min",
             [4.0, 2.0, -10.0],
             False,
         ),
     ],
 )
 def test_meter_profile_schema_resample_method(
-    data: pd.DataFrame, charge: TariffCharge, expected_resampled_list: list[float], raises: bool
+    data: pd.DataFrame, charge_resolution: str, expected_resampled_list: list[float], raises: bool
 ) -> None:
     """TODO"""
 
-    resampled = resample(data, charge)
+    resampled = resample(data, charge_resolution)
     assert list(resampled.profile) == expected_resampled_list
 
 
 @pytest.mark.parametrize(
-    "data, charge, billing_start, meter_unit, exp_import_profile, exp_export_profile, exp_cumsum_import, exp_cumsum_export, exp_import_max, exp_export_max",  # noqa
+    "data, charge, meter_unit, exp_import_profile, exp_export_profile, exp_cumsum_import, exp_cumsum_export, exp_import_max, exp_export_max",  # noqa
     [
         (  # check basic usage; assert that import and export profiles are given the appropriate sign
             # and that the cumulative profiles are being calculated correctly
@@ -192,8 +192,10 @@ def test_meter_profile_schema_resample_method(
                 ),
                 data={"profile": [0.0, 1.0, -1.0, 1.0, 0.0]},
             ),
-            mock.Mock(spec=TariffCharge, reset_period=ConsumptionResetPeriod.DAILY),
-            datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")),
+            mock.Mock(
+                spec=TariffCharge,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
+            ),
             mock.Mock(spec=TariffUnit, convention=SignConvention.Passive),
             [0.0, 0.0, 1.0, 0.0, 0.0],
             [0.0, 1.0, 0.0, 1.0, 0.0],
@@ -213,8 +215,10 @@ def test_meter_profile_schema_resample_method(
                 ),
                 data={"profile": np.tile(np.array([0.0] * 8 + [1.0] * 8 + [-1.0] * 8), 3)},
             ),
-            mock.Mock(spec=TariffCharge, reset_period=ConsumptionResetPeriod.DAILY),
-            datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")),
+            mock.Mock(
+                spec=TariffCharge,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
+            ),
             mock.Mock(spec=TariffUnit, convention=SignConvention.Passive),
             list(np.tile(np.array([0.0] * 8 + [0.0] * 8 + [1.0] * 8), 3)),
             list(np.tile(np.array([0.0] * 8 + [1.0] * 8 + [0.0] * 8), 3)),
@@ -235,8 +239,10 @@ def test_meter_profile_schema_resample_method(
                 ),
                 data={"profile": [0.0, 1.0, -1.0, 1.0, 0.0]},
             ),
-            mock.Mock(spec=TariffCharge, reset_period=ConsumptionResetPeriod.DAILY),
-            datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")),
+            mock.Mock(
+                spec=TariffCharge,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
+            ),
             mock.Mock(spec=TariffUnit, convention=SignConvention.Active),
             [0.0, 1.0, 0.0, 1.0, 0.0],
             [0.0, 0.0, 1.0, 0.0, 0.0],
@@ -256,8 +262,10 @@ def test_meter_profile_schema_resample_method(
                 ),
                 data={"profile": np.tile(np.array([0.0] * 8 + [5.0] * 8 + [-1.0] * 8), 3)},
             ),
-            mock.Mock(spec=TariffCharge, reset_period=ConsumptionResetPeriod.DAILY),
-            datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")),
+            mock.Mock(
+                spec=TariffCharge,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
+            ),
             mock.Mock(spec=TariffUnit, convention=SignConvention.Passive),
             list(np.tile(np.array([0.0] * 8 + [0.0] * 8 + [1.0] * 8), 3)),
             list(np.tile(np.array([0.0] * 8 + [5.0] * 8 + [0.0] * 8), 3)),
@@ -271,7 +279,6 @@ def test_meter_profile_schema_resample_method(
 def test_meter_profile_schema_transform_method(
     data: pd.DataFrame,
     charge: TariffCharge,
-    billing_start: datetime,
     meter_unit: TariffUnit,
     exp_import_profile: list[float],
     exp_export_profile: list[float],
@@ -282,7 +289,7 @@ def test_meter_profile_schema_transform_method(
 ) -> None:
     """TODO"""
 
-    transformed = transform(data, charge, billing_start, meter_unit)
+    transformed = transform(datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), data, charge, meter_unit)
 
     assert list(transformed._import_profile) == exp_import_profile
     assert list(transformed._export_profile) == exp_export_profile
@@ -290,3 +297,32 @@ def test_meter_profile_schema_transform_method(
     assert list(transformed._export_profile_cumsum) == exp_cumsum_export
     assert list(transformed._import_profile_max) == exp_import_max
     assert list(transformed._export_profile_max) == exp_export_max
+
+
+# @pytest.mark.parametrize(
+#     "billing_data, meter_end, exp_num_billing_events",
+#     [
+#         (  # 5 days, last day inclusive
+#             BillingData(start=datetime(2023, 1, 1), frequency=BillingPeriod.DAILY),
+#             datetime(2023, 1, 5),
+#             5,
+#         ),
+#         (  # 1 day, billed on first day of meter interval
+#             BillingData(start=datetime(2023, 1, 1), frequency=BillingPeriod.FIRST_OF_MONTH),
+#             datetime(2023, 1, 5),
+#             1,
+#         ),
+#         (  # billing begins after first of month, meter ends before next billing period start
+#             # no billing interval is triggered. TODO this will have to be addressed as partial billing interval
+#             # TODO more generally, we need to separate the billing period conceptually from the
+#             # frequency with which charges are levied. Customer should be billed for each X minute period or part
+#             # thereof, and bills should be levied at each billing period
+#             BillingData(start=datetime(2023, 1, 2), frequency=BillingPeriod.FIRST_OF_MONTH),
+#             datetime(2023, 1, 5),
+#             0,
+#         ),
+#     ],
+# )
+# def test_num_billing_events(billing_data, meter_end, exp_num_billing_events) -> None:
+#     """"""
+#     assert num_billing_events(billing_data, meter_end) == exp_num_billing_events

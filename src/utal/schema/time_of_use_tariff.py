@@ -1,8 +1,8 @@
-from datetime import datetime
 from pydantic import model_validator
 from utal._internal.generic_types import MetricType
 from utal._internal.meter_profile import MeterProfileSchema, TariffCostSchema
 from utal._internal.tariff_interval import TariffInterval
+from utal._internal.unit import TariffUnit
 from utal.schema.generic_tariff import GenericTariff
 import pandera as pa
 from pandera.typing import DataFrame
@@ -48,6 +48,6 @@ class TimeOfUseTariff(GenericTariff[MetricType]):
 
     @pa.check_types
     def apply(
-        self, meter_profile: DataFrame[MeterProfileSchema], billing_start: datetime | None
+        self, meter_profile: DataFrame[MeterProfileSchema], tariff_unit: TariffUnit
     ) -> DataFrame[TariffCostSchema]:
-        return super().apply(meter_profile, billing_start)
+        return super().apply(meter_profile, tariff_unit)

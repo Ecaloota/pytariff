@@ -1,4 +1,5 @@
-from datetime import time, timedelta, timezone
+from datetime import time, timedelta, timezone, datetime
+from zoneinfo import ZoneInfo
 from pydantic import ValidationError
 
 import pytest
@@ -8,7 +9,7 @@ from utal._internal.charge import ConsumptionCharge, DemandCharge, TariffCharge
 from utal._internal.day_type import DayType
 from utal._internal.days_applied import DaysApplied
 from utal._internal.generic_types import Consumption, Demand, SignConvention, TradeDirection
-from utal._internal.period import ConsumptionResetPeriod, DemandResetPeriod
+from utal._internal.period import ResetData, ResetPeriod
 from utal._internal.rate import TariffRate
 from utal._internal.tariff_interval import ConsumptionInterval, DemandInterval, TariffInterval
 from utal._internal.unit import ConsumptionUnit, DemandUnit, RateCurrency, TariffUnit
@@ -46,7 +47,7 @@ def test_tariff_interval_valid_construction(block: ConsumptionBlock | DemandBloc
                 unit=TariffUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.DAILY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             tzinfo=timezone(timedelta(hours=1)),
         )
@@ -61,7 +62,7 @@ def test_tariff_interval_valid_construction(block: ConsumptionBlock | DemandBloc
                     unit=TariffUnit(
                         metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                     ),
-                    reset_period=ConsumptionResetPeriod.DAILY,
+                    reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
                 ),
                 tzinfo=timezone(timedelta(hours=1)),
             )
@@ -82,7 +83,7 @@ def test_tariff_interval_valid_construction(block: ConsumptionBlock | DemandBloc
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.DAILY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             False,
         ),
@@ -96,7 +97,7 @@ def test_tariff_interval_valid_construction(block: ConsumptionBlock | DemandBloc
                     ),
                 ),
                 unit=DemandUnit(metric=Demand.kW, direction=TradeDirection.Import, convention=SignConvention.Passive),
-                reset_period=DemandResetPeriod.DAILY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             True,
         ),
@@ -138,7 +139,7 @@ def test_consumption_interval_charges_must_be_consumption_charges(
                     ),
                 ),
                 unit=DemandUnit(metric=Demand.kW, direction=TradeDirection.Import, convention=SignConvention.Passive),
-                reset_period=DemandResetPeriod.DAILY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             False,
         ),
@@ -154,7 +155,7 @@ def test_consumption_interval_charges_must_be_consumption_charges(
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
-                reset_period=ConsumptionResetPeriod.DAILY,
+                reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             True,
         ),
@@ -200,7 +201,7 @@ def test_demand_interval_charges_must_be_demand_charges(charge: ConsumptionCharg
                     unit=TariffUnit(
                         metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                     ),
-                    reset_period=ConsumptionResetPeriod.DAILY,
+                    reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
                 ),
                 tzinfo=timezone(timedelta(hours=1)),
             ),
@@ -219,7 +220,7 @@ def test_demand_interval_charges_must_be_demand_charges(charge: ConsumptionCharg
                     unit=TariffUnit(
                         metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                     ),
-                    reset_period=ConsumptionResetPeriod.DAILY,
+                    reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
                 ),
                 tzinfo=timezone(timedelta(hours=1)),
             ),

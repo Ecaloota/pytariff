@@ -1,10 +1,9 @@
-from datetime import datetime
-
 from pydantic import model_validator
 from utal._internal.charge import DemandCharge
 from utal._internal.generic_types import Demand
 from utal._internal.meter_profile import MeterProfileSchema, TariffCostSchema
 from utal._internal.tariff_interval import DemandInterval
+from utal._internal.unit import TariffUnit
 from utal.schema.generic_tariff import GenericTariff
 import pandera as pa
 from pandera.typing import DataFrame
@@ -34,6 +33,6 @@ class DemandTariff(GenericTariff[Demand]):
 
     @pa.check_types
     def apply(
-        self, meter_profile: DataFrame[MeterProfileSchema], billing_start: datetime | None
+        self, meter_profile: DataFrame[MeterProfileSchema], profile_unit: TariffUnit
     ) -> DataFrame[TariffCostSchema]:
-        return super().apply(meter_profile, billing_start)
+        return super().apply(meter_profile, profile_unit)
