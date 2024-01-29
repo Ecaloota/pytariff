@@ -24,6 +24,7 @@ class ResetPeriod(Enum):
     def _is_daily(self) -> bool:
         return self.name in ["DAILY", "WEEKLY"]
 
+    # TODO test this
     def count_occurences(self, until: datetime, reference: datetime) -> int:
         """Count the number of times since reference time until time until that the given ResetPeriod
         has occurred. Used to keep track of ResetPeriods"""
@@ -44,13 +45,11 @@ class ResetPeriod(Enum):
             delta = timedelta(days=int(self.value.replace("D", "")))
 
         elif self.name == "FIRST_OF_MONTH":
-            current = reference.replace(day=1)
             delta = timedelta(days=32)  # always longer than longest month => after day_replace, will count months
             day_replace = True
 
         elif self.name == "FIRST_OF_QUARTER":
-            current = reference.replace(day=1)
-            delta = timedelta(days=32)  # always longer than longest quarter => after day_replace, will count quarters
+            delta = timedelta(days=93)  # always longer than longest quarter => after day_replace, will count quarters
             day_replace = True
 
         while current <= until:

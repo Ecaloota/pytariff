@@ -1,25 +1,36 @@
-# from datetime import datetime
-# import pytest
+from datetime import datetime
+import pytest
 
-# from utal._internal.period import ResetPeriod
+from utal._internal.period import ResetPeriod
 
 
-# @pytest.mark.parametrize(
-#     "reset_period, from_datetime, to_days_expected",
-#     [
-#         (ResetPeriod.DAILY, datetime(2023, 1, 1, 6), "1D"),
-#         (ResetPeriod.HOURLY, datetime(2023, 1, 1, 6), "1h"),
-#         (ResetPeriod.FIRST_OF_MONTH, datetime(2023, 1, 1, 6), "31D"),
-#         (ResetPeriod.FIRST_OF_QUARTER, datetime(2023, 1, 1, 6), "90D"),
-#         (ResetPeriod.FIRST_OF_MONTH, datetime(2023, 1, 15, 6), "17D"),
-#         (ResetPeriod.FIRST_OF_QUARTER, datetime(2023, 2, 15, 6), "45D"),
-#         (ResetPeriod.FIRST_OF_MONTH, datetime(2023, 2, 1, 6), "28D"),  # non-leap year
-#         (ResetPeriod.FIRST_OF_MONTH, datetime(2020, 2, 1, 6), "29D"),  # leap year
-#     ],
-# )
-# def test_reset_period_to_days_method(reset_period: ResetPeriod, from_datetime: datetime, to_days_expected: str) -> None: # noqa
-#     """Given some input datetime, return the number of days between it and the next FIRST_OF_MONTH,
-#     FIRST_OF_QUARTER, or the string representation of the Enum value for other valid
-#     ResetPeriod values"""
+@pytest.mark.parametrize(
+    "reset_period, until_datetime, ref_datetime, exp_num_occurences",
+    [
+        (ResetPeriod.DAILY, datetime(2023, 1, 1), datetime(2023, 1, 1), 1),
+        (ResetPeriod.DAILY, datetime(2023, 1, 2), datetime(2023, 1, 1), 2),
+        (ResetPeriod.FIRST_OF_MONTH, datetime(2023, 1, 5), datetime(2023, 1, 5), 1),
+        (ResetPeriod.FIRST_OF_MONTH, datetime(2023, 1, 5), datetime(2023, 1, 2), 1),
+        (ResetPeriod.FIRST_OF_MONTH, datetime(2023, 2, 2), datetime(2023, 1, 1), 2),
+        (ResetPeriod.FIRST_OF_QUARTER, datetime(2023, 2, 2), datetime(2023, 2, 2), 1),
+        (ResetPeriod.FIRST_OF_QUARTER, datetime(2023, 2, 2), datetime(2023, 1, 1), 1),
+        (ResetPeriod.FIRST_OF_QUARTER, datetime(2023, 8, 2), datetime(2023, 1, 2), 3),
+        (ResetPeriod.QUARTER_HOURLY, datetime(2023, 1, 1, 1), datetime(2023, 1, 1, 1), 1),
+        (ResetPeriod.QUARTER_HOURLY, datetime(2023, 1, 1, 1), datetime(2023, 1, 1), 5),
+        (ResetPeriod.QUARTER_HOURLY, datetime(2023, 1, 1, 2), datetime(2023, 1, 1), 9),
+        (ResetPeriod.HALF_HOURLY, datetime(2023, 1, 1), datetime(2023, 1, 1), 1),
+        (ResetPeriod.HALF_HOURLY, datetime(2023, 1, 1, 1), datetime(2023, 1, 1), 3),
+        (ResetPeriod.HOURLY, datetime(2023, 1, 1), datetime(2023, 1, 1), 1),
+        (ResetPeriod.HOURLY, datetime(2023, 1, 1, 1), datetime(2023, 1, 1), 2),
+        (ResetPeriod.HOURLY, datetime(2023, 1, 1, 3), datetime(2023, 1, 1), 4),
+        (ResetPeriod.WEEKLY, datetime(2023, 1, 1, 3), datetime(2023, 1, 1), 1),
+        (ResetPeriod.WEEKLY, datetime(2023, 2, 1), datetime(2023, 1, 1), 5),
+    ],
+)
+def test_reset_period_count_occurences_method(
+    reset_period: ResetPeriod, until_datetime: datetime, ref_datetime: datetime, exp_num_occurences: int
+) -> None:  # noqa
+    """Given some input datetime, return the number of times since the reference time
+    and until the 'until' time that the given ResetPeriod has occurred"""
 
-#     assert reset_period._to_days(_from=from_datetime) == to_days_expected
+    assert reset_period.count_occurences(until=until_datetime, reference=ref_datetime) == exp_num_occurences

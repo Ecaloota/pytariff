@@ -131,10 +131,15 @@ def transform(
         is_active_import = meter_unit.convention == SignConvention.Active and value > 0
         return is_passive_import or is_active_import
 
-    def calculate_reset_periods() -> DataFrame:
+    def calculate_reset_periods(ref_time: datetime) -> DataFrame:
         if charge.reset_data:
+            # NOTE Would occur if user provided metering data that began earlier than tariff definition. In this case,
+            # we simply set the reference time to be the earliest time in the index, assuming the index is ordered.
+            if df.idx.iloc[0] < ref_time:
+                ref_time = df.idx.iloc[0]
+
             df["reset_periods"] = df.index.to_series().apply(
-                charge.reset_data.period.count_occurences, reference=tariff_start
+                charge.reset_data.period.count_occurences, reference=ref_time
             )
         else:
             df["reset_periods"] = 1
@@ -164,7 +169,7 @@ def transform(
     df["_import_profile"] = df["profile"].apply(lambda x: _import_sign() * x if is_import(x) else 0)
     df["_export_profile"] = df["profile"].apply(lambda x: _export_sign() * x if is_export(x) else 0)
 
-    df = calculate_reset_periods()
+    df = calculate_reset_periods(ref_time=tariff_start)
     df = calculate_reset_cumsum("_import_profile")
     df = calculate_reset_cumsum("_export_profile")
 
