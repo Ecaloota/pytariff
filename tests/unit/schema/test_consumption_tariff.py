@@ -14,7 +14,7 @@ from utal._internal.rate import TariffRate
 from utal._internal.tariff_interval import ConsumptionInterval
 import pytest
 
-from utal._internal.unit import ConsumptionUnit, RateCurrency, TariffUnit
+from utal._internal.unit import ConsumptionUnit, RateCurrency, TariffUnit, UsageChargeMethod
 
 
 @pytest.mark.parametrize(
@@ -85,7 +85,7 @@ def test_consumption_tariff_apply_method():
             pd.Timestamp(2023, 1, 1, tzinfo=ZoneInfo("UTC"), unit="us"),
             pd.Timestamp(2023, 1, 2, tzinfo=ZoneInfo("UTC"), unit="us"),
         ],
-        data={"profile": [1.0, 1.0]},
+        data={"profile": [1.0, -1.0]},
     )
 
     tariff = ConsumptionTariff(
@@ -109,13 +109,14 @@ def test_consumption_tariff_apply_method():
                         metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                     ),
                     reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
+                    method=UsageChargeMethod.cumsum,
                 ),
-                tzinfo=timezone(timedelta(hours=1)),
+                tzinfo=ZoneInfo("UTC"),
             ),
         ),
     )
 
-    cost_schema = tariff.apply(
+    cost_schema = tariff.apply(  # noqa
         meter_profile,
         profile_unit=TariffUnit(
             metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive

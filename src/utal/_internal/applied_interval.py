@@ -48,6 +48,29 @@ class AppliedInterval(BaseModel):
 
         return self
 
+    @model_validator(mode="after")
+    def validate_time_relationship(self) -> "AppliedInterval":
+        """We assume that if below condition, the user is trying to specify that the
+        AppliedInterval is to be applied at all possible times. This is the closest we
+        can do with datetime.time, noting that it is unlikely to cause significant error"""
+
+        tz_attrs = [
+            getattr(self.start_time, "tzinfo", None),
+            getattr(self.end_time, "tzinfo", None),
+            getattr(self, "tzinfo", None),
+        ]
+        tz_list = [x for x in tz_attrs if x is not None]
+
+        if len(tz_list) == 0:
+            raise ValueError
+        else:
+            tz = tz_list.pop()
+
+        if self.start_time == self.end_time:
+            self.start_time = time.min.replace(tzinfo=tz)
+            self.end_time = time.max.replace(tzinfo=tz)
+        return self
+
     def __contains__(self, other: time | date | datetime) -> bool:
         """
         An AppliedInterval contains a time iff that time is within the range [start_time, end_time).

@@ -135,8 +135,8 @@ def transform(
         if charge.reset_data:
             # NOTE Would occur if user provided metering data that began earlier than tariff definition. In this case,
             # we simply set the reference time to be the earliest time in the index, assuming the index is ordered.
-            if df.idx.iloc[0] < ref_time:
-                ref_time = df.idx.iloc[0]
+            if df.index[0] < ref_time:
+                ref_time = df.index[0]
 
             df["reset_periods"] = df.index.to_series().apply(
                 charge.reset_data.period.count_occurences, reference=ref_time
