@@ -141,7 +141,7 @@ def test_consumption_block_intersection(
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate[Consumption](RateCurrency.AUD, value=1),
+                rate=TariffRate(RateCurrency.AUD, value=1),
             ),
             int(5),
         ),

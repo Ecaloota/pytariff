@@ -84,7 +84,15 @@ A BlockTariff is a subclass of a GenericTariff that enforces that, among other t
 
 There are no restrictions on the units of the child TariffIntervals or the existence of reset periods.
 
+---
+### MarketTariff
+A MarketTariff is a subclass of a GenericTariff that enforces that, among other things:
+1. At least one child TariffInterval must be defined
+2. The child TariffInterval(s) must each contain only a single block in their TariffCharge
+3. Each TariffCharge rate must be defined as a MarketRate
 
+There are no restrictions on the units of the child TariffIntervals or the existence of reset periods. A MarketTariff cannot use TariffRate(s). Tariff values for MarketRates are
+determined on-the-fly from input data when applied to metering data.
 
 
 <!-- 
@@ -101,4 +109,5 @@ Wishlist:
 4. Simple html interface which allows selection from pre-defined tariffs in db and provision of 
     json profile inputs
 
+5. pyomo interface
  -->

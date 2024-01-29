@@ -9,10 +9,10 @@ from utal._internal.charge import TariffCharge
 from utal._internal.day_type import DayType
 from utal._internal.days_applied import DaysApplied
 from utal._internal.generic_types import Demand, SignConvention, TradeDirection
-from utal._internal.period import DemandResetPeriod
+from utal._internal.period import ResetData, ResetPeriod
 from utal._internal.rate import TariffRate
 from utal._internal.tariff_interval import TariffInterval
-from utal._internal.unit import RateCurrency, TariffUnit, UsageChargeMetric
+from utal._internal.unit import RateCurrency, TariffUnit, UsageChargeMethod
 
 from utal.schema.single_rate_tariff import SingleRateTariff
 
@@ -47,8 +47,10 @@ from utal.schema.single_rate_tariff import SingleRateTariff
                         unit=TariffUnit(
                             metric=Demand.kW, direction=TradeDirection.Import, convention=SignConvention.Passive
                         ),
-                        reset_period=DemandResetPeriod.DAILY,
-                        method=UsageChargeMetric.mean,
+                        reset_data=ResetData(
+                            anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY
+                        ),
+                        method=UsageChargeMethod.mean,
                         resolution="5min",
                         window=None,
                     ),
@@ -74,8 +76,10 @@ from utal.schema.single_rate_tariff import SingleRateTariff
                         unit=TariffUnit(
                             metric=Demand.kW, direction=TradeDirection.Import, convention=SignConvention.Passive
                         ),
-                        reset_period=DemandResetPeriod.DAILY,
-                        method=UsageChargeMetric.mean,
+                        reset_data=ResetData(
+                            anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY
+                        ),
+                        method=UsageChargeMethod.mean,
                         resolution="5min",
                         window=None,
                     ),
@@ -101,8 +105,10 @@ from utal.schema.single_rate_tariff import SingleRateTariff
                         unit=TariffUnit(
                             metric=Demand.kW, direction=TradeDirection.Import, convention=SignConvention.Passive
                         ),
-                        reset_period=DemandResetPeriod.DAILY,
-                        method=UsageChargeMetric.mean,
+                        reset_data=ResetData(
+                            anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY
+                        ),
+                        method=UsageChargeMethod.mean,
                         resolution="5min",
                         window=None,
                     ),
@@ -123,8 +129,10 @@ from utal.schema.single_rate_tariff import SingleRateTariff
                         unit=TariffUnit(
                             metric=Demand.kW, direction=TradeDirection.Export, convention=SignConvention.Passive
                         ),
-                        reset_period=DemandResetPeriod.DAILY,
-                        method=UsageChargeMetric.mean,
+                        reset_data=ResetData(
+                            anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY
+                        ),
+                        method=UsageChargeMethod.mean,
                         resolution="5min",
                         window=None,
                     ),

@@ -1,6 +1,6 @@
-from typing import Hashable, Iterable, Union
+from datetime import datetime
+from typing import Iterable, Literal, Union
 
-import numpy as np
 import pandas as pd
 import pandera as pa
 from pandera import dtypes
@@ -8,6 +8,8 @@ from pandera.engines import pandas_engine
 from pandera.typing import Index, DataFrame
 
 from utal._internal.charge import TariffCharge
+from utal._internal.generic_types import SignConvention
+from utal._internal.unit import TariffUnit
 
 
 @pandas_engine.Engine.register_dtype()
@@ -79,42 +81,119 @@ class TariffCostSchema(MeterProfileSchema):
     total_cost: float  # the sum of import cost + export cost
     import_cost: float  # the amount paid due to import
     export_cost: float  # the amount paid due to export (negative value is revenue generated)
-    billed_total_cost: float  # the cumulative billed amount, levied at each billing interval
+    # billed_total_cost: float  # the cumulative billed amount, levied at each billing interval
+    # TODO billing is complex. leave it for later
 
 
 @pa.check_types
-def resample(df: DataFrame[MeterProfileSchema], charge: TariffCharge) -> DataFrame[MeterProfileSchema]:
-    """"""
+def resample(
+    df: DataFrame[MeterProfileSchema], charge_resolution: str, min_resolution: str = "1min", window: str | None = None
+) -> DataFrame[MeterProfileSchema]:
+    """
+    Resample the provided DataFrame, first by sampling at min_resolution and interpolating
+    the result, then sampling at the provided charge.resolution.
+
+    NOTE This approach is undesirable when the minimum resolution (default = '1min') is less than the implied resolution
+    of the provided DataFrame.
+    """
 
     if len(df.index) < 2:
         raise ValueError
 
-    # get the index keys for each unique value in the resample.groups dict
-    # these will tell us which keys were anchored against in the resample
-    inverted: dict[list[Hashable], list[Hashable]] = {}
-    for k, v in df.resample("1min").groups.items():  # TODO wrong, we want to resample out beyond last anchor too
-        if v in inverted:
-            inverted[v].append(k)
-        else:
-            inverted[v] = [k]
+    window = "1min" if not window else window
 
-    # replace nan with zero in resampled object
-    resampled = df.resample("1min").asfreq().fillna(0)
+    min_resolution_df = df.resample(min_resolution).interpolate(method="linear")
+    resampled = min_resolution_df.rolling(window).mean().resample(charge_resolution).mean()
+    new_df = MeterProfileSchema(resampled)
 
-    # take mean of df slice for each slice in the index keys found before
-    for k, v in inverted.items():  # type: ignore
-        resampled.loc[inverted[k]] = np.sum(resampled.profile.loc[inverted[k]]) / len(v)  # type: ignore
-
-    # keep the cumulative profile, we will need it
-    # NOTE TODO we need to generalise this to allow for cumulative sums to be reset
-    # at the start of reset_period(s)
-    # One way to do this would be to keep track of the integer ID of the current reset_period..?
-    resampled["cum_profile"] = resampled.profile.cumsum()
-
-    return resampled  # type: ignore
+    return new_df  # type: ignore
 
 
-# TODO prescribe the returned dict more strictly: it should have specific keys
 @pa.check_types
-def meter_statistics(df: DataFrame[MeterProfileSchema], charge: TariffCharge) -> dict:
-    return {}
+def transform(
+    tariff_start: datetime, df: DataFrame[MeterProfileSchema], charge: TariffCharge, meter_unit: TariffUnit
+) -> MeterProfileSchema:
+    """Calculate properties of the provided dataframe that are useful for tariff application.
+    Specifically, divide the profile into _import and _export quantities, and calculate cumulative
+    profiles for each, such that it is possible to determine costings for the given charge.
+
+    By convention, the quantity imported or exported is defined to be positive in the _import_profile and
+    _export_profile columns, respectively.
+    """
+
+    def is_export(value: float) -> bool:
+        is_passive_export = meter_unit.convention == SignConvention.Passive and value > 0
+        is_active_export = meter_unit.convention == SignConvention.Active and value < 0
+        return is_passive_export or is_active_export
+
+    def is_import(value: float) -> bool:
+        is_passive_import = meter_unit.convention == SignConvention.Passive and value < 0
+        is_active_import = meter_unit.convention == SignConvention.Active and value > 0
+        return is_passive_import or is_active_import
+
+    def calculate_reset_periods(ref_time: datetime) -> DataFrame:
+        if charge.reset_data:
+            # NOTE Would occur if user provided metering data that began earlier than tariff definition. In this case,
+            # we simply set the reference time to be the earliest time in the index, assuming the index is ordered.
+            if df.index[0] < ref_time:
+                ref_time = df.index[0]
+
+            df["reset_periods"] = df.index.to_series().apply(
+                charge.reset_data.period.count_occurences, reference=ref_time
+            )
+        else:
+            df["reset_periods"] = 1
+
+        return df
+
+    def calculate_reset_cumsum(col_name: str) -> DataFrame:
+        df[f"{col_name}_cumsum"] = df.groupby((df["reset_periods"] != df["reset_periods"].shift()).cumsum())[
+            col_name
+        ].cumsum()
+        return df
+
+    def calculate_reset_max(col_name: str) -> DataFrame:
+        df[f"{col_name}_max"] = df.groupby((df["reset_periods"] != df["reset_periods"].shift()).cumsum())[
+            col_name
+        ].transform("max")
+        return df
+
+    def _import_sign() -> Literal[-1, 1]:
+        return -1 if meter_unit.convention == SignConvention.Passive else 1
+
+    def _export_sign() -> Literal[-1, 1]:
+        return -1 if meter_unit.convention == SignConvention.Active else 1
+
+    # TODO this whole func needs work
+
+    df["_import_profile"] = df["profile"].apply(lambda x: _import_sign() * x if is_import(x) else 0)
+    df["_export_profile"] = df["profile"].apply(lambda x: _export_sign() * x if is_export(x) else 0)
+
+    df = calculate_reset_periods(ref_time=tariff_start)
+    df = calculate_reset_cumsum("_import_profile")
+    df = calculate_reset_cumsum("_export_profile")
+
+    df = calculate_reset_max("_import_profile")
+    df = calculate_reset_max("_export_profile")
+
+    return MeterProfileSchema(df)
+
+
+# def num_billing_events(billing_data: BillingData, meter_end: datetime) -> int:
+#     """"""
+
+#     current_dt = billing_data.start
+#     billing_events = 0
+
+#     while current_dt <= meter_end:
+#         billing_events += 1
+#         delta_time: str = billing_data.frequency._to_days(current_dt)
+
+#         if billing_data.frequency._is_day_suffix():
+#             as_int = int(delta_time.replace("D", ""))
+#             current_dt += timedelta(days=as_int)
+
+#         else:
+#             raise NotImplementedError
+
+#     return billing_events

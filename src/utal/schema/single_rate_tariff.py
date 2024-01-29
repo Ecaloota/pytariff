@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Generic
 import pandera as pa
 from pandera.typing import DataFrame
@@ -7,6 +6,7 @@ from utal._internal.generic_types import MetricType
 
 from utal._internal.meter_profile import MeterProfileSchema, TariffCostSchema
 from utal._internal.tariff_interval import TariffInterval
+from utal._internal.unit import TariffUnit
 from utal.schema.generic_tariff import GenericTariff
 
 
@@ -42,6 +42,6 @@ class SingleRateTariff(GenericTariff, Generic[MetricType]):
 
     @pa.check_types
     def apply(
-        self, meter_profile: DataFrame[MeterProfileSchema], billing_start: datetime | None
+        self, meter_profile: DataFrame[MeterProfileSchema], tariff_unit: TariffUnit
     ) -> DataFrame[TariffCostSchema]:
-        return super().apply(meter_profile, billing_start)
+        return super().apply(meter_profile, tariff_unit)

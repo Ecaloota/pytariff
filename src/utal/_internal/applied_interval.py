@@ -1,8 +1,9 @@
 from datetime import date, datetime, time, timezone
 from typing import Optional
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import UUID4, BaseModel, ConfigDict, model_validator
 
 from utal import helper
 from utal._internal.days_applied import DaysApplied
@@ -20,6 +21,8 @@ class AppliedInterval(BaseModel):
     end_time: Optional[time]
     days_applied: DaysApplied
     tzinfo: Optional[timezone | ZoneInfo] = None
+
+    uuid: UUID4 = uuid4()
 
     @model_validator(mode="after")
     def validate_start_time_aware(self) -> "AppliedInterval":
@@ -43,6 +46,29 @@ class AppliedInterval(BaseModel):
         elif helper.is_naive(self.end_time):
             self.end_time = self.end_time.replace(tzinfo=self.tzinfo)
 
+        return self
+
+    @model_validator(mode="after")
+    def validate_time_relationship(self) -> "AppliedInterval":
+        """We assume that if below condition, the user is trying to specify that the
+        AppliedInterval is to be applied at all possible times. This is the closest we
+        can do with datetime.time, noting that it is unlikely to cause significant error"""
+
+        tz_attrs = [
+            getattr(self.start_time, "tzinfo", None),
+            getattr(self.end_time, "tzinfo", None),
+            getattr(self, "tzinfo", None),
+        ]
+        tz_list = [x for x in tz_attrs if x is not None]
+
+        if len(tz_list) == 0:
+            raise ValueError
+        else:
+            tz = tz_list.pop()
+
+        if self.start_time == self.end_time:
+            self.start_time = time.min.replace(tzinfo=tz)
+            self.end_time = time.max.replace(tzinfo=tz)
         return self
 
     def __contains__(self, other: time | date | datetime) -> bool:

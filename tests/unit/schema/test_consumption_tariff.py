@@ -7,14 +7,14 @@ from utal._internal.block import ConsumptionBlock
 from utal._internal.charge import ConsumptionCharge
 from utal._internal.day_type import DayType
 from utal._internal.days_applied import DaysApplied
+from utal._internal.period import ResetData, ResetPeriod
 from utal.schema.consumption_tariff import ConsumptionTariff
 from utal._internal.generic_types import Consumption, SignConvention, TradeDirection
-from utal._internal.period import ConsumptionResetPeriod
 from utal._internal.rate import TariffRate
 from utal._internal.tariff_interval import ConsumptionInterval
 import pytest
 
-from utal._internal.unit import ConsumptionUnit, RateCurrency
+from utal._internal.unit import ConsumptionUnit, RateCurrency, TariffUnit, UsageChargeMethod
 
 
 @pytest.mark.parametrize(
@@ -43,7 +43,9 @@ def test_consumption_tariff_valid_construction(block_fixture: str, raises: bool,
                                 direction=TradeDirection.Import,
                                 convention=SignConvention.Passive,
                             ),
-                            reset_period=ConsumptionResetPeriod.ANNUALLY,
+                            reset_data=ResetData(
+                                anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY
+                            ),
                         ),
                         tzinfo=timezone(timedelta(hours=1)),
                     ),
@@ -65,7 +67,9 @@ def test_consumption_tariff_valid_construction(block_fixture: str, raises: bool,
                         unit=ConsumptionUnit(
                             metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                         ),
-                        reset_period=ConsumptionResetPeriod.ANNUALLY,
+                        reset_data=ResetData(
+                            anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY
+                        ),
                     ),
                     tzinfo=timezone(timedelta(hours=1)),
                 ),
@@ -81,7 +85,7 @@ def test_consumption_tariff_apply_method():
             pd.Timestamp(2023, 1, 1, tzinfo=ZoneInfo("UTC"), unit="us"),
             pd.Timestamp(2023, 1, 2, tzinfo=ZoneInfo("UTC"), unit="us"),
         ],
-        data={"profile": [1.0, 1.0]},
+        data={"profile": [1.0, -1.0]},
     )
 
     tariff = ConsumptionTariff(
@@ -104,12 +108,18 @@ def test_consumption_tariff_apply_method():
                     unit=ConsumptionUnit(
                         metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                     ),
-                    reset_period=ConsumptionResetPeriod.ANNUALLY,
+                    reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
+                    method=UsageChargeMethod.cumsum,
                 ),
-                tzinfo=timezone(timedelta(hours=1)),
+                tzinfo=ZoneInfo("UTC"),
             ),
         ),
     )
 
-    cost_schema = tariff.apply(meter_profile, billing_start=None)  # noqa
+    cost_schema = tariff.apply(  # noqa
+        meter_profile,
+        profile_unit=TariffUnit(
+            metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
+        ),
+    )  # noqa
     print("foo")

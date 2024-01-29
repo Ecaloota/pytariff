@@ -8,11 +8,11 @@ from utal._internal.charge import ConsumptionCharge, DemandCharge
 from utal._internal.day_type import DayType
 from utal._internal.days_applied import DaysApplied
 from utal._internal.generic_types import Consumption, Demand, SignConvention, TradeDirection
-from utal._internal.period import ConsumptionResetPeriod, DemandResetPeriod
+from utal._internal.period import ResetData, ResetPeriod
 from utal._internal.rate import TariffRate
 
 from utal._internal.tariff_interval import ConsumptionInterval, DemandInterval
-from utal._internal.unit import ConsumptionUnit, DemandUnit, RateCurrency, UsageChargeMetric
+from utal._internal.unit import ConsumptionUnit, DemandUnit, RateCurrency, UsageChargeMethod
 from utal.schema.demand_tariff import DemandTariff
 
 
@@ -43,8 +43,10 @@ from utal.schema.demand_tariff import DemandTariff
                         unit=DemandUnit(
                             metric=Demand.kW, direction=TradeDirection.Import, convention=SignConvention.Passive
                         ),
-                        reset_period=DemandResetPeriod.DAILY,
-                        method=UsageChargeMetric.mean,
+                        reset_data=ResetData(
+                            anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY
+                        ),
+                        method=UsageChargeMethod.mean,
                         resolution="5min",
                         window=None,
                     ),
@@ -75,8 +77,10 @@ from utal.schema.demand_tariff import DemandTariff
                         unit=ConsumptionUnit(
                             metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                         ),
-                        reset_period=ConsumptionResetPeriod.DAILY,
-                        method=UsageChargeMetric.mean,
+                        reset_data=ResetData(
+                            anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY
+                        ),
+                        method=UsageChargeMethod.mean,
                         resolution="5min",
                         window=None,
                     ),

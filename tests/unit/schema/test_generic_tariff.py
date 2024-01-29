@@ -11,9 +11,9 @@ from utal._internal.days_applied import DaysApplied
 from utal._internal.rate import TariffRate
 from utal.schema.generic_tariff import GenericTariff
 from utal._internal.generic_types import Consumption, SignConvention, TradeDirection
-from utal._internal.period import ConsumptionResetPeriod
+from utal._internal.period import ResetData, ResetPeriod
 from utal._internal.tariff_interval import TariffInterval
-from utal._internal.unit import ConsumptionUnit, RateCurrency, TariffUnit
+from utal._internal.unit import BillingData, ConsumptionUnit, RateCurrency, TariffUnit, UsageChargeMethod
 
 
 def test_generic_tariff_valid_construction(DEFAULT_CONSUMPTION_BLOCK):
@@ -33,7 +33,9 @@ def test_generic_tariff_valid_construction(DEFAULT_CONSUMPTION_BLOCK):
                     unit=TariffUnit(
                         metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                     ),
-                    reset_period=ConsumptionResetPeriod.ANNUALLY,
+                    reset_data=ResetData(
+                        anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.FIRST_OF_MONTH
+                    ),
                 ),
                 tzinfo=timezone(timedelta(hours=1)),
             ),
@@ -70,7 +72,7 @@ def test_generic_tariff_valid_construction(DEFAULT_CONSUMPTION_BLOCK):
         ),
     ],
 )
-def test_flat_consumption_tariff_apply(profile, import_cost_series, export_cost_series, billed_cost_series):
+def test_generic_tariff_apply(profile, import_cost_series, export_cost_series, billed_cost_series):
     """"""
 
     DEFAULT_CHARGE = TariffCharge(
@@ -78,13 +80,14 @@ def test_flat_consumption_tariff_apply(profile, import_cost_series, export_cost_
             TariffBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                rate=TariffRate(currency=RateCurrency.AUD, value=0.998),
             ),
         ),
         unit=ConsumptionUnit(
             metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
         ),
-        reset_period=None,
+        reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.FIRST_OF_MONTH),
+        method=UsageChargeMethod.cumsum,
     )
 
     # Create a default single child
@@ -104,15 +107,13 @@ def test_flat_consumption_tariff_apply(profile, import_cost_series, export_cost_
         end=datetime(2024, 1, 1),
         tzinfo=ZoneInfo("UTC"),
         children=DEFAULT_CHILD,
-        reset_period=ConsumptionResetPeriod.ANNUALLY,
     )
 
-    output = DEFAULT_TARIFF.apply(
+    output = DEFAULT_TARIFF.apply(  # type: ignore  # noqa
         meter_profile=profile,
-        billing_start=None,
         profile_unit=TariffUnit(
             metric=Consumption.kWh, direction=TradeDirection._null, convention=SignConvention.Passive
         ),
-    )  # noqa
+    )
 
     # assert output.total_cost == "foo"  # TODO
