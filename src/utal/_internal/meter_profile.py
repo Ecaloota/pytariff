@@ -11,6 +11,8 @@ from utal._internal.charge import TariffCharge
 from utal._internal.generic_types import SignConvention
 from utal._internal.unit import TariffUnit
 
+import plotly.express as px  # type: ignore
+
 
 @pandas_engine.Engine.register_dtype()
 @dtypes.immutable
@@ -177,6 +179,17 @@ def transform(
     df = calculate_reset_max("_export_profile")
 
     return MeterProfileSchema(df)
+
+
+@pa.check_types
+def plot(df: DataFrame[TariffCostSchema], include_additional_cost_components: bool = False) -> None:
+    """"""
+
+    if not include_additional_cost_components:
+        df = df[["import_cost", "export_cost", "total_cost"]]  # type: ignore
+
+    fig = px.line(df)
+    fig.show()
 
 
 # def num_billing_events(billing_data: BillingData, meter_end: datetime) -> int:
