@@ -13,7 +13,8 @@ from utal.schema.generic_tariff import GenericTariff
 from utal._internal.generic_types import Consumption, SignConvention, TradeDirection
 from utal._internal.period import ResetData, ResetPeriod
 from utal._internal.tariff_interval import TariffInterval
-from utal._internal.unit import BillingData, ConsumptionUnit, RateCurrency, TariffUnit, UsageChargeMethod
+from utal._internal.unit import ConsumptionUnit, TariffUnit, UsageChargeMethod
+from utal._internal.currency import RateCurrency
 
 
 def test_generic_tariff_valid_construction(DEFAULT_CONSUMPTION_BLOCK):

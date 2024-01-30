@@ -12,7 +12,8 @@ from utal._internal.generic_types import Demand, SignConvention, TradeDirection
 from utal._internal.period import ResetData, ResetPeriod
 from utal._internal.rate import TariffRate
 from utal._internal.tariff_interval import TariffInterval
-from utal._internal.unit import RateCurrency, TariffUnit, UsageChargeMethod
+from utal._internal.unit import TariffUnit, UsageChargeMethod
+from utal._internal.currency import RateCurrency
 
 from utal.schema.single_rate_tariff import SingleRateTariff
 

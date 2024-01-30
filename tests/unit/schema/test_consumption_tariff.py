@@ -14,7 +14,8 @@ from utal._internal.rate import TariffRate
 from utal._internal.tariff_interval import ConsumptionInterval
 import pytest
 
-from utal._internal.unit import ConsumptionUnit, RateCurrency, TariffUnit, UsageChargeMethod
+from utal._internal.unit import ConsumptionUnit, TariffUnit, UsageChargeMethod
+from utal._internal.currency import RateCurrency
 
 
 @pytest.mark.parametrize(

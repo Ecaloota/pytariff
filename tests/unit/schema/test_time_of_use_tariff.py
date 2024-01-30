@@ -12,7 +12,8 @@ from utal._internal.period import ResetData, ResetPeriod
 from utal._internal.rate import TariffRate
 
 from utal._internal.tariff_interval import TariffInterval
-from utal._internal.unit import RateCurrency, TariffUnit
+from utal._internal.unit import TariffUnit
+from utal._internal.currency import RateCurrency
 from utal.schema.time_of_use_tariff import TimeOfUseTariff
 
 

@@ -8,7 +8,8 @@ from utal._internal.charge import ConsumptionCharge, ExportConsumptionCharge, Im
 from utal._internal.generic_types import Consumption, Demand, SignConvention, TradeDirection
 from utal._internal.period import ResetData, ResetPeriod
 from utal._internal.rate import TariffRate
-from utal._internal.unit import ConsumptionUnit, DemandUnit, RateCurrency, TariffUnit
+from utal._internal.unit import ConsumptionUnit, DemandUnit, TariffUnit
+from utal._internal.currency import RateCurrency
 
 
 def test_tariff_charge_valid_construction():

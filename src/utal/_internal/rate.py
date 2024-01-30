@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 from pydantic.dataclasses import dataclass
 
-from utal._internal.unit import RateCurrency
+from utal._internal.currency import RateCurrency
 
 
 @dataclass
