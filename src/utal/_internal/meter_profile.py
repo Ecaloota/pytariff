@@ -9,7 +9,7 @@ from pandera.typing import Index, DataFrame
 
 from utal._internal.charge import TariffCharge
 from utal._internal.generic_types import SignConvention
-from utal._internal.unit import TariffUnit
+from utal._internal.unit import TariffUnit, UsageChargeMethod
 
 import plotly.express as px  # type: ignore
 
@@ -112,7 +112,7 @@ def resample(
 
 
 @pa.check_types
-def transform(
+def transform(  # noqa
     tariff_start: datetime, df: DataFrame[MeterProfileSchema], charge: TariffCharge, meter_unit: TariffUnit
 ) -> MeterProfileSchema:
     """Calculate properties of the provided dataframe that are useful for tariff application.
@@ -148,16 +148,10 @@ def transform(
 
         return df
 
-    def calculate_reset_cumsum(col_name: str) -> DataFrame:
-        df[f"{col_name}_cumsum"] = df.groupby((df["reset_periods"] != df["reset_periods"].shift()).cumsum())[
-            col_name
-        ].cumsum()
-        return df
-
-    def calculate_reset_max(col_name: str) -> DataFrame:
-        df[f"{col_name}_max"] = df.groupby((df["reset_periods"] != df["reset_periods"].shift()).cumsum())[
-            col_name
-        ].transform("max")
+    def calculate_profile_transformation(col_name: str, transform_name: UsageChargeMethod) -> DataFrame:
+        df[f"{col_name}_{transform_name.value}"] = df.groupby(
+            (df["reset_periods"] != df["reset_periods"].shift()).cumsum()
+        )[col_name].transform(transform_name.value)
         return df
 
     def _import_sign() -> Literal[-1, 1]:
@@ -172,11 +166,11 @@ def transform(
     df["_export_profile"] = df["profile"].apply(lambda x: _export_sign() * x if is_export(x) else 0)
 
     df = calculate_reset_periods(ref_time=tariff_start)
-    df = calculate_reset_cumsum("_import_profile")
-    df = calculate_reset_cumsum("_export_profile")
 
-    df = calculate_reset_max("_import_profile")
-    df = calculate_reset_max("_export_profile")
+    # NOTE should be vectorised one day
+    for profile_direction in ["_import_profile", "_export_profile"]:
+        for method in [UsageChargeMethod.mean, UsageChargeMethod.cumsum, UsageChargeMethod.max]:
+            df = calculate_profile_transformation(profile_direction, method)
 
     return MeterProfileSchema(df)
 

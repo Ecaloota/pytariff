@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import Optional
 from uuid import uuid4
 
@@ -9,9 +8,8 @@ from utal._internal.rate import MarketRate, TariffRate
 
 
 @dataclass
-class TariffBlock(ABC):
-    """Not to be used directly.
-
+class TariffBlock:
+    """
     TariffBlocks are right-open intervals over [from_quantity, to_quantity) defined for some unit
     and associated with a rate.
     """

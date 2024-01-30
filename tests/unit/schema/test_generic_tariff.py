@@ -89,7 +89,7 @@ def test_generic_tariff_apply(profile, import_cost_series, export_cost_series, b
             metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
         ),
         reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.FIRST_OF_MONTH),
-        method=UsageChargeMethod.cumsum,
+        method=UsageChargeMethod.mean,
     )
 
     # Create a default single child

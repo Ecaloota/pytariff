@@ -10,7 +10,7 @@ class UsageChargeMethod(Enum):
     """Defines how the TariffUnit provided in a TariffCharge definition is to be charged"""
 
     mean = "mean"
-    peak = "peak"
+    max = "max"
     rolling_mean = "rolling_mean"
     cumsum = "cumsum"
 

@@ -29,20 +29,28 @@ class TimeOfUseTariff(GenericTariff[MetricType]):
         for i, child_a in enumerate(self.children):
             for j, child_b in enumerate(self.children):
                 if i != j:
+                    # Units must match to be considered an intersection
+                    if child_a.charge.unit != child_b.charge.unit:
+                        continue
+
                     # Tariff intervals must share days_applied and timezone attrs
                     if not (child_a.days_applied == child_b.days_applied and child_a.tzinfo == child_b.tzinfo):
-                        raise ValueError
+                        raise ValueError(
+                            "Tariff intervals in TimeOfUseTariff must share DaysApplied and tzinfo attributes"
+                        )
 
                     # Tariff intervals must contain unique, non-overlapping [start, end) intervals
                     if child_a.start_time is None or child_a.end_time is None:
-                        raise ValueError
+                        raise ValueError("TimeOfUseTariff children must contain non-null start and end times")
                     if child_b.start_time is None or child_b.end_time is None:
-                        raise ValueError
+                        raise ValueError("TimeOfUseTariff children must contain non-null start and end times")
 
                     start_intersection = max(child_a.start_time, child_b.start_time)
                     end_intersection = min(child_a.end_time, child_b.end_time)
                     if start_intersection < end_intersection:
-                        raise ValueError  # TODO verify this
+                        raise ValueError(
+                            "Tariff intervals in TimeOfUseTariff must contain unique, non-overlapping time intervals"
+                        )  # TODO verify this
 
         return self
 

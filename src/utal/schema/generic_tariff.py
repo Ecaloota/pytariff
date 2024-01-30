@@ -42,21 +42,25 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
             suffix = f"_{charge.method.value.lower()}"
             return prefix + suffix
 
-        def _cost_import_value(idx: datetime, charge: TariffCharge, applied_map: pd.DataFrame) -> float:
+        def _cost_import_value(
+            idx: datetime, charge: TariffCharge, applied_map: pd.DataFrame, charge_profile: pd.DataFrame
+        ) -> float:
             """Given the index of the cost_df, map that index to the block rate value"""
             # If the block.rate is a TariffRate, idx is unused, else it defines the
             # value of the block rate at time idx for a MarketRate
             if charge.unit.direction == TradeDirection.Import and block.rate and applied_map[idx]:
-                return block.rate.get_value(idx)
+                return block.rate.get_value(idx) * getattr(charge_profile, _block_map_name(charge)).loc[idx]
             return 0.0
 
-        def _cost_export_value(idx: datetime, charge: TariffCharge, applied_map: pd.DataFrame) -> float:
+        def _cost_export_value(
+            idx: datetime, charge: TariffCharge, applied_map: pd.DataFrame, charge_profile: pd.DataFrame
+        ) -> float:
             """Given the index of the cost_df, map that index to the block rate value"""
             # if the block.rate is a TariffRate, idx is unused, else it defines the
             # value of the block rate at time idx for a MarketRate
             if charge.unit.direction == TradeDirection.Export and block.rate and applied_map[idx]:
-                return block.rate.get_value(idx)
-            return 0
+                return block.rate.get_value(idx) * getattr(charge_profile, _block_map_name(charge)).loc[idx]
+            return 0.0
 
         min_resolution = "1min"
         resampled_meter = resample(meter_profile, min_resolution, window=None)
@@ -84,17 +88,21 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
                 block_map = getattr(charge_profile, _block_map_name(child.charge)).map(block.__contains__)
                 applied_map = charge_map & block_map
                 cost_df["cost_import"] = cost_df.index.map(
-                    lambda x: _cost_import_value(x, charge=child.charge, applied_map=applied_map)
+                    lambda x: _cost_import_value(
+                        x, charge=child.charge, applied_map=applied_map, charge_profile=charge_profile
+                    )
                 )
                 cost_df["cost_export"] = cost_df.index.map(
-                    lambda x: _cost_export_value(x, charge=child.charge, applied_map=applied_map)
+                    lambda x: _cost_export_value(
+                        x, charge=child.charge, applied_map=applied_map, charge_profile=charge_profile
+                    )
                 )
 
                 charge_profile[f"cost_import_{uuid_identifier}"] = cost_df["cost_import"]
                 charge_profile[f"cost_export_{uuid_identifier}"] = cost_df["cost_export"]
 
             # match indices on resampled charge_profile onto resampled_meter
-            resamp_charge_profile = resample(charge_profile, min_resolution, window=None)
+            resamp_charge_profile = resample(charge_profile, min_resolution, window=None)  # TODO this causes issues
             resampled_meter[f"cost_import_{child.uuid}"] = resamp_charge_profile.filter(like="cost_import").sum(axis=1)
             resampled_meter[f"cost_export_{child.uuid}"] = resamp_charge_profile.filter(like="cost_export").sum(axis=1)
 
