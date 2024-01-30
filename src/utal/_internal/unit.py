@@ -13,6 +13,7 @@ class UsageChargeMethod(Enum):
     max = "max"
     rolling_mean = "rolling_mean"
     cumsum = "cumsum"
+    identity = "identity"  # i.e. apply identity to usage values in meter profile
 
 
 @dataclass

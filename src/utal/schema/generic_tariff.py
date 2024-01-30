@@ -38,7 +38,7 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
         """"""
 
         def _block_map_name(charge: TariffCharge) -> str:
-            prefix = f"_{charge.unit.direction.value.lower()}_profile"
+            prefix = f"_{charge.unit.direction.value.lower()}_profile_usage"
             suffix = f"_{charge.method.value.lower()}"
             return prefix + suffix
 
@@ -48,6 +48,9 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
             """Given the index of the cost_df, map that index to the block rate value"""
             # If the block.rate is a TariffRate, idx is unused, else it defines the
             # value of the block rate at time idx for a MarketRate
+            # NOTE the cost at time idx is the value of the relevant profile column
+            # at idx * block.rate.get_value(idx)
+
             if charge.unit.direction == TradeDirection.Import and block.rate and applied_map[idx]:
                 return block.rate.get_value(idx) * getattr(charge_profile, _block_map_name(charge)).loc[idx]
             return 0.0
@@ -102,6 +105,10 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
                 charge_profile[f"cost_export_{uuid_identifier}"] = cost_df["cost_export"]
 
             # match indices on resampled charge_profile onto resampled_meter
+            # TODO NOTE this line is wrong, but everything up to here is validated by hand
+            # NOTE Do we want to resample to the max(_ for _ in all_charge_resolutions)?
+            # In so doing, we never impute costs, and the output resolution is determined by the 'accuracy'
+            # of the child intervals?
             resamp_charge_profile = resample(charge_profile, min_resolution, window=None)  # TODO this causes issues
             resampled_meter[f"cost_import_{child.uuid}"] = resamp_charge_profile.filter(like="cost_import").sum(axis=1)
             resampled_meter[f"cost_export_{child.uuid}"] = resamp_charge_profile.filter(like="cost_export").sum(axis=1)

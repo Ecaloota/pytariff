@@ -148,10 +148,17 @@ def transform(  # noqa
 
         return df
 
-    def calculate_profile_transformation(col_name: str, transform_name: UsageChargeMethod) -> DataFrame:
-        df[f"{col_name}_{transform_name.value}"] = df.groupby(
-            (df["reset_periods"] != df["reset_periods"].shift()).cumsum()
-        )[col_name].transform(transform_name.value)
+    def calculate_profile_transformation(col_name: str, transform: UsageChargeMethod) -> DataFrame:
+        """Calculate the mean/max/cumsum of col_name in given DataFrame and broadcast the value
+        to the DataFrame grouped by reset_periods.
+
+        NOTE for example, given transform_name == UsageChargeMethod.mean with two unique reset_period
+        indices in the given DataFrame will return a new column on that DataFrame with the mean
+        usage of that unit (in a given direction) _for each reset_period_.
+        """
+
+        req_transform = transform.value if transform.value != "identity" else lambda x: x
+        df[f"{col_name}_{transform.value}"] = df.groupby(df["reset_periods"]).transform(req_transform)[col_name]
         return df
 
     def _import_sign() -> Literal[-1, 1]:
@@ -162,14 +169,19 @@ def transform(  # noqa
 
     # TODO this whole func needs work
 
-    df["_import_profile"] = df["profile"].apply(lambda x: _import_sign() * x if is_import(x) else 0)
-    df["_export_profile"] = df["profile"].apply(lambda x: _export_sign() * x if is_export(x) else 0)
+    df["_import_profile_usage"] = df["profile"].apply(lambda x: _import_sign() * x if is_import(x) else 0)
+    df["_export_profile_usage"] = df["profile"].apply(lambda x: _export_sign() * x if is_export(x) else 0)
 
     df = calculate_reset_periods(ref_time=tariff_start)
 
     # NOTE should be vectorised one day
-    for profile_direction in ["_import_profile", "_export_profile"]:
-        for method in [UsageChargeMethod.mean, UsageChargeMethod.cumsum, UsageChargeMethod.max]:
+    for profile_direction in ["_import_profile_usage", "_export_profile_usage"]:
+        for method in [
+            UsageChargeMethod.mean,
+            UsageChargeMethod.cumsum,
+            UsageChargeMethod.max,
+            UsageChargeMethod.identity,
+        ]:
             df = calculate_profile_transformation(profile_direction, method)
 
     return MeterProfileSchema(df)
