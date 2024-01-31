@@ -5,6 +5,7 @@ import pandas as pd
 
 import pandera as pa
 from pandera.typing import DataFrame
+from pydantic import model_validator
 from utal._internal.charge import TariffCharge
 from utal._internal.defined_interval import DefinedInterval
 from utal._internal.generic_types import MetricType, TradeDirection
@@ -28,6 +29,12 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
         is_defined_contained = super(GenericTariff, self).__contains__(other, tzinfo)
         is_child_contained = any(child.__contains__(other) for child in self.children)
         return is_defined_contained and is_child_contained
+
+    @model_validator(mode="after")
+    def validate_children_share_charge_resolution(self) -> "GenericTariff":
+        if not len(set([x.charge.resolution for x in self.children])) == 1:
+            raise ValueError
+        return self
 
     @pa.check_types
     def apply(
@@ -61,12 +68,13 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
             """Given the index of the cost_df, map that index to the block rate value"""
             # if the block.rate is a TariffRate, idx is unused, else it defines the
             # value of the block rate at time idx for a MarketRate
+
             if charge.unit.direction == TradeDirection.Export and block.rate and applied_map[idx]:
                 return block.rate.get_value(idx) * getattr(charge_profile, _block_map_name(charge)).loc[idx]
             return 0.0
 
-        min_resolution = "1min"
-        resampled_meter = resample(meter_profile, min_resolution, window=None)
+        child_resolution = [x.charge.resolution for x in self.children][0]
+        resampled_meter = resample(meter_profile, child_resolution, window=None)
         tariff_start = self.start  # needed to calculate reset_period start
 
         for child in self.children:
@@ -75,7 +83,7 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
                 pass
 
             # resample the meter profile given charge information
-            charge_profile = resample(meter_profile, child.charge.resolution, window=child.charge.window)
+            charge_profile = resample(meter_profile, child_resolution, window=child.charge.window)
 
             # calculate the cumulative profile including reset_period tracking given charge information
             # also split the profile into _import and _export quantities so we can determine cost sign for given charge
@@ -104,27 +112,11 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
                 charge_profile[f"cost_import_{uuid_identifier}"] = cost_df["cost_import"]
                 charge_profile[f"cost_export_{uuid_identifier}"] = cost_df["cost_export"]
 
-            # match indices on resampled charge_profile onto resampled_meter
-            # TODO NOTE this line is wrong, but everything up to here is validated by hand
-            # NOTE Do we want to resample to the max(_ for _ in all_charge_resolutions)?
-            # In so doing, we never impute costs, and the output resolution is determined by the 'accuracy'
-            # of the child intervals?
-            resamp_charge_profile = resample(charge_profile, min_resolution, window=None)  # TODO this causes issues
-            resampled_meter[f"cost_import_{child.uuid}"] = resamp_charge_profile.filter(like="cost_import").sum(axis=1)
-            resampled_meter[f"cost_export_{child.uuid}"] = resamp_charge_profile.filter(like="cost_export").sum(axis=1)
+            resampled_meter[f"cost_import_{child.uuid}"] = charge_profile.filter(like="cost_import").sum(axis=1)
+            resampled_meter[f"cost_export_{child.uuid}"] = charge_profile.filter(like="cost_export").sum(axis=1)
 
-        # NOTE this is not the cumsum of the cost till index idx, but the sum of import/export cost at index idx
         resampled_meter["import_cost"] = resampled_meter.filter(like="cost_import").sum(axis=1)
         resampled_meter["export_cost"] = resampled_meter.filter(like="cost_export").sum(axis=1)
         resampled_meter["total_cost"] = resampled_meter["import_cost"] + resampled_meter["export_cost"]
-
-        # billed total_cost is the total_cost taken stepwise from billing_data.start
-        # and stepped with billing_data.frequency
-
-        # given the frequency, the start, and the final index of the sorted resampled_meter
-        # we know how many we need to bill the resampled_meter. NOTE previous sentence doesnt account for partial
-        # billing periods. See: test_num_billing_events
-
-        # resampled_meter["billed_total_cost"] = 0.0  # TODO this is complex. resolve later
 
         return resampled_meter  # type: ignore

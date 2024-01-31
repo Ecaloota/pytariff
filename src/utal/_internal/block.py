@@ -18,7 +18,7 @@ class TariffBlock:
     from_quantity: float = Field(ge=0)
     to_quantity: float = Field(gt=0)
 
-    uuid: UUID4 = uuid4()
+    uuid: UUID4 = Field(default_factory=uuid4)
 
     @model_validator(mode="after")  # type: ignore
     def assert_from_lt_to(self) -> "TariffBlock":

@@ -102,7 +102,7 @@ def resample(
     if len(df.index) < 2:
         raise ValueError
 
-    window = "1min" if not window else window
+    window = min_resolution if not window else window
 
     min_resolution_df = df.resample(min_resolution).interpolate(method="linear")
     resampled = min_resolution_df.rolling(window).mean().resample(charge_resolution).mean()

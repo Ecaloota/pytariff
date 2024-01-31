@@ -2,7 +2,7 @@ from abc import ABC
 from typing import Generic, Optional
 from uuid import uuid4
 
-from pydantic import UUID4, model_validator
+from pydantic import UUID4, Field, model_validator
 from pydantic.dataclasses import dataclass
 
 
@@ -23,7 +23,7 @@ class TariffCharge(ABC, Generic[MetricType]):
     resolution: str = "5T"
     window: Optional[str] = None
 
-    uuid: UUID4 = uuid4()
+    uuid: UUID4 = Field(default_factory=uuid4)
 
     @model_validator(mode="after")
     def validate_blocks_cannot_overlap(self) -> "TariffCharge":

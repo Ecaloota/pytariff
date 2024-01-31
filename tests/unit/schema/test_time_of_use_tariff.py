@@ -10,6 +10,7 @@ from utal._internal.charge import TariffCharge
 from utal._internal.day_type import DayType
 from utal._internal.days_applied import DaysApplied
 from utal._internal.generic_types import Consumption, SignConvention, TradeDirection
+from utal._internal.meter_profile import plot
 from utal._internal.period import ResetData, ResetPeriod
 from utal._internal.rate import TariffRate
 
@@ -250,7 +251,7 @@ def test_time_of_use_tariff_apply():
             ),
             unit=TariffUnit(metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive),
             reset_data=None,
-            method=UsageChargeMethod.cumsum,
+            method=UsageChargeMethod.identity,
         ),
     )
 
@@ -267,7 +268,7 @@ def test_time_of_use_tariff_apply():
             ),
             unit=TariffUnit(metric=Consumption.kWh, direction=TradeDirection.Export, convention=SignConvention.Passive),
             reset_data=None,
-            method=UsageChargeMethod.cumsum,
+            method=UsageChargeMethod.identity,
         ),
     )
 
@@ -299,10 +300,4 @@ def test_time_of_use_tariff_apply():
         ),
     )
 
-    print("foo")
-
-    # TODO some serious concerns from this test.
-    # 1. Costs are levied before profile is non-zero, presumably because the resampling is messing things up
-    #   Note for example that the costs always occur 5min before the start of the charge period, presumably when we
-    #   resample to 5T
-    # 2. Import costs are never applied in the cost_df...
+    # plot(cost_df, include_additional_cost_components=True)

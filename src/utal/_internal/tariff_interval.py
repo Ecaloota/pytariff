@@ -1,7 +1,8 @@
 from datetime import date, datetime, time
 from typing import Generic, Optional
+from uuid import uuid4
 
-from pydantic import model_validator
+from pydantic import UUID4, Field, model_validator
 
 from utal._internal.applied_interval import AppliedInterval
 from utal._internal.charge import ConsumptionCharge, DemandCharge, TariffCharge
@@ -13,6 +14,7 @@ class TariffInterval(AppliedInterval, Generic[MetricType]):
     associated with a single TariffCharge"""
 
     charge: TariffCharge[MetricType]
+    uuid: UUID4 = Field(default_factory=uuid4)
 
     # TODO resolve the type error in line below
     def __and__(self, other: "TariffInterval") -> Optional["TariffInterval"]:  # type: ignore
