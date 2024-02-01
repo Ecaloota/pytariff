@@ -20,7 +20,7 @@ class TariffBlock:
 
     uuid: UUID4 = Field(default_factory=uuid4)
 
-    @model_validator(mode="after")  # type: ignore
+    @model_validator(mode="after")
     def assert_from_lt_to(self) -> "TariffBlock":
         if self.to_quantity <= self.from_quantity:
             raise ValueError

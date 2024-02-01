@@ -29,7 +29,7 @@ class AwareDateTime(pandas_engine.DateTime):
         try:
             # assert each k in the index is aware;
             # accepts col with dytpe 'object' and mixed format timezones
-            return all(data_container.map(lambda x: x.tzinfo is not None))  # type: ignore
+            return all(data_container.map(lambda x: x.tzinfo is not None))
         except Exception:
             pass
 
@@ -52,7 +52,7 @@ class AwareDateTime(pandas_engine.DateTime):
         else:
             try:
                 # map is required, as call on Series is future deprecated
-                data_container = data_container.map(lambda x: pd.to_datetime(x))  # type: ignore
+                data_container = data_container.map(lambda x: pd.to_datetime(x))
 
                 # we know at least one indice is naive
                 if not all(data_container.map(lambda x: x.tzinfo is not None)):

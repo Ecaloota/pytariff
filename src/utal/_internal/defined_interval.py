@@ -29,7 +29,7 @@ class DefinedInterval(BaseModel):
 
     @model_validator(mode="after")
     def validate_model_is_aware(self) -> "DefinedInterval":
-        if (helper.is_naive(self.start) or helper.is_naive(self.end)) and self.tzinfo is None:  # type: ignore
+        if (helper.is_naive(self.start) or helper.is_naive(self.end)) and self.tzinfo is None:
             raise ValueError
         return self
 
@@ -45,7 +45,7 @@ class DefinedInterval(BaseModel):
 
     @model_validator(mode="after")
     def validate_timezones_match(self) -> "DefinedInterval":
-        if not self.start.tzinfo == self.end.tzinfo:  # type: ignore
+        if not self.start.tzinfo == self.end.tzinfo:
             raise ValueError
         return self
 

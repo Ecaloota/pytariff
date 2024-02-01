@@ -116,4 +116,4 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
         resampled_meter["export_cost"] = resampled_meter.filter(like="cost_export").sum(axis=1)
         resampled_meter["total_cost"] = resampled_meter["import_cost"] + resampled_meter["export_cost"]
 
-        return resampled_meter  # type: ignore
+        return resampled_meter

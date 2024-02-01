@@ -84,14 +84,14 @@ class DaysApplied(BaseModel):
     day_types: tuple[DayType, ...] | None = None
     holidays: HolidayBase | None = None
 
-    @model_validator(mode="after")  # type: ignore
+    @model_validator(mode="after")
     def validate_holidays_present_if_day_type_business_days(self) -> "DaysApplied":
         if self.day_types is not None:
             if DayType.BUSINESS_DAYS in self.day_types and (self.holidays is None or self.holidays.years == set()):
                 raise ValueError
         return self
 
-    @model_validator(mode="after")  # type: ignore
+    @model_validator(mode="after")
     def validate_holidays_present_if_day_type_holidays(self) -> "DaysApplied":
         if self.day_types is not None:
             if DayType.HOLIDAYS in self.day_types and (self.holidays is None or self.holidays.years == set()):
