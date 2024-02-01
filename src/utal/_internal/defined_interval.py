@@ -4,7 +4,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 import pandas as pd
 
-from pydantic import UUID4, BaseModel, ConfigDict, model_validator
+from pydantic import UUID4, BaseModel, ConfigDict, Field, model_validator
 
 from utal import helper
 from utal._internal.applied_interval import AppliedInterval
@@ -20,16 +20,16 @@ class DefinedInterval(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    start: datetime | date
-    end: datetime | date
+    start: datetime
+    end: datetime
     tzinfo: Optional[timezone | ZoneInfo] = None
     children: Optional[tuple[AppliedInterval, ...]] = None
 
-    uuid: UUID4 = uuid4()
+    uuid: UUID4 = Field(default_factory=uuid4)
 
     @model_validator(mode="after")
     def validate_model_is_aware(self) -> "DefinedInterval":
-        if (helper.is_naive(self.start) or helper.is_naive(self.end)) and self.tzinfo is None:  # type: ignore
+        if (helper.is_naive(self.start) or helper.is_naive(self.end)) and self.tzinfo is None:
             raise ValueError
         return self
 
@@ -45,7 +45,7 @@ class DefinedInterval(BaseModel):
 
     @model_validator(mode="after")
     def validate_timezones_match(self) -> "DefinedInterval":
-        if not self.start.tzinfo == self.end.tzinfo:  # type: ignore
+        if not self.start.tzinfo == self.end.tzinfo:
             raise ValueError
         return self
 

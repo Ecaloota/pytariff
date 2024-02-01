@@ -1,9 +1,9 @@
 import pytest
 
-from utal._internal.block import ConsumptionBlock, DemandBlock
-from utal._internal.generic_types import Consumption, Demand, SignConvention, TradeDirection
-from utal._internal.rate import TariffRate
-from utal._internal.unit import ConsumptionUnit, DemandUnit, RateCurrency
+from utal.core.block import ConsumptionBlock, DemandBlock
+from utal.core.typing import Consumption, Demand
+from utal.core.rate import TariffRate, RateCurrency
+from utal.core.unit import ConsumptionUnit, DemandUnit, SignConvention, TradeDirection
 
 
 @pytest.fixture

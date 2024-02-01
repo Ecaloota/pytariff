@@ -3,10 +3,10 @@ from typing import Optional
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from pydantic import UUID4, BaseModel, ConfigDict, model_validator
+from pydantic import UUID4, BaseModel, ConfigDict, Field, model_validator
 
 from utal import helper
-from utal._internal.days_applied import DaysApplied
+from utal.core.day import DaysApplied  # _internal shouldn't import from core...
 
 
 class AppliedInterval(BaseModel):
@@ -22,7 +22,7 @@ class AppliedInterval(BaseModel):
     days_applied: DaysApplied
     tzinfo: Optional[timezone | ZoneInfo] = None
 
-    uuid: UUID4 = uuid4()
+    uuid: UUID4 = Field(default_factory=uuid4)
 
     @model_validator(mode="after")
     def validate_start_time_aware(self) -> "AppliedInterval":

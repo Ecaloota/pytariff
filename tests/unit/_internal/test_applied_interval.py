@@ -5,8 +5,7 @@ import pytest
 from holidays import country_holidays
 
 from utal._internal.applied_interval import AppliedInterval
-from utal._internal.day_type import DayType
-from utal._internal.days_applied import DaysApplied
+from utal.core.day import DayType, DaysApplied
 
 GENERIC_TZ = timezone(offset=timedelta(hours=1))
 

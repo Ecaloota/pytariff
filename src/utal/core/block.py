@@ -1,17 +1,15 @@
-from abc import ABC
 from typing import Optional
 from uuid import uuid4
 
 from pydantic import UUID4, Field, model_validator
 from pydantic.dataclasses import dataclass
 
-from utal._internal.rate import MarketRate, TariffRate
+from utal.core.rate import MarketRate, TariffRate
 
 
 @dataclass
-class TariffBlock(ABC):
-    """Not to be used directly.
-
+class TariffBlock:
+    """
     TariffBlocks are right-open intervals over [from_quantity, to_quantity) defined for some unit
     and associated with a rate.
     """
@@ -20,9 +18,9 @@ class TariffBlock(ABC):
     from_quantity: float = Field(ge=0)
     to_quantity: float = Field(gt=0)
 
-    uuid: UUID4 = uuid4()
+    uuid: UUID4 = Field(default_factory=uuid4)
 
-    @model_validator(mode="after")  # type: ignore
+    @model_validator(mode="after")
     def assert_from_lt_to(self) -> "TariffBlock":
         if self.to_quantity <= self.from_quantity:
             raise ValueError

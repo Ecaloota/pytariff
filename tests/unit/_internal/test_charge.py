@@ -3,12 +3,13 @@ from zoneinfo import ZoneInfo
 from pydantic import ValidationError
 import pytest
 
-from utal._internal.block import ConsumptionBlock, DemandBlock, TariffBlock
-from utal._internal.charge import ConsumptionCharge, ExportConsumptionCharge, ImportConsumptionCharge, TariffCharge
-from utal._internal.generic_types import Consumption, Demand, SignConvention, TradeDirection
-from utal._internal.period import ResetData, ResetPeriod
-from utal._internal.rate import TariffRate
-from utal._internal.unit import ConsumptionUnit, DemandUnit, RateCurrency, TariffUnit
+from utal.core.block import ConsumptionBlock, DemandBlock, TariffBlock
+from utal.core.charge import ConsumptionCharge, ExportConsumptionCharge, ImportConsumptionCharge, TariffCharge
+from utal.core.typing import Consumption, Demand
+from utal.core.unit import SignConvention, TradeDirection
+from utal.core.reset import ResetData, ResetPeriod
+from utal.core.rate import TariffRate, RateCurrency
+from utal.core.unit import ConsumptionUnit, DemandUnit, TariffUnit
 
 
 def test_tariff_charge_valid_construction():
@@ -475,7 +476,8 @@ def test_consumption_charge_intersection_method(
     charge_b: ConsumptionCharge | TariffCharge,
     expected_intersection: ConsumptionCharge | None,
 ) -> None:
-    assert (charge_a & charge_b) == expected_intersection
+    intersection = charge_a & charge_b
+    assert intersection == expected_intersection
 
 
 @pytest.mark.parametrize(

@@ -1,19 +1,19 @@
-from abc import ABC
 from typing import Generic, Optional
 from uuid import uuid4
 
-from pydantic import UUID4, model_validator
+from pydantic import UUID4, Field, model_validator
 from pydantic.dataclasses import dataclass
 
 
-from utal._internal.block import ConsumptionBlock, DemandBlock, TariffBlock
-from utal._internal.generic_types import Consumption, Demand, MetricType, TradeDirection
-from utal._internal.period import ResetData
-from utal._internal.unit import ConsumptionUnit, DemandUnit, TariffUnit, UsageChargeMethod
+from utal.core.block import ConsumptionBlock, DemandBlock, TariffBlock
+from utal.core.typing import Consumption, Demand, MetricType
+from utal.core.unit import TradeDirection
+from utal.core.reset import ResetData
+from utal.core.unit import ConsumptionUnit, DemandUnit, TariffUnit, UsageChargeMethod
 
 
 @dataclass
-class TariffCharge(ABC, Generic[MetricType]):
+class TariffCharge(Generic[MetricType]):
     """Not to be used directly"""
 
     blocks: tuple[TariffBlock, ...]
@@ -23,7 +23,7 @@ class TariffCharge(ABC, Generic[MetricType]):
     resolution: str = "5T"
     window: Optional[str] = None
 
-    uuid: UUID4 = uuid4()
+    uuid: UUID4 = Field(default_factory=uuid4)
 
     @model_validator(mode="after")
     def validate_blocks_cannot_overlap(self) -> "TariffCharge":
@@ -132,6 +132,19 @@ class ConsumptionCharge(TariffCharge[Consumption]):
             reset_data=None,  # intersection between reset periods is ill-defined
         )
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ConsumptionCharge):
+            return False
+
+        return (
+            self.blocks == other.blocks
+            and self.unit == other.unit
+            and self.reset_data == other.reset_data
+            and self.method == other.method
+            and self.resolution == other.resolution
+            and self.window == other.window
+        )
+
 
 @dataclass
 class DemandCharge(TariffCharge[Demand]):
@@ -167,6 +180,19 @@ class DemandCharge(TariffCharge[Demand]):
             blocks=block_tuple,
             unit=self.unit,
             reset_data=None,  # intersection between reset periods is ill-defined
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, DemandCharge):
+            return False
+
+        return (
+            self.blocks == other.blocks
+            and self.unit == other.unit
+            and self.reset_data == other.reset_data
+            and self.method == other.method
+            and self.resolution == other.resolution
+            and self.window == other.window
         )
 
 

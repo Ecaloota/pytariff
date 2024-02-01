@@ -4,8 +4,7 @@ from typing import Optional
 import pytest
 from holidays import HolidayBase, country_holidays
 
-from utal._internal.day_type import DayType
-from utal._internal.days_applied import DaysApplied
+from utal.core.day import DayType, DaysApplied
 
 
 def no_day_type_holidays(t: DayType) -> HolidayBase:

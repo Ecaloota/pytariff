@@ -1,12 +1,11 @@
 from pydantic import model_validator
-from utal._internal.charge import DemandCharge
-from utal._internal.generic_types import Demand
-from utal._internal.meter_profile import MeterProfileSchema, TariffCostSchema
-from utal._internal.tariff_interval import DemandInterval
-from utal._internal.unit import TariffUnit
-from utal.schema.generic_tariff import GenericTariff
-import pandera as pa
-from pandera.typing import DataFrame
+from utal.core.charge import DemandCharge
+from utal.core.dataframe.profile import MeterProfileHandler
+from utal.core.typing import Demand
+from utal.core.interval import DemandInterval
+from utal.core.unit import TariffUnit
+from utal.core.tariff import GenericTariff
+import pandas as pd
 
 
 class DemandTariff(GenericTariff[Demand]):
@@ -31,8 +30,5 @@ class DemandTariff(GenericTariff[Demand]):
 
         return self
 
-    @pa.check_types
-    def apply(
-        self, meter_profile: DataFrame[MeterProfileSchema], profile_unit: TariffUnit
-    ) -> DataFrame[TariffCostSchema]:
-        return super().apply(meter_profile, profile_unit)
+    def apply_to(self, profile_handler: MeterProfileHandler, profile_unit: TariffUnit) -> pd.DataFrame:
+        return super().apply_to(profile_handler, profile_unit)

@@ -1,11 +1,10 @@
 from pydantic import model_validator
-from utal._internal.generic_types import MetricType
-from utal._internal.meter_profile import MeterProfileSchema, TariffCostSchema
-from utal._internal.tariff_interval import TariffInterval
-from utal._internal.unit import TariffUnit
-from utal.schema.generic_tariff import GenericTariff
-import pandera as pa
-from pandera.typing import DataFrame
+from utal.core.dataframe.profile import MeterProfileHandler
+from utal.core.typing import MetricType
+from utal.core.interval import TariffInterval
+from utal.core.unit import TariffUnit
+from utal.core.tariff import GenericTariff
+import pandas as pd
 
 
 class TimeOfUseTariff(GenericTariff[MetricType]):
@@ -29,25 +28,30 @@ class TimeOfUseTariff(GenericTariff[MetricType]):
         for i, child_a in enumerate(self.children):
             for j, child_b in enumerate(self.children):
                 if i != j:
+                    # Units must match to be considered an intersection
+                    if child_a.charge.unit != child_b.charge.unit:
+                        continue
+
                     # Tariff intervals must share days_applied and timezone attrs
                     if not (child_a.days_applied == child_b.days_applied and child_a.tzinfo == child_b.tzinfo):
-                        raise ValueError
+                        raise ValueError(
+                            "Tariff intervals in TimeOfUseTariff must share DaysApplied and tzinfo attributes"
+                        )
 
                     # Tariff intervals must contain unique, non-overlapping [start, end) intervals
                     if child_a.start_time is None or child_a.end_time is None:
-                        raise ValueError
+                        raise ValueError("TimeOfUseTariff children must contain non-null start and end times")
                     if child_b.start_time is None or child_b.end_time is None:
-                        raise ValueError
+                        raise ValueError("TimeOfUseTariff children must contain non-null start and end times")
 
                     start_intersection = max(child_a.start_time, child_b.start_time)
                     end_intersection = min(child_a.end_time, child_b.end_time)
                     if start_intersection < end_intersection:
-                        raise ValueError  # TODO verify this
+                        raise ValueError(
+                            "Tariff intervals in TimeOfUseTariff must contain unique, non-overlapping time intervals"
+                        )  # TODO verify this
 
         return self
 
-    @pa.check_types
-    def apply(
-        self, meter_profile: DataFrame[MeterProfileSchema], tariff_unit: TariffUnit
-    ) -> DataFrame[TariffCostSchema]:
-        return super().apply(meter_profile, tariff_unit)
+    def apply_to(self, profile_handler: MeterProfileHandler, tariff_unit: TariffUnit) -> pd.DataFrame:
+        return super().apply_to(profile_handler, tariff_unit)

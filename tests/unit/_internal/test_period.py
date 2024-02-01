@@ -1,7 +1,7 @@
 from datetime import datetime
 import pytest
 
-from utal._internal.period import ResetPeriod
+from utal.core.reset import ResetPeriod
 
 
 @pytest.mark.parametrize(
