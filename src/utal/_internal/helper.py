@@ -5,17 +5,14 @@ from zoneinfo import ZoneInfo
 T = TypeVar("T")
 
 
-# TODO test this
 def is_date_type(obj: T) -> TypeGuard[date]:
     return isinstance(obj, date) and not isinstance(obj, datetime)
 
 
-# TODO test this
 def is_datetime_type(obj: T) -> TypeGuard[datetime]:
     return not is_date_type(obj) and isinstance(obj, datetime)
 
 
-# TODO test this
 def is_aware(obj: datetime | time) -> bool:
     if is_datetime_type(obj):
         return obj.tzinfo is not None and obj.utcoffset() is not None
@@ -25,7 +22,6 @@ def is_aware(obj: datetime | time) -> bool:
     return (is_datetime_type(obj) or isinstance(obj, time)) and obj.tzinfo is not None and obj.utcoffset() is not None
 
 
-# TODO test this
 def is_naive(obj: datetime | time) -> bool:
     return not is_aware(obj)
 
