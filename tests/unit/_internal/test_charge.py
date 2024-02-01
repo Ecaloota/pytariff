@@ -476,7 +476,8 @@ def test_consumption_charge_intersection_method(
     charge_b: ConsumptionCharge | TariffCharge,
     expected_intersection: ConsumptionCharge | None,
 ) -> None:
-    assert (charge_a & charge_b) == expected_intersection
+    intersection = charge_a & charge_b
+    assert intersection == expected_intersection
 
 
 @pytest.mark.parametrize(

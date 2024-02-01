@@ -291,12 +291,12 @@ def test_meter_profile_schema_transform_method(
 
     transformed = transform(datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), data, charge, meter_unit)
 
-    assert list(transformed._import_profile) == exp_import_profile
-    assert list(transformed._export_profile) == exp_export_profile
-    assert list(transformed._import_profile_cumsum) == exp_cumsum_import
-    assert list(transformed._export_profile_cumsum) == exp_cumsum_export
-    assert list(transformed._import_profile_max) == exp_import_max
-    assert list(transformed._export_profile_max) == exp_export_max
+    assert list(transformed._import_profile_usage) == exp_import_profile
+    assert list(transformed._export_profile_usage) == exp_export_profile
+    assert list(transformed._import_profile_usage_cumsum) == exp_cumsum_import
+    assert list(transformed._export_profile_usage_cumsum) == exp_cumsum_export
+    assert list(transformed._import_profile_usage_max) == exp_import_max
+    assert list(transformed._export_profile_usage_max) == exp_export_max
 
 
 # @pytest.mark.parametrize(

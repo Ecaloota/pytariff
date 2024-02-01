@@ -132,6 +132,19 @@ class ConsumptionCharge(TariffCharge[Consumption]):
             reset_data=None,  # intersection between reset periods is ill-defined
         )
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ConsumptionCharge):
+            return False
+
+        return (
+            self.blocks == other.blocks
+            and self.unit == other.unit
+            and self.reset_data == other.reset_data
+            and self.method == other.method
+            and self.resolution == other.resolution
+            and self.window == other.window
+        )
+
 
 @dataclass
 class DemandCharge(TariffCharge[Demand]):
@@ -167,6 +180,19 @@ class DemandCharge(TariffCharge[Demand]):
             blocks=block_tuple,
             unit=self.unit,
             reset_data=None,  # intersection between reset periods is ill-defined
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, DemandCharge):
+            return False
+
+        return (
+            self.blocks == other.blocks
+            and self.unit == other.unit
+            and self.reset_data == other.reset_data
+            and self.method == other.method
+            and self.resolution == other.resolution
+            and self.window == other.window
         )
 
 
