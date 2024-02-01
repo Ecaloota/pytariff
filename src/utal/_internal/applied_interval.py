@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 from pydantic import UUID4, BaseModel, ConfigDict, Field, model_validator
 
 from utal import helper
-from utal._internal.days_applied import DaysApplied
+from utal.core.day import DaysApplied  # _internal shouldn't import from core...
 
 
 class AppliedInterval(BaseModel):

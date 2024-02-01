@@ -4,7 +4,7 @@ from uuid import uuid4
 from pydantic import UUID4, Field, model_validator
 from pydantic.dataclasses import dataclass
 
-from utal._internal.rate import MarketRate, TariffRate
+from utal.core.rate import MarketRate, TariffRate
 
 
 @dataclass

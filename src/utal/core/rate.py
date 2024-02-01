@@ -1,8 +1,32 @@
 from datetime import datetime
+from enum import Enum
 from typing import Any
 from pydantic.dataclasses import dataclass
 
-from utal._internal.currency import RateCurrency
+
+# TODO probably not required to have this
+class RateCurrency(Enum):
+    AUD = ("$", "AUD")
+    _null = ("_null", "_null")  # for internal use only
+
+    def __init__(self, symbol: str, iso: str) -> None:
+        self._symbol = symbol
+        self._iso = iso
+
+    def __repr__(self) -> str:
+        return self._iso + ":" + self._symbol
+
+    @property
+    def symbol(self) -> str:
+        return self._symbol
+
+    @property
+    def sign(self) -> str:
+        return self._symbol
+
+    @property
+    def iso(self) -> str:
+        return self._iso
 
 
 @dataclass

@@ -3,9 +3,8 @@ from typing import Any, Optional
 import pytest
 from pydantic import ValidationError
 
-from utal._internal.block import ConsumptionBlock, TariffBlock
-from utal._internal.rate import TariffRate
-from utal._internal.currency import RateCurrency
+from utal.core.block import ConsumptionBlock, TariffBlock
+from utal.core.rate import TariffRate, RateCurrency
 
 
 @pytest.mark.parametrize(

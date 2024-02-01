@@ -3,19 +3,17 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 from pydantic import ValidationError
-from utal._internal.block import ConsumptionBlock
-from utal._internal.charge import ConsumptionCharge
-from utal._internal.day_type import DayType
-from utal._internal.days_applied import DaysApplied
-from utal._internal.period import ResetData, ResetPeriod
-from utal.schema.consumption_tariff import ConsumptionTariff
-from utal._internal.generic_types import Consumption, SignConvention, TradeDirection
-from utal._internal.rate import TariffRate
-from utal._internal.tariff_interval import ConsumptionInterval
+from utal.core.block import ConsumptionBlock
+from utal.core.charge import ConsumptionCharge
+from utal.core.dataframe.profile import MeterProfileHandler
+from utal.core.day import DayType, DaysApplied
+from utal.core.reset import ResetData, ResetPeriod
+from utal.core.tariff import ConsumptionTariff
+from utal.core.typing import Consumption
+from utal.core.unit import ConsumptionUnit, TariffUnit, UsageChargeMethod, SignConvention, TradeDirection
+from utal.core.rate import TariffRate, RateCurrency
+from utal.core.interval import ConsumptionInterval
 import pytest
-
-from utal._internal.unit import ConsumptionUnit, TariffUnit, UsageChargeMethod
-from utal._internal.currency import RateCurrency
 
 
 @pytest.mark.parametrize(
@@ -78,7 +76,7 @@ def test_consumption_tariff_valid_construction(block_fixture: str, raises: bool,
         )
 
 
-def test_consumption_tariff_apply_method():
+def test_consumption_tariff_apply_to_method():
     """"""
 
     meter_profile = pd.DataFrame(
@@ -117,8 +115,9 @@ def test_consumption_tariff_apply_method():
         ),
     )
 
-    cost_schema = tariff.apply(  # noqa
-        meter_profile,
+    handler = MeterProfileHandler(meter_profile)
+    cost_schema = tariff.apply_to(  # noqa
+        handler,
         profile_unit=TariffUnit(
             metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
         ),

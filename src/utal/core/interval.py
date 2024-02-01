@@ -5,8 +5,8 @@ from uuid import uuid4
 from pydantic import UUID4, Field, model_validator
 
 from utal._internal.applied_interval import AppliedInterval
-from utal._internal.charge import ConsumptionCharge, DemandCharge, TariffCharge
-from utal._internal.generic_types import Consumption, Demand, MetricType
+from utal.core.charge import ConsumptionCharge, DemandCharge, TariffCharge
+from utal.core.typing import Consumption, Demand, MetricType
 
 
 class TariffInterval(AppliedInterval, Generic[MetricType]):

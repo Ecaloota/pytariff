@@ -3,18 +3,17 @@ from typing import Any
 from zoneinfo import ZoneInfo
 from pydantic import ValidationError
 import pytest
-from utal._internal.block import ConsumptionBlock, DemandBlock
-from utal._internal.charge import ConsumptionCharge, DemandCharge
-from utal._internal.day_type import DayType
-from utal._internal.days_applied import DaysApplied
-from utal._internal.generic_types import Consumption, Demand, SignConvention, TradeDirection
-from utal._internal.period import ResetData, ResetPeriod
-from utal._internal.rate import TariffRate
 
-from utal._internal.tariff_interval import ConsumptionInterval, DemandInterval
-from utal._internal.unit import ConsumptionUnit, DemandUnit, UsageChargeMethod
-from utal._internal.currency import RateCurrency
-from utal.schema.demand_tariff import DemandTariff
+from utal.core.block import ConsumptionBlock, DemandBlock
+from utal.core.charge import ConsumptionCharge, DemandCharge
+from utal.core.day import DayType, DaysApplied
+from utal.core.typing import Consumption, Demand
+from utal.core.reset import ResetData, ResetPeriod
+from utal.core.rate import TariffRate, RateCurrency
+
+from utal.core.interval import ConsumptionInterval, DemandInterval
+from utal.core.unit import ConsumptionUnit, DemandUnit, UsageChargeMethod, SignConvention, TradeDirection
+from utal.core.tariff import DemandTariff
 
 
 @pytest.mark.parametrize(

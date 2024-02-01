@@ -1,11 +1,10 @@
 from pydantic import model_validator
-from utal._internal.generic_types import MetricType
-from utal._internal.meter_profile import MeterProfileSchema, TariffCostSchema
-from utal._internal.tariff_interval import TariffInterval
-from utal._internal.unit import TariffUnit
-from utal.schema.generic_tariff import GenericTariff
-import pandera as pa
-from pandera.typing import DataFrame
+from utal.core.dataframe.profile import MeterProfileHandler
+from utal.core.typing import MetricType
+from utal.core.interval import TariffInterval
+from utal.core.unit import TariffUnit
+from utal.core.tariff import GenericTariff
+import pandas as pd
 
 
 class TimeOfUseTariff(GenericTariff[MetricType]):
@@ -54,8 +53,5 @@ class TimeOfUseTariff(GenericTariff[MetricType]):
 
         return self
 
-    @pa.check_types
-    def apply(
-        self, meter_profile: DataFrame[MeterProfileSchema], tariff_unit: TariffUnit
-    ) -> DataFrame[TariffCostSchema]:
-        return super().apply(meter_profile, tariff_unit)
+    def apply_to(self, profile_handler: MeterProfileHandler, tariff_unit: TariffUnit) -> pd.DataFrame:
+        return super().apply_to(profile_handler, tariff_unit)

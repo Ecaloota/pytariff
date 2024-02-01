@@ -3,15 +3,13 @@ from typing import Generic, Optional
 from zoneinfo import ZoneInfo
 import pandas as pd
 
-import pandera as pa
-from pandera.typing import DataFrame
 from pydantic import model_validator
-from utal._internal.charge import TariffCharge
+from utal.core.charge import TariffCharge
 from utal._internal.defined_interval import DefinedInterval
-from utal._internal.generic_types import MetricType, TradeDirection
-from utal._internal.meter_profile import MeterProfileSchema, TariffCostSchema, resample, transform
-from utal._internal.tariff_interval import TariffInterval
-from utal._internal.unit import TariffUnit
+from utal.core.dataframe.profile import MeterProfileHandler
+from utal.core.typing import MetricType
+from utal.core.unit import TradeDirection, TariffUnit
+from utal.core.interval import TariffInterval
 
 
 class GenericTariff(DefinedInterval, Generic[MetricType]):
@@ -36,12 +34,11 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
             raise ValueError
         return self
 
-    @pa.check_types
-    def apply(
+    def apply_to(
         self,
-        meter_profile: DataFrame[MeterProfileSchema],
+        profile_handler: MeterProfileHandler,
         profile_unit: TariffUnit,
-    ) -> DataFrame[TariffCostSchema]:
+    ) -> pd.DataFrame:
         """"""
 
         def _block_map_name(charge: TariffCharge) -> str:
@@ -74,7 +71,7 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
             return 0.0
 
         child_resolution = [x.charge.resolution for x in self.children][0]
-        resampled_meter = resample(meter_profile, child_resolution, window=None)
+        resampled_meter = profile_handler._utal_resample(child_resolution)
         tariff_start = self.start  # needed to calculate reset_period start
 
         for child in self.children:
@@ -83,11 +80,11 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
                 pass
 
             # resample the meter profile given charge information
-            charge_profile = resample(meter_profile, child_resolution, window=child.charge.window)
+            charge_profile = profile_handler._utal_resample(child_resolution, window=child.charge.window)
 
             # calculate the cumulative profile including reset_period tracking given charge information
             # also split the profile into _import and _export quantities so we can determine cost sign for given charge
-            charge_profile = transform(tariff_start, charge_profile, child.charge, profile_unit)  # type: ignore
+            charge_profile = profile_handler._utal_transform(tariff_start, child.charge)
 
             # The charge map denotes whether the charge profile indices are contained within the meter profile given
             charge_map = charge_profile.index.map(self.__contains__)

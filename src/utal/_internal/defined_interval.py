@@ -20,8 +20,8 @@ class DefinedInterval(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    start: datetime | date
-    end: datetime | date
+    start: datetime
+    end: datetime
     tzinfo: Optional[timezone | ZoneInfo] = None
     children: Optional[tuple[AppliedInterval, ...]] = None
 

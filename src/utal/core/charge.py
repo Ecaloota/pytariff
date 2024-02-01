@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import Generic, Optional
 from uuid import uuid4
 
@@ -6,14 +5,15 @@ from pydantic import UUID4, Field, model_validator
 from pydantic.dataclasses import dataclass
 
 
-from utal._internal.block import ConsumptionBlock, DemandBlock, TariffBlock
-from utal._internal.generic_types import Consumption, Demand, MetricType, TradeDirection
-from utal._internal.period import ResetData
-from utal._internal.unit import ConsumptionUnit, DemandUnit, TariffUnit, UsageChargeMethod
+from utal.core.block import ConsumptionBlock, DemandBlock, TariffBlock
+from utal.core.typing import Consumption, Demand, MetricType
+from utal.core.unit import TradeDirection
+from utal.core.reset import ResetData
+from utal.core.unit import ConsumptionUnit, DemandUnit, TariffUnit, UsageChargeMethod
 
 
 @dataclass
-class TariffCharge(ABC, Generic[MetricType]):
+class TariffCharge(Generic[MetricType]):
     """Not to be used directly"""
 
     blocks: tuple[TariffBlock, ...]

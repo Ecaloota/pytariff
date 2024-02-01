@@ -5,8 +5,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from utal._internal.applied_interval import AppliedInterval
-from utal._internal.day_type import DayType
-from utal._internal.days_applied import DaysApplied
+from utal.core.day import DayType, DaysApplied
 from utal._internal.defined_interval import DefinedInterval
 
 

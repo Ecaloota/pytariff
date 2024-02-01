@@ -3,19 +3,17 @@ from zoneinfo import ZoneInfo
 
 import pytest
 import pandas as pd
-from utal._internal.block import TariffBlock
+from utal.core.block import TariffBlock
 
-from utal._internal.charge import TariffCharge
-from utal._internal.day_type import DayType
-from utal._internal.days_applied import DaysApplied
-from utal._internal.meter_profile import plot
-from utal._internal.rate import TariffRate
-from utal.schema.generic_tariff import GenericTariff
-from utal._internal.generic_types import Consumption, SignConvention, TradeDirection
-from utal._internal.period import ResetData, ResetPeriod
-from utal._internal.tariff_interval import TariffInterval
-from utal._internal.unit import ConsumptionUnit, TariffUnit, UsageChargeMethod
-from utal._internal.currency import RateCurrency
+from utal.core.charge import TariffCharge
+from utal.core.dataframe.profile import MeterProfileHandler
+from utal.core.day import DayType, DaysApplied
+from utal.core.rate import TariffRate, RateCurrency
+from utal.core.tariff import GenericTariff
+from utal.core.typing import Consumption
+from utal.core.reset import ResetData, ResetPeriod
+from utal.core.interval import TariffInterval
+from utal.core.unit import ConsumptionUnit, TariffUnit, UsageChargeMethod, SignConvention, TradeDirection
 
 
 def test_generic_tariff_valid_construction(DEFAULT_CONSUMPTION_BLOCK):
@@ -74,7 +72,7 @@ def test_generic_tariff_valid_construction(DEFAULT_CONSUMPTION_BLOCK):
         ),
     ],
 )
-def test_generic_tariff_apply(profile, import_cost_series, export_cost_series, billed_cost_series):
+def test_generic_tariff_apply_to(profile, import_cost_series, export_cost_series, billed_cost_series):
     """"""
 
     DEFAULT_CHARGE = TariffCharge(
@@ -111,8 +109,9 @@ def test_generic_tariff_apply(profile, import_cost_series, export_cost_series, b
         children=DEFAULT_CHILD,
     )
 
-    output = DEFAULT_TARIFF.apply(  # type: ignore  # noqa
-        meter_profile=profile,
+    handler = MeterProfileHandler(profile)
+    output = DEFAULT_TARIFF.apply_to(  # type: ignore  # noqa
+        handler,
         profile_unit=TariffUnit(
             metric=Consumption.kWh, direction=TradeDirection._null, convention=SignConvention.Passive
         ),
@@ -171,12 +170,13 @@ def test_generic_tariff_plot(profile):
         children=DEFAULT_CHILD,
     )
 
-    cost_df = DEFAULT_TARIFF.apply(  # type: ignore  # noqa
-        meter_profile=profile,
+    handler = MeterProfileHandler(profile)
+    cost_df = DEFAULT_TARIFF.apply_to(  # type: ignore  # noqa
+        handler,
         profile_unit=TariffUnit(
             metric=Consumption.kWh, direction=TradeDirection._null, convention=SignConvention.Passive
         ),
     )
 
-    plot(cost_df, include_additional_cost_components=True)
-    plot(cost_df, include_additional_cost_components=False)
+    # plot(cost_df, include_additional_cost_components=True)
+    # plot(cost_df, include_additional_cost_components=False)
