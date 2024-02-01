@@ -5,7 +5,7 @@ from holidays import HolidayBase
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from utal import helper
+from utal._internal import helper
 
 
 class DayType(Enum):

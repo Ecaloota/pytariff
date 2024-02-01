@@ -1,19 +1,17 @@
 from datetime import datetime
-from zoneinfo import ZoneInfo
-
 from unittest import mock
-import numpy as np
-
+from zoneinfo import ZoneInfo
 import pandas as pd
+import numpy as np
 import pytest
 from pandera.errors import SchemaError
 from utal.core.charge import TariffCharge
-from utal.core.dataframe.profile import MeterProfileHandler, MeterProfileSchema
-from utal.core.typing import Consumption
-from utal.core.unit import SignConvention, TradeDirection
 
+
+from utal.core.dataframe.profile import MeterProfileHandler, MeterProfileSchema
 from utal.core.reset import ResetData, ResetPeriod
-from utal.core.unit import TariffUnit
+from utal.core.typing import Consumption
+from utal.core.unit import SignConvention, TariffUnit, TradeDirection
 
 
 @pytest.mark.parametrize(

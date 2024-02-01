@@ -3,7 +3,7 @@ from enum import Enum
 
 from pydantic.dataclasses import dataclass
 from pydantic import model_validator
-from utal.helper import is_aware
+from utal._internal.helper import is_aware
 
 
 class ResetPeriod(Enum):
@@ -24,7 +24,6 @@ class ResetPeriod(Enum):
     def _is_daily(self) -> bool:
         return self.name in ["DAILY", "WEEKLY"]
 
-    # TODO test this
     def count_occurences(self, until: datetime, reference: datetime) -> int:
         """Count the number of times since reference time until time until that the given ResetPeriod
         has occurred. Used to keep track of ResetPeriods"""
