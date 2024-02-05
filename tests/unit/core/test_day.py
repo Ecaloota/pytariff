@@ -3,7 +3,7 @@ from typing import Optional
 import pytest
 
 from holidays import HolidayBase, country_holidays
-from utal.core.day import DayType, DaysApplied
+from pytariff.core.day import DayType, DaysApplied
 
 
 @pytest.mark.parametrize(

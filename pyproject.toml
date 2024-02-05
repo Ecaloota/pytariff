@@ -29,9 +29,9 @@ requires = ["setuptools >= 40.9.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "utal"
+name = "pytariff"
 version = "0.0.0"
-description = "United Tariff Library"
+description = "For representing generic electrical tariffs"
 dependencies = []
 
 [project.optional-dependencies]

@@ -53,6 +53,7 @@ import_charge = pt.TariffInterval(
     ),
 )
 
+# define the export charge
 export_charge = pt.TariffInterval(
     start_time=time(0),
     end_time=time(0),
@@ -79,6 +80,7 @@ export_charge = pt.TariffInterval(
     ),
 )
 
+# define the parent time-of-use tariff
 tou_tariff = TimeOfUseTariff(
     start=datetime(2023, 1, 1),
     end=datetime(2024, 1, 1),
@@ -91,7 +93,7 @@ tou_tariff = TimeOfUseTariff(
 
 Now that we have defined a tariff, we are able to investigate how costs are levied against energy usage. Before we begin, we must define metering data for the tariff to be applied towards, and provide a ```MeterProfileHandler``` which can be used by PyTariff:
 
-```
+```python3
 import pandas as pd
 import numpy as np
 from zoneinfo import ZoneInfo
@@ -110,7 +112,10 @@ meter_profile = pd.DataFrame(
 handler = MeterProfileHandler(meter_profile)
 cost_df = tou_tariff.apply_to(
     handler,
-    tariff_unit=TariffUnit(metric=Consumption.kWh, convention=SignConvention.Passive),
+    tariff_unit=TariffUnit(
+        metric=Consumption.kWh,
+        convention=SignConvention.Passive
+    ),
 )
 
 ```
@@ -121,15 +126,13 @@ We can call ```.apply_to``` with our ```MeterProfileHandler``` and a ```TariffUn
 
 The output ```cost_df``` contains a breakdown of the costs by ```TariffCharge``` and ```TariffBlock``` combinations in each of the ```TradeDirection```s. It also contains columns which tally the total ```import_cost```, ```export_cost```, and ```total_cost```. This dataframe, and all the cost components, can be easily visualised by passing the results to a ```TariffCostHandler```:
 
-```
+```python3
 cost_handler = TariffCostHandler(cost_df)
 cost_handler.plot(include_additional_cost_components=True)
 ```
 
-![Example TOU Tariff](src/utal/docs/img/tou_example.png)
+![Example TOU Tariff](src/pytariff/docs/img/tou_example.png)
 
-
-<!-- Plot goes here TODO -->
 
 <!-- ## Schema
 

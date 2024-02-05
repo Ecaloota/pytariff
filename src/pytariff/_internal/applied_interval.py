@@ -5,8 +5,8 @@ from zoneinfo import ZoneInfo
 
 from pydantic import UUID4, BaseModel, ConfigDict, Field, model_validator
 
-from utal._internal import helper
-from utal.core.day import DaysApplied  # _internal shouldn't import from core...
+from pytariff._internal import helper
+from pytariff.core.day import DaysApplied  # _internal shouldn't import from core...
 
 
 class AppliedInterval(BaseModel):

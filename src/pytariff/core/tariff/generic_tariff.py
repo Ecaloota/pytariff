@@ -4,12 +4,12 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 from pydantic import model_validator
-from utal.core.charge import TariffCharge
-from utal._internal.defined_interval import DefinedInterval
-from utal.core.dataframe.profile import MeterProfileHandler
-from utal.core.typing import MetricType
-from utal.core.unit import TradeDirection, TariffUnit
-from utal.core.interval import TariffInterval
+from pytariff.core.charge import TariffCharge
+from pytariff._internal.defined_interval import DefinedInterval
+from pytariff.core.dataframe.profile import MeterProfileHandler
+from pytariff.core.typing import MetricType
+from pytariff.core.unit import TradeDirection, TariffUnit
+from pytariff.core.interval import TariffInterval
 
 
 class GenericTariff(DefinedInterval, Generic[MetricType]):
@@ -73,7 +73,7 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
             return 0.0
 
         child_resolution = [x.charge.resolution for x in self.children][0]
-        resampled_meter = profile_handler._utal_resample(profile_handler.profile, child_resolution)
+        resampled_meter = profile_handler._pytariff_resample(profile_handler.profile, child_resolution)
         tariff_start = self.start  # needed to calculate reset_period start
 
         for child in self.children:
@@ -82,13 +82,13 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
                 pass
 
             # resample the meter profile given charge information
-            charge_profile = profile_handler._utal_resample(
+            charge_profile = profile_handler._pytariff_resample(
                 profile_handler.profile, child_resolution, window=child.charge.window
             )
 
             # calculate the cumulative profile including reset_period tracking given charge information
             # also split the profile into _import and _export quantities so we can determine cost sign for given charge
-            charge_profile = profile_handler._utal_transform(charge_profile, tariff_start, child.charge)
+            charge_profile = profile_handler._pytariff_transform(charge_profile, tariff_start, child.charge)
 
             # The charge map denotes whether the charge profile indices are contained within the meter profile given
             charge_map = charge_profile.index.map(self.__contains__)

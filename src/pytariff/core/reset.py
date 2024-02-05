@@ -3,7 +3,7 @@ from enum import Enum
 
 from pydantic.dataclasses import dataclass
 from pydantic import model_validator
-from utal._internal.helper import is_aware
+from pytariff._internal.helper import is_aware
 
 
 class ResetPeriod(Enum):

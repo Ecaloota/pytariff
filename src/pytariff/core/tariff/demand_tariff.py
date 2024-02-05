@@ -1,10 +1,10 @@
 from pydantic import model_validator
-from utal.core.charge import DemandCharge
-from utal.core.dataframe.profile import MeterProfileHandler
-from utal.core.typing import Demand
-from utal.core.interval import DemandInterval
-from utal.core.unit import TariffUnit
-from utal.core.tariff import GenericTariff
+from pytariff.core.charge import DemandCharge
+from pytariff.core.dataframe.profile import MeterProfileHandler
+from pytariff.core.typing import Demand
+from pytariff.core.interval import DemandInterval
+from pytariff.core.unit import TariffUnit
+from pytariff.core.tariff import GenericTariff
 import pandas as pd
 
 

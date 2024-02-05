@@ -1,7 +1,7 @@
 from datetime import datetime
 import pytest
 
-from utal.core.reset import ResetPeriod
+from pytariff.core.reset import ResetPeriod
 
 
 @pytest.mark.parametrize(

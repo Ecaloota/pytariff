@@ -4,16 +4,16 @@ from zoneinfo import ZoneInfo
 from pydantic import ValidationError
 import pytest
 
-from utal.core.block import ConsumptionBlock, DemandBlock
-from utal.core.charge import ConsumptionCharge, DemandCharge
-from utal.core.day import DayType, DaysApplied
-from utal.core.typing import Consumption, Demand
-from utal.core.reset import ResetData, ResetPeriod
-from utal.core.rate import TariffRate
+from pytariff.core.block import ConsumptionBlock, DemandBlock
+from pytariff.core.charge import ConsumptionCharge, DemandCharge
+from pytariff.core.day import DayType, DaysApplied
+from pytariff.core.typing import Consumption, Demand
+from pytariff.core.reset import ResetData, ResetPeriod
+from pytariff.core.rate import TariffRate
 
-from utal.core.interval import ConsumptionInterval, DemandInterval
-from utal.core.unit import ConsumptionUnit, DemandUnit, UsageChargeMethod, SignConvention, TradeDirection
-from utal.core.tariff import DemandTariff
+from pytariff.core.interval import ConsumptionInterval, DemandInterval
+from pytariff.core.unit import ConsumptionUnit, DemandUnit, UsageChargeMethod, SignConvention, TradeDirection
+from pytariff.core.tariff import DemandTariff
 
 
 @pytest.mark.parametrize(

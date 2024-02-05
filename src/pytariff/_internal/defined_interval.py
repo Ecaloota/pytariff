@@ -6,8 +6,8 @@ import pandas as pd
 
 from pydantic import UUID4, BaseModel, ConfigDict, Field, model_validator
 
-from utal._internal import helper
-from utal._internal.applied_interval import AppliedInterval
+from pytariff._internal import helper
+from pytariff._internal.applied_interval import AppliedInterval
 
 
 class DefinedInterval(BaseModel):

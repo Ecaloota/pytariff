@@ -5,11 +5,11 @@ from pydantic import UUID4, Field, model_validator
 from pydantic.dataclasses import dataclass
 
 
-from utal.core.block import ConsumptionBlock, DemandBlock, TariffBlock
-from utal.core.typing import Consumption, Demand, MetricType
-from utal.core.unit import TradeDirection
-from utal.core.reset import ResetData
-from utal.core.unit import ConsumptionUnit, DemandUnit, TariffUnit, UsageChargeMethod
+from pytariff.core.block import ConsumptionBlock, DemandBlock, TariffBlock
+from pytariff.core.typing import Consumption, Demand, MetricType
+from pytariff.core.unit import TradeDirection
+from pytariff.core.reset import ResetData
+from pytariff.core.unit import ConsumptionUnit, DemandUnit, TariffUnit, UsageChargeMethod
 
 
 @dataclass
