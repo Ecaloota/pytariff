@@ -9,7 +9,7 @@ from utal.core.charge import TariffCharge
 from utal.core.day import DayType, DaysApplied
 from utal.core.typing import Demand
 from utal.core.reset import ResetData, ResetPeriod
-from utal.core.rate import TariffRate, RateCurrency
+from utal.core.rate import TariffRate
 from utal.core.interval import TariffInterval
 from utal.core.unit import TariffUnit, UsageChargeMethod, SignConvention, TradeDirection
 
@@ -33,12 +33,12 @@ from utal.core.tariff import SingleRateTariff
                     charge=TariffCharge(
                         blocks=(
                             TariffBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=1.0),
+                                rate=TariffRate(currency="AUD", value=1.0),
                                 from_quantity=0,
                                 to_quantity=100,
                             ),
                             TariffBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=2.0),
+                                rate=TariffRate(currency="AUD", value=2.0),
                                 from_quantity=100,
                                 to_quantity=float("inf"),
                             ),
@@ -67,7 +67,7 @@ from utal.core.tariff import SingleRateTariff
                     charge=TariffCharge(
                         blocks=(
                             TariffBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=2.0),
+                                rate=TariffRate(currency="AUD", value=2.0),
                                 from_quantity=0,
                                 to_quantity=float("inf"),
                             ),
@@ -96,7 +96,7 @@ from utal.core.tariff import SingleRateTariff
                     charge=TariffCharge(
                         blocks=(
                             TariffBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=2.0),
+                                rate=TariffRate(currency="AUD", value=2.0),
                                 from_quantity=0,
                                 to_quantity=float("inf"),
                             ),
@@ -120,7 +120,7 @@ from utal.core.tariff import SingleRateTariff
                     charge=TariffCharge(
                         blocks=(
                             TariffBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=2.0),
+                                rate=TariffRate(currency="AUD", value=2.0),
                                 from_quantity=0,
                                 to_quantity=float("inf"),
                             ),

@@ -11,7 +11,7 @@ from utal.core.reset import ResetData, ResetPeriod
 from utal.core.tariff import ConsumptionTariff
 from utal.core.typing import Consumption
 from utal.core.unit import ConsumptionUnit, TariffUnit, UsageChargeMethod, SignConvention, TradeDirection
-from utal.core.rate import TariffRate, RateCurrency
+from utal.core.rate import TariffRate
 from utal.core.interval import ConsumptionInterval
 import pytest
 
@@ -101,7 +101,7 @@ def test_consumption_tariff_apply_to_method():
                         ConsumptionBlock(
                             from_quantity=0,
                             to_quantity=float("inf"),
-                            rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                            rate=TariffRate(currency="AUD", value=1),
                         ),
                     ),
                     unit=ConsumptionUnit(

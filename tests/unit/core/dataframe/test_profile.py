@@ -1,19 +1,17 @@
 from datetime import datetime
-from zoneinfo import ZoneInfo
-
 from unittest import mock
-import numpy as np
-
+from zoneinfo import ZoneInfo
 import pandas as pd
+import numpy as np
 import pytest
 from pandera.errors import SchemaError
 from utal.core.charge import TariffCharge
-from utal.core.dataframe.profile import MeterProfileHandler, MeterProfileSchema
-from utal.core.typing import Consumption
-from utal.core.unit import SignConvention, TradeDirection
 
+
+from utal.core.dataframe.profile import MeterProfileHandler, MeterProfileSchema
 from utal.core.reset import ResetData, ResetPeriod
-from utal.core.unit import TariffUnit
+from utal.core.typing import Consumption
+from utal.core.unit import SignConvention, TariffUnit, TradeDirection
 
 
 @pytest.mark.parametrize(
@@ -175,7 +173,7 @@ def test_meter_profile_schema_resample_method(
     """TODO"""
 
     handler = MeterProfileHandler(data)
-    resampled = handler._utal_resample(charge_resolution)
+    resampled = handler._utal_resample(handler.profile, charge_resolution)
     assert list(resampled.profile) == expected_resampled_list
 
 
@@ -299,7 +297,7 @@ def test_meter_profile_schema_transform_method(
     """TODO"""
 
     handler = MeterProfileHandler(data)
-    transformed = handler._utal_transform(datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), charge)
+    transformed = handler._utal_transform(handler.profile, datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), charge)
 
     assert list(transformed._import_profile_usage) == exp_import_profile
     assert list(transformed._export_profile_usage) == exp_export_profile

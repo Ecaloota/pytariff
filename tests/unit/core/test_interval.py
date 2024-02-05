@@ -9,7 +9,7 @@ from utal.core.charge import ConsumptionCharge, DemandCharge, TariffCharge
 from utal.core.day import DayType, DaysApplied
 from utal.core.typing import Consumption, Demand
 from utal.core.reset import ResetData, ResetPeriod
-from utal.core.rate import TariffRate, RateCurrency
+from utal.core.rate import TariffRate
 from utal.core.interval import ConsumptionInterval, DemandInterval, TariffInterval
 from utal.core.unit import ConsumptionUnit, DemandUnit, TariffUnit, SignConvention, TradeDirection
 
@@ -21,7 +21,7 @@ from utal.core.unit import ConsumptionUnit, DemandUnit, TariffUnit, SignConventi
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                rate=TariffRate(currency="AUD", value=1),
             ),
             True,
         ),
@@ -29,7 +29,7 @@ from utal.core.unit import ConsumptionUnit, DemandUnit, TariffUnit, SignConventi
             DemandBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                rate=TariffRate(currency="AUD", value=1),
             ),
             True,
         ),
@@ -76,7 +76,7 @@ def test_tariff_interval_valid_construction(block: ConsumptionBlock | DemandBloc
                     ConsumptionBlock(
                         from_quantity=0,
                         to_quantity=float("inf"),
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                        rate=TariffRate(currency="AUD", value=1),
                     ),
                 ),
                 unit=ConsumptionUnit(
@@ -92,7 +92,7 @@ def test_tariff_interval_valid_construction(block: ConsumptionBlock | DemandBloc
                     DemandBlock(
                         from_quantity=0,
                         to_quantity=float("inf"),
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                        rate=TariffRate(currency="AUD", value=1),
                     ),
                 ),
                 unit=DemandUnit(metric=Demand.kW, direction=TradeDirection.Import, convention=SignConvention.Passive),
@@ -134,7 +134,7 @@ def test_consumption_interval_charges_must_be_consumption_charges(
                     DemandBlock(
                         from_quantity=0,
                         to_quantity=float("inf"),
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                        rate=TariffRate(currency="AUD", value=1),
                     ),
                 ),
                 unit=DemandUnit(metric=Demand.kW, direction=TradeDirection.Import, convention=SignConvention.Passive),
@@ -148,7 +148,7 @@ def test_consumption_interval_charges_must_be_consumption_charges(
                     ConsumptionBlock(
                         from_quantity=0,
                         to_quantity=float("inf"),
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                        rate=TariffRate(currency="AUD", value=1),
                     ),
                 ),
                 unit=ConsumptionUnit(
@@ -194,7 +194,7 @@ def test_demand_interval_charges_must_be_demand_charges(charge: ConsumptionCharg
                         ConsumptionBlock(
                             from_quantity=0,
                             to_quantity=float("inf"),
-                            rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                            rate=TariffRate(currency="AUD", value=1),
                         ),
                     ),
                     unit=TariffUnit(
@@ -213,7 +213,7 @@ def test_demand_interval_charges_must_be_demand_charges(charge: ConsumptionCharg
                         ConsumptionBlock(
                             from_quantity=0,
                             to_quantity=float("inf"),
-                            rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                            rate=TariffRate(currency="AUD", value=1),
                         ),
                     ),
                     unit=TariffUnit(

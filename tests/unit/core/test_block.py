@@ -4,7 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from utal.core.block import ConsumptionBlock, TariffBlock
-from utal.core.rate import TariffRate, RateCurrency
+from utal.core.rate import TariffRate
 
 
 @pytest.mark.parametrize(
@@ -13,19 +13,19 @@ from utal.core.rate import TariffRate, RateCurrency
         (  # valid ConsumptionBlock attribute values
             0,
             float("inf"),
-            TariffRate(currency=RateCurrency.AUD, value=1),
+            TariffRate(currency="AUD", value=1),
             False,
         ),
         (  # from_quantity <= to_quantity
             100,
             100,
-            TariffRate(currency=RateCurrency.AUD, value=1),
+            TariffRate(currency="AUD", value=1),
             True,
         ),
         (  # from_quantity <= to_quantity
             1000,
             50,
-            TariffRate(currency=RateCurrency.AUD, value=1),
+            TariffRate(currency="AUD", value=1),
             True,
         ),
     ],
@@ -59,12 +59,12 @@ def test_consumption_block_construction(
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             ConsumptionBlock(
                 from_quantity=50,
                 to_quantity=100,
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             ConsumptionBlock(
                 from_quantity=50,
@@ -76,12 +76,12 @@ def test_consumption_block_construction(
             ConsumptionBlock(
                 from_quantity=25,
                 to_quantity=75,
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             ConsumptionBlock(
                 from_quantity=50,
                 to_quantity=100,
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             ConsumptionBlock(
                 from_quantity=50,
@@ -93,12 +93,12 @@ def test_consumption_block_construction(
             ConsumptionBlock(
                 from_quantity=50,
                 to_quantity=100,
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             ConsumptionBlock(
                 from_quantity=50,
                 to_quantity=100,
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             ConsumptionBlock(
                 from_quantity=50,
@@ -110,12 +110,12 @@ def test_consumption_block_construction(
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=100,
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             ConsumptionBlock(
                 from_quantity=100,
                 to_quantity=200,
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             None,
         ),
@@ -139,7 +139,7 @@ def test_consumption_block_intersection(
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             int(5),
         ),
@@ -159,12 +159,12 @@ def test_consumption_block_invalid_intersection(block_1: ConsumptionBlock, obj: 
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             True,
         ),
@@ -172,12 +172,12 @@ def test_consumption_block_invalid_intersection(block_1: ConsumptionBlock, obj: 
             ConsumptionBlock(
                 from_quantity=1,
                 to_quantity=float("inf"),
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             False,
         ),
@@ -185,12 +185,12 @@ def test_consumption_block_invalid_intersection(block_1: ConsumptionBlock, obj: 
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=1,
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             False,
         ),
@@ -198,12 +198,12 @@ def test_consumption_block_invalid_intersection(block_1: ConsumptionBlock, obj: 
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(RateCurrency.AUD, value=2),
+                rate=TariffRate("AUD", value=2),
             ),
             ConsumptionBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(RateCurrency.AUD, value=1),
+                rate=TariffRate("AUD", value=1),
             ),
             False,
         ),
@@ -217,21 +217,13 @@ def test_consumption_block_equality(block1: ConsumptionBlock, block2: Consumptio
     "block_a, block_b, is_equal",
     [
         (
-            TariffBlock(
-                rate=TariffRate(currency=RateCurrency.AUD, value=1.0), from_quantity=0.0, to_quantity=float("inf")
-            ),
-            TariffBlock(
-                rate=TariffRate(currency=RateCurrency.AUD, value=1.0), from_quantity=0.0, to_quantity=float("inf")
-            ),
+            TariffBlock(rate=TariffRate(currency="AUD", value=1.0), from_quantity=0.0, to_quantity=float("inf")),
+            TariffBlock(rate=TariffRate(currency="AUD", value=1.0), from_quantity=0.0, to_quantity=float("inf")),
             True,
         ),
         (
-            TariffBlock(
-                rate=TariffRate(currency=RateCurrency.AUD, value=2.0), from_quantity=0.0, to_quantity=float("inf")
-            ),
-            TariffBlock(
-                rate=TariffRate(currency=RateCurrency.AUD, value=1.0), from_quantity=0.0, to_quantity=float("inf")
-            ),
+            TariffBlock(rate=TariffRate(currency="AUD", value=2.0), from_quantity=0.0, to_quantity=float("inf")),
+            TariffBlock(rate=TariffRate(currency="AUD", value=1.0), from_quantity=0.0, to_quantity=float("inf")),
             False,
         ),
     ],

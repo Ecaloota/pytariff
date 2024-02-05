@@ -21,6 +21,6 @@ class TariffCostHandler:
 
         profile_copy = self.profile.copy()
         if not include_additional_cost_components:
-            profile_copy = profile_copy[["import_cost", "export_cost", "total_cost"]]
+            profile_copy = profile_copy[["profile", "import_cost", "export_cost", "total_cost"]]
         fig = px.line(profile_copy)
         fig.show()

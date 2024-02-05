@@ -8,7 +8,7 @@ from utal.core.block import TariffBlock
 from utal.core.charge import TariffCharge
 from utal.core.dataframe.profile import MeterProfileHandler
 from utal.core.day import DayType, DaysApplied
-from utal.core.rate import TariffRate, RateCurrency
+from utal.core.rate import TariffRate
 from utal.core.tariff import GenericTariff
 from utal.core.typing import Consumption
 from utal.core.reset import ResetData, ResetPeriod
@@ -80,7 +80,7 @@ def test_generic_tariff_apply_to(profile, import_cost_series, export_cost_series
             TariffBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(currency=RateCurrency.AUD, value=0.998),
+                rate=TariffRate(currency="AUD", value=0.998),
             ),
         ),
         unit=ConsumptionUnit(
@@ -141,7 +141,7 @@ def test_generic_tariff_plot(profile):
             TariffBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(currency=RateCurrency.AUD, value=0.998),
+                rate=TariffRate(currency="AUD", value=0.998),
             ),
         ),
         unit=ConsumptionUnit(

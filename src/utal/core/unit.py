@@ -51,8 +51,8 @@ class UsageChargeMethod(Enum):
 @dataclass
 class TariffUnit(Generic[MetricType]):
     metric: MetricType
-    direction: TradeDirection
     convention: SignConvention
+    direction: TradeDirection | None = None
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TariffUnit):

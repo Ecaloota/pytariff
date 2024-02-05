@@ -19,7 +19,7 @@ class TariffCharge(Generic[MetricType]):
     blocks: tuple[TariffBlock, ...]
     unit: TariffUnit[MetricType]
     reset_data: Optional[ResetData]
-    method: UsageChargeMethod = UsageChargeMethod.mean
+    method: UsageChargeMethod = UsageChargeMethod.identity
     resolution: str = "5T"
     window: Optional[str] = None
 

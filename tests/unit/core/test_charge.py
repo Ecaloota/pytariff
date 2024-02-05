@@ -8,7 +8,7 @@ from utal.core.charge import ConsumptionCharge, ExportConsumptionCharge, ImportC
 from utal.core.typing import Consumption, Demand
 from utal.core.unit import SignConvention, TradeDirection
 from utal.core.reset import ResetData, ResetPeriod
-from utal.core.rate import TariffRate, RateCurrency
+from utal.core.rate import TariffRate
 from utal.core.unit import ConsumptionUnit, DemandUnit, TariffUnit
 
 
@@ -22,7 +22,7 @@ def test_tariff_charge_valid_construction():
             TariffBlock(
                 from_quantity=0,
                 to_quantity=float("inf"),
-                rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                rate=TariffRate(currency="AUD", value=1),
             ),
         ),
         unit=TariffUnit(metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive),
@@ -36,7 +36,7 @@ def test_tariff_charge_valid_construction():
         (
             (
                 ConsumptionBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=0,
                     to_quantity=100,
                 ),
@@ -48,7 +48,7 @@ def test_tariff_charge_valid_construction():
         (
             (
                 ConsumptionBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=0,
                     to_quantity=100,
                 ),
@@ -60,12 +60,12 @@ def test_tariff_charge_valid_construction():
         (
             (
                 ConsumptionBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=0,
                     to_quantity=100,
                 ),
                 ConsumptionBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=100,
                     to_quantity=200,
                 ),
@@ -77,12 +77,12 @@ def test_tariff_charge_valid_construction():
         (  # blocks with same parent charge cannot overlap (this would be an overlap in quantity + unit)
             (
                 ConsumptionBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=0,
                     to_quantity=100,
                 ),
                 ConsumptionBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=100,
                     to_quantity=200,
                 ),
@@ -94,12 +94,12 @@ def test_tariff_charge_valid_construction():
         (  # blocks with same parent charge cannot overlap (this would be an overlap in quantity + unit)
             (
                 ConsumptionBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=0,
                     to_quantity=100,
                 ),
                 ConsumptionBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=50,
                     to_quantity=150,
                 ),
@@ -111,7 +111,7 @@ def test_tariff_charge_valid_construction():
         (  # consumption charge cannot contain DemandUnit
             (
                 ConsumptionBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=0,
                     to_quantity=100,
                 ),
@@ -123,7 +123,7 @@ def test_tariff_charge_valid_construction():
         (  # consumption charge cannot contain DemandBlock
             (
                 DemandBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=0,
                     to_quantity=100,
                 ),
@@ -160,7 +160,7 @@ def test_consumption_charge_valid_construction(
                     unit=ConsumptionUnit(
                         metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                     ),
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=0,
                     to_quantity=101,
                 ),
@@ -168,7 +168,7 @@ def test_consumption_charge_valid_construction(
                     unit=ConsumptionUnit(
                         metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                     ),
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=100,
                     to_quantity=200,
                 ),
@@ -194,7 +194,7 @@ def test_consumption_charge_cannot_intersect(blocks_tuple: tuple[ConsumptionBloc
         (
             (
                 ConsumptionBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=0,
                     to_quantity=100,
                 ),
@@ -206,7 +206,7 @@ def test_consumption_charge_cannot_intersect(blocks_tuple: tuple[ConsumptionBloc
         (
             (
                 ConsumptionBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=0,
                     to_quantity=100,
                 ),
@@ -241,7 +241,7 @@ def test_import_consumption_charge_must_import(
         (
             (
                 ConsumptionBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=0,
                     to_quantity=100,
                 ),
@@ -253,7 +253,7 @@ def test_import_consumption_charge_must_import(
         (
             (
                 ConsumptionBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                    rate=TariffRate(currency="AUD", value=1),
                     from_quantity=0,
                     to_quantity=100,
                 ),
@@ -289,7 +289,7 @@ def test_export_consumption_charge_must_export(
             ConsumptionCharge(  # charge_a
                 blocks=(
                     ConsumptionBlock(
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1), from_quantity=0, to_quantity=float("inf")
+                        rate=TariffRate(currency="AUD", value=1), from_quantity=0, to_quantity=float("inf")
                     ),
                 ),
                 unit=ConsumptionUnit(
@@ -298,11 +298,7 @@ def test_export_consumption_charge_must_export(
                 reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             ConsumptionCharge(  # charge_b
-                blocks=(
-                    ConsumptionBlock(
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1), from_quantity=50, to_quantity=100
-                    ),
-                ),
+                blocks=(ConsumptionBlock(rate=TariffRate(currency="AUD", value=1), from_quantity=50, to_quantity=100),),
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
@@ -318,22 +314,14 @@ def test_export_consumption_charge_must_export(
         ),
         (  # charge_a right-overhangs charge_b
             ConsumptionCharge(  # charge_a
-                blocks=(
-                    ConsumptionBlock(
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1), from_quantity=0, to_quantity=100
-                    ),
-                ),
+                blocks=(ConsumptionBlock(rate=TariffRate(currency="AUD", value=1), from_quantity=0, to_quantity=100),),
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
                 reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             ConsumptionCharge(  # charge_b
-                blocks=(
-                    ConsumptionBlock(
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1), from_quantity=50, to_quantity=100
-                    ),
-                ),
+                blocks=(ConsumptionBlock(rate=TariffRate(currency="AUD", value=1), from_quantity=50, to_quantity=100),),
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
@@ -349,22 +337,14 @@ def test_export_consumption_charge_must_export(
         ),
         (  # charge_a left-overhangs charge_b
             ConsumptionCharge(  # charge_a
-                blocks=(
-                    ConsumptionBlock(
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1), from_quantity=50, to_quantity=100
-                    ),
-                ),
+                blocks=(ConsumptionBlock(rate=TariffRate(currency="AUD", value=1), from_quantity=50, to_quantity=100),),
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
                 reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
             ),
             ConsumptionCharge(  # charge_b
-                blocks=(
-                    ConsumptionBlock(
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1), from_quantity=0, to_quantity=100
-                    ),
-                ),
+                blocks=(ConsumptionBlock(rate=TariffRate(currency="AUD", value=1), from_quantity=0, to_quantity=100),),
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
@@ -380,11 +360,7 @@ def test_export_consumption_charge_must_export(
         ),
         (  # no overlaps from quantity
             ConsumptionCharge(  # charge_a
-                blocks=(
-                    ConsumptionBlock(
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1), from_quantity=50, to_quantity=100
-                    ),
-                ),
+                blocks=(ConsumptionBlock(rate=TariffRate(currency="AUD", value=1), from_quantity=50, to_quantity=100),),
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
@@ -392,9 +368,7 @@ def test_export_consumption_charge_must_export(
             ),
             ConsumptionCharge(  # charge_b
                 blocks=(
-                    ConsumptionBlock(
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1), from_quantity=100, to_quantity=200
-                    ),
+                    ConsumptionBlock(rate=TariffRate(currency="AUD", value=1), from_quantity=100, to_quantity=200),
                 ),
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
@@ -405,11 +379,7 @@ def test_export_consumption_charge_must_export(
         ),
         (  # no overlaps due to unit misalignment
             ConsumptionCharge(  # charge_a
-                blocks=(
-                    ConsumptionBlock(
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1), from_quantity=50, to_quantity=100
-                    ),
-                ),
+                blocks=(ConsumptionBlock(rate=TariffRate(currency="AUD", value=1), from_quantity=50, to_quantity=100),),
                 unit=ConsumptionUnit(
                     metric=Consumption._null, direction=TradeDirection.Import, convention=SignConvention.Passive
                 ),
@@ -417,9 +387,7 @@ def test_export_consumption_charge_must_export(
             ),
             ConsumptionCharge(  # charge_b
                 blocks=(
-                    ConsumptionBlock(
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1), from_quantity=100, to_quantity=200
-                    ),
+                    ConsumptionBlock(rate=TariffRate(currency="AUD", value=1), from_quantity=100, to_quantity=200),
                 ),
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
@@ -431,12 +399,8 @@ def test_export_consumption_charge_must_export(
         (  # multiple blocks per charge; more complex
             ConsumptionCharge(  # charge_a
                 blocks=(
-                    ConsumptionBlock(
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1), from_quantity=0, to_quantity=50
-                    ),
-                    ConsumptionBlock(
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1), from_quantity=50, to_quantity=100
-                    ),
+                    ConsumptionBlock(rate=TariffRate(currency="AUD", value=1), from_quantity=0, to_quantity=50),
+                    ConsumptionBlock(rate=TariffRate(currency="AUD", value=1), from_quantity=50, to_quantity=100),
                 ),
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
@@ -445,12 +409,8 @@ def test_export_consumption_charge_must_export(
             ),
             ConsumptionCharge(  # charge_b
                 blocks=(
-                    ConsumptionBlock(
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1), from_quantity=25, to_quantity=75
-                    ),
-                    ConsumptionBlock(
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1), from_quantity=75, to_quantity=125
-                    ),
+                    ConsumptionBlock(rate=TariffRate(currency="AUD", value=1), from_quantity=25, to_quantity=75),
+                    ConsumptionBlock(rate=TariffRate(currency="AUD", value=1), from_quantity=75, to_quantity=125),
                 ),
                 unit=ConsumptionUnit(
                     metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
@@ -489,7 +449,7 @@ def test_consumption_charge_intersection_method(
                     TariffBlock(
                         from_quantity=0,
                         to_quantity=float("inf"),
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                        rate=TariffRate(currency="AUD", value=1),
                     ),
                 ),
                 unit=TariffUnit(
@@ -502,7 +462,7 @@ def test_consumption_charge_intersection_method(
                     TariffBlock(
                         from_quantity=0,
                         to_quantity=float("inf"),
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                        rate=TariffRate(currency="AUD", value=1),
                     ),
                 ),
                 unit=TariffUnit(
@@ -518,7 +478,7 @@ def test_consumption_charge_intersection_method(
                     TariffBlock(
                         from_quantity=0,
                         to_quantity=float("inf"),
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                        rate=TariffRate(currency="AUD", value=1),
                     ),
                 ),
                 unit=TariffUnit(
@@ -531,7 +491,7 @@ def test_consumption_charge_intersection_method(
                     TariffBlock(
                         from_quantity=0,
                         to_quantity=float("inf"),
-                        rate=TariffRate(currency=RateCurrency.AUD, value=2),
+                        rate=TariffRate(currency="AUD", value=2),
                     ),
                 ),
                 unit=TariffUnit(
@@ -547,7 +507,7 @@ def test_consumption_charge_intersection_method(
                     TariffBlock(
                         from_quantity=0,
                         to_quantity=float("inf"),
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                        rate=TariffRate(currency="AUD", value=1),
                     ),
                 ),
                 unit=TariffUnit(
@@ -560,7 +520,7 @@ def test_consumption_charge_intersection_method(
                     TariffBlock(
                         from_quantity=0,
                         to_quantity=float("inf"),
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                        rate=TariffRate(currency="AUD", value=1),
                     ),
                 ),
                 unit=TariffUnit(
@@ -576,7 +536,7 @@ def test_consumption_charge_intersection_method(
                     TariffBlock(
                         from_quantity=0,
                         to_quantity=float("inf"),
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                        rate=TariffRate(currency="AUD", value=1),
                     ),
                 ),
                 unit=TariffUnit(
@@ -589,7 +549,7 @@ def test_consumption_charge_intersection_method(
                     TariffBlock(
                         from_quantity=0,
                         to_quantity=float("inf"),
-                        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+                        rate=TariffRate(currency="AUD", value=1),
                     ),
                 ),
                 unit=TariffUnit(

@@ -5,7 +5,7 @@ from holidays import HolidayBase
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from utal import helper
+from utal._internal import helper
 
 
 class DayType(Enum):
@@ -23,6 +23,13 @@ class DayType(Enum):
     ALL_DAYS = auto()
     BUSINESS_DAYS = auto()
     HOLIDAYS = auto()
+
+    def __contains__(self, value: object) -> bool:
+        """For our purposes, a given value is in self iff the value and self are equal.
+        This is implemented so we can run comparisons like (DayType.BUSINESS_DAYS in self.day_types) when both
+        self.day_types is a typle of DayType or an instance thereof.
+        """
+        return self == value
 
     def __and__(self, other: "DayType") -> Collection["DayType"]:
         """
@@ -81,13 +88,13 @@ class DayType(Enum):
 class DaysApplied(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    day_types: tuple[DayType, ...] | None = None
+    day_types: tuple[DayType, ...] | DayType | None = None
     holidays: HolidayBase | None = None
 
     @model_validator(mode="after")
     def validate_holidays_present_if_day_type_business_days(self) -> "DaysApplied":
         if self.day_types is not None:
-            if DayType.BUSINESS_DAYS in self.day_types and (self.holidays is None or self.holidays.years == set()):
+            if (DayType.BUSINESS_DAYS in self.day_types) and (self.holidays is None or self.holidays.years == set()):
                 raise ValueError
         return self
 
@@ -230,6 +237,11 @@ class DaysApplied(BaseModel):
             return False
 
         intersections: set[DayType] = set()
+        if not isinstance(self.day_types, tuple):
+            self.day_types = (self.day_types,)
+        if not isinstance(other.day_types, tuple):
+            other.day_types = (other.day_types,)
+
         for day_type in self.day_types:
             for other_day in other.day_types:
                 inter = day_type & other_day

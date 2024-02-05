@@ -42,7 +42,9 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
         """"""
 
         def _block_map_name(charge: TariffCharge) -> str:
-            prefix = f"_{charge.unit.direction.value.lower()}_profile_usage"
+
+            direction = "_null_direction" if not charge.unit.direction else charge.unit.direction.value.lower()
+            prefix = f"_{direction}_profile_usage"
             suffix = f"_{charge.method.value.lower()}"
             return prefix + suffix
 
@@ -71,7 +73,7 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
             return 0.0
 
         child_resolution = [x.charge.resolution for x in self.children][0]
-        resampled_meter = profile_handler._utal_resample(child_resolution)
+        resampled_meter = profile_handler._utal_resample(profile_handler.profile, child_resolution)
         tariff_start = self.start  # needed to calculate reset_period start
 
         for child in self.children:
@@ -80,11 +82,13 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
                 pass
 
             # resample the meter profile given charge information
-            charge_profile = profile_handler._utal_resample(child_resolution, window=child.charge.window)
+            charge_profile = profile_handler._utal_resample(
+                profile_handler.profile, child_resolution, window=child.charge.window
+            )
 
             # calculate the cumulative profile including reset_period tracking given charge information
             # also split the profile into _import and _export quantities so we can determine cost sign for given charge
-            charge_profile = profile_handler._utal_transform(tariff_start, child.charge)
+            charge_profile = profile_handler._utal_transform(charge_profile, tariff_start, child.charge)
 
             # The charge map denotes whether the charge profile indices are contained within the meter profile given
             charge_map = charge_profile.index.map(self.__contains__)
@@ -108,6 +112,9 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
 
                 charge_profile[f"cost_import_{uuid_identifier}"] = cost_df["cost_import"]
                 charge_profile[f"cost_export_{uuid_identifier}"] = cost_df["cost_export"]
+
+            if len(charge_profile.index) != len(resampled_meter.index):
+                raise ValueError("Tariff misalignment")
 
             resampled_meter[f"cost_import_{child.uuid}"] = charge_profile.filter(like="cost_import").sum(axis=1)
             resampled_meter[f"cost_export_{child.uuid}"] = charge_profile.filter(like="cost_export").sum(axis=1)

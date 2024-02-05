@@ -2,7 +2,7 @@ import pytest
 
 from utal.core.block import ConsumptionBlock, DemandBlock
 from utal.core.typing import Consumption, Demand
-from utal.core.rate import TariffRate, RateCurrency
+from utal.core.rate import TariffRate
 from utal.core.unit import ConsumptionUnit, DemandUnit, SignConvention, TradeDirection
 
 
@@ -14,7 +14,7 @@ def DEFAULT_CONSUMPTION_BLOCK():
         unit=ConsumptionUnit(
             metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
         ),
-        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+        rate=TariffRate(currency="AUD", value=1),
     )
 
 
@@ -24,5 +24,5 @@ def DEFAULT_DEMAND_BLOCK():
         from_quantity=0,
         to_quantity=float("inf"),
         unit=DemandUnit(metric=Demand.kW, direction=TradeDirection.Import, convention=SignConvention.Passive),
-        rate=TariffRate(currency=RateCurrency.AUD, value=1),
+        rate=TariffRate(currency="AUD", value=1),
     )
