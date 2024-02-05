@@ -30,9 +30,19 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytariff"
-version = "0.0.0"
+version = "0.0.1"
 description = "For representing generic electrical tariffs"
+readme = "README.md"
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/Ecaloota/pytariff"
+Issues = "https://github.com/Ecaloota/pytariff/issues"
 
 [project.optional-dependencies]
 dev = ["flake8", "mypy", "black"]
