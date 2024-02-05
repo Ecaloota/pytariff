@@ -67,6 +67,14 @@ def test_helper_is_naive(obj: Any, is_naive: bool) -> None:
     assert helper.is_naive(obj) is is_naive
 
 
-# TODO
-def test_helper_convert_to_aware_datetime():
-    pass
+@pytest.mark.parametrize(
+    "obj",
+    [
+        (date(2023, 1, 1)),
+        (datetime(2023, 1, 1, 12, 0, 0)),
+        (datetime(2023, 1, 1, 12, 0, 0, tzinfo=ZoneInfo("UTC"))),
+    ],
+)
+def test_helper_convert_to_aware_datetime(obj: Any) -> None:
+    converted = helper.convert_to_aware_datetime(obj, tzinfo=ZoneInfo("UTC"))
+    assert helper.is_aware(converted)

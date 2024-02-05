@@ -26,7 +26,6 @@ def is_naive(obj: datetime | time) -> bool:
     return not is_aware(obj)
 
 
-# TODO test this
 def convert_to_aware_datetime(obj: datetime | date, tzinfo: Optional[timezone | ZoneInfo]) -> datetime:
     if is_date_type(obj):
         if tzinfo is None:
