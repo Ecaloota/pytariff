@@ -1,9 +1,9 @@
 import pytest
 
-from utal.core.block import ConsumptionBlock, DemandBlock
-from utal.core.typing import Consumption, Demand
-from utal.core.rate import TariffRate
-from utal.core.unit import ConsumptionUnit, DemandUnit, SignConvention, TradeDirection
+from pytariff.core.block import ConsumptionBlock, DemandBlock
+from pytariff.core.typing import Consumption, Demand
+from pytariff.core.rate import TariffRate
+from pytariff.core.unit import ConsumptionUnit, DemandUnit, SignConvention, TradeDirection
 
 
 @pytest.fixture

@@ -1,10 +1,10 @@
 import pandas as pd
 from pydantic import model_validator
-from utal.core.dataframe.profile import MeterProfileHandler
-from utal.core.typing import Consumption
-from utal.core.interval import ConsumptionInterval
-from utal.core.unit import TariffUnit
-from utal.core.tariff import GenericTariff
+from pytariff.core.dataframe.profile import MeterProfileHandler
+from pytariff.core.typing import Consumption
+from pytariff.core.interval import ConsumptionInterval
+from pytariff.core.unit import TariffUnit
+from pytariff.core.tariff import GenericTariff
 
 
 class ConsumptionTariff(GenericTariff[Consumption]):

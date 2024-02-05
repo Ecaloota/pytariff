@@ -3,8 +3,8 @@ from typing import Any, Optional
 import pytest
 from pydantic import ValidationError
 
-from utal.core.block import ConsumptionBlock, TariffBlock
-from utal.core.rate import TariffRate
+from pytariff.core.block import ConsumptionBlock, TariffBlock
+from pytariff.core.rate import TariffRate
 
 
 @pytest.mark.parametrize(

@@ -4,9 +4,9 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from utal._internal.applied_interval import AppliedInterval
-from utal.core.day import DayType, DaysApplied
-from utal._internal.defined_interval import DefinedInterval
+from pytariff._internal.applied_interval import AppliedInterval
+from pytariff.core.day import DayType, DaysApplied
+from pytariff._internal.defined_interval import DefinedInterval
 
 
 @pytest.mark.parametrize(

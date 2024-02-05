@@ -3,13 +3,13 @@ from zoneinfo import ZoneInfo
 from pydantic import ValidationError
 import pytest
 
-from utal.core.block import ConsumptionBlock, DemandBlock, TariffBlock
-from utal.core.charge import ConsumptionCharge, ExportConsumptionCharge, ImportConsumptionCharge, TariffCharge
-from utal.core.typing import Consumption, Demand
-from utal.core.unit import SignConvention, TradeDirection
-from utal.core.reset import ResetData, ResetPeriod
-from utal.core.rate import TariffRate
-from utal.core.unit import ConsumptionUnit, DemandUnit, TariffUnit
+from pytariff.core.block import ConsumptionBlock, DemandBlock, TariffBlock
+from pytariff.core.charge import ConsumptionCharge, ExportConsumptionCharge, ImportConsumptionCharge, TariffCharge
+from pytariff.core.typing import Consumption, Demand
+from pytariff.core.unit import SignConvention, TradeDirection
+from pytariff.core.reset import ResetData, ResetPeriod
+from pytariff.core.rate import TariffRate
+from pytariff.core.unit import ConsumptionUnit, DemandUnit, TariffUnit
 
 
 def test_tariff_charge_valid_construction():

@@ -1,11 +1,11 @@
 import pandas as pd
 from pydantic import model_validator
 import pandera as pa
-from utal.core.dataframe.profile import MeterProfileHandler
-from utal.core.typing import MetricType
-from utal.core.interval import TariffInterval
-from utal.core.unit import TariffUnit
-from utal.core.tariff import GenericTariff
+from pytariff.core.dataframe.profile import MeterProfileHandler
+from pytariff.core.typing import MetricType
+from pytariff.core.interval import TariffInterval
+from pytariff.core.unit import TariffUnit
+from pytariff.core.tariff import GenericTariff
 
 
 class BlockTariff(GenericTariff[MetricType]):

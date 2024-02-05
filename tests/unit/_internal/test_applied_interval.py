@@ -4,8 +4,8 @@ from zoneinfo import ZoneInfo
 import pytest
 from holidays import country_holidays
 
-from utal._internal.applied_interval import AppliedInterval
-from utal.core.day import DayType, DaysApplied
+from pytariff._internal.applied_interval import AppliedInterval
+from pytariff.core.day import DayType, DaysApplied
 
 GENERIC_TZ = timezone(offset=timedelta(hours=1))
 

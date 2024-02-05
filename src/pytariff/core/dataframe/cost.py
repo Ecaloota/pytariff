@@ -1,5 +1,5 @@
 import pandas as pd
-from utal.core.dataframe.profile import MeterProfileSchema
+from pytariff.core.dataframe.profile import MeterProfileSchema
 
 import plotly.express as px  # type: ignore
 

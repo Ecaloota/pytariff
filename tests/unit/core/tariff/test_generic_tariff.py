@@ -3,17 +3,17 @@ from zoneinfo import ZoneInfo
 
 import pytest
 import pandas as pd
-from utal.core.block import TariffBlock
+from pytariff.core.block import TariffBlock
 
-from utal.core.charge import TariffCharge
-from utal.core.dataframe.profile import MeterProfileHandler
-from utal.core.day import DayType, DaysApplied
-from utal.core.rate import TariffRate
-from utal.core.tariff import GenericTariff
-from utal.core.typing import Consumption
-from utal.core.reset import ResetData, ResetPeriod
-from utal.core.interval import TariffInterval
-from utal.core.unit import ConsumptionUnit, TariffUnit, UsageChargeMethod, SignConvention, TradeDirection
+from pytariff.core.charge import TariffCharge
+from pytariff.core.dataframe.profile import MeterProfileHandler
+from pytariff.core.day import DayType, DaysApplied
+from pytariff.core.rate import TariffRate
+from pytariff.core.tariff import GenericTariff
+from pytariff.core.typing import Consumption
+from pytariff.core.reset import ResetData, ResetPeriod
+from pytariff.core.interval import TariffInterval
+from pytariff.core.unit import ConsumptionUnit, TariffUnit, UsageChargeMethod, SignConvention, TradeDirection
 
 
 def test_generic_tariff_valid_construction(DEFAULT_CONSUMPTION_BLOCK):

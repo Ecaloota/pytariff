@@ -3,16 +3,16 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 from pydantic import ValidationError
-from utal.core.block import ConsumptionBlock
-from utal.core.charge import ConsumptionCharge
-from utal.core.dataframe.profile import MeterProfileHandler
-from utal.core.day import DayType, DaysApplied
-from utal.core.reset import ResetData, ResetPeriod
-from utal.core.tariff import ConsumptionTariff
-from utal.core.typing import Consumption
-from utal.core.unit import ConsumptionUnit, TariffUnit, UsageChargeMethod, SignConvention, TradeDirection
-from utal.core.rate import TariffRate
-from utal.core.interval import ConsumptionInterval
+from pytariff.core.block import ConsumptionBlock
+from pytariff.core.charge import ConsumptionCharge
+from pytariff.core.dataframe.profile import MeterProfileHandler
+from pytariff.core.day import DayType, DaysApplied
+from pytariff.core.reset import ResetData, ResetPeriod
+from pytariff.core.tariff import ConsumptionTariff
+from pytariff.core.typing import Consumption
+from pytariff.core.unit import ConsumptionUnit, TariffUnit, UsageChargeMethod, SignConvention, TradeDirection
+from pytariff.core.rate import TariffRate
+from pytariff.core.interval import ConsumptionInterval
 import pytest
 
 

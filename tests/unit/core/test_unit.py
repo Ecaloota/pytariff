@@ -1,10 +1,10 @@
 from typing import Any
 from pydantic import ValidationError
 import pytest
-from utal.core.typing import Consumption, Demand
-from utal.core.unit import SignConvention, TradeDirection
+from pytariff.core.typing import Consumption, Demand
+from pytariff.core.unit import SignConvention, TradeDirection
 
-from utal.core.unit import ConsumptionUnit, DemandUnit
+from pytariff.core.unit import ConsumptionUnit, DemandUnit
 
 
 @pytest.mark.parametrize(

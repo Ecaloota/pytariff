@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Generic, Literal
 
 from pydantic.dataclasses import dataclass
-from utal.core.typing import Consumption, Demand, MetricType
+from pytariff.core.typing import Consumption, Demand, MetricType
 
 
 class TradeDirection(str, Enum):

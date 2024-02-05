@@ -4,7 +4,7 @@ import pytest
 
 from datetime import date, datetime, time
 
-from utal._internal import helper
+from pytariff._internal import helper
 
 
 @pytest.mark.parametrize(
