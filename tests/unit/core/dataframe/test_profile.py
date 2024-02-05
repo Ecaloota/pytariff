@@ -173,7 +173,7 @@ def test_meter_profile_schema_resample_method(
     """TODO"""
 
     handler = MeterProfileHandler(data)
-    resampled = handler._utal_resample(charge_resolution)
+    resampled = handler._utal_resample(handler.profile, charge_resolution)
     assert list(resampled.profile) == expected_resampled_list
 
 
@@ -297,7 +297,7 @@ def test_meter_profile_schema_transform_method(
     """TODO"""
 
     handler = MeterProfileHandler(data)
-    transformed = handler._utal_transform(datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), charge)
+    transformed = handler._utal_transform(handler.profile, datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), charge)
 
     assert list(transformed._import_profile_usage) == exp_import_profile
     assert list(transformed._export_profile_usage) == exp_export_profile

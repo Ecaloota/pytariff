@@ -193,6 +193,10 @@ def no_day_type_holidays(t: DayType) -> HolidayBase:
             (DayType.HOLIDAYS,),
             country_holidays("AUS", years=2020),
         ),
+        (  # We are allowed to pass a single DayType as well (not in a tuple)
+            DayType.MONDAY,
+            None,
+        ),
     ],
 )
 def test_days_applied_valid_construction(day_types: tuple[DayType, ...], holidays: Optional[HolidayBase]):

@@ -73,7 +73,7 @@ class ResetData:
     @model_validator(mode="after")
     def assert_anchor_tz_aware(self) -> "ResetData":
         if not is_aware(self.anchor):
-            raise ValueError
+            raise ValueError("ResetData anchor cannot be naive")
         return self
 
     def __hash__(self) -> int:

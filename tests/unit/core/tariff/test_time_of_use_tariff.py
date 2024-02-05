@@ -13,11 +13,12 @@ from utal.core.day import DayType, DaysApplied
 from utal.core.typing import Consumption
 from utal.core.unit import TradeDirection, SignConvention
 from utal.core.reset import ResetData, ResetPeriod
-from utal.core.rate import TariffRate, RateCurrency
+from utal.core.rate import TariffRate
 
 from utal.core.interval import TariffInterval
 from utal.core.unit import TariffUnit, UsageChargeMethod
 from utal.core.tariff import TimeOfUseTariff
+from utal.core.dataframe.cost import TariffCostHandler
 
 
 @pytest.mark.parametrize(
@@ -34,7 +35,7 @@ from utal.core.tariff import TimeOfUseTariff
                     charge=TariffCharge(
                         blocks=(
                             ConsumptionBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=1.0),
+                                rate=TariffRate(currency="AUD", value=1.0),
                                 from_quantity=0,
                                 to_quantity=float("inf"),
                             ),
@@ -56,7 +57,7 @@ from utal.core.tariff import TimeOfUseTariff
                     charge=TariffCharge(
                         blocks=(
                             ConsumptionBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=1.0),
+                                rate=TariffRate(currency="AUD", value=1.0),
                                 from_quantity=0,
                                 to_quantity=float("inf"),
                             ),
@@ -83,7 +84,7 @@ from utal.core.tariff import TimeOfUseTariff
                     charge=TariffCharge(
                         blocks=(
                             ConsumptionBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=1.0),
+                                rate=TariffRate(currency="AUD", value=1.0),
                                 from_quantity=0,
                                 to_quantity=float("inf"),
                             ),
@@ -105,7 +106,7 @@ from utal.core.tariff import TimeOfUseTariff
                     charge=TariffCharge(
                         blocks=(
                             ConsumptionBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=1.0),
+                                rate=TariffRate(currency="AUD", value=1.0),
                                 from_quantity=0,
                                 to_quantity=float("inf"),
                             ),
@@ -132,7 +133,7 @@ from utal.core.tariff import TimeOfUseTariff
                     charge=TariffCharge(
                         blocks=(
                             ConsumptionBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=1.0),
+                                rate=TariffRate(currency="AUD", value=1.0),
                                 from_quantity=0,
                                 to_quantity=float("inf"),
                             ),
@@ -154,7 +155,7 @@ from utal.core.tariff import TimeOfUseTariff
                     charge=TariffCharge(
                         blocks=(
                             ConsumptionBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=1.0),
+                                rate=TariffRate(currency="AUD", value=1.0),
                                 from_quantity=0,
                                 to_quantity=float("inf"),
                             ),
@@ -181,7 +182,7 @@ from utal.core.tariff import TimeOfUseTariff
                     charge=TariffCharge(
                         blocks=(
                             ConsumptionBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=1.0),
+                                rate=TariffRate(currency="AUD", value=1.0),
                                 from_quantity=0,
                                 to_quantity=float("inf"),
                             ),
@@ -203,7 +204,7 @@ from utal.core.tariff import TimeOfUseTariff
                     charge=TariffCharge(
                         blocks=(
                             ConsumptionBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=1.0),
+                                rate=TariffRate(currency="AUD", value=1.0),
                                 from_quantity=0,
                                 to_quantity=float("inf"),
                             ),
@@ -245,9 +246,7 @@ def test_time_of_use_tariff_apply_to():
         tzinfo=ZoneInfo("UTC"),
         charge=TariffCharge(
             blocks=(
-                TariffBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=20.0), from_quantity=0.0, to_quantity=float("inf")
-                ),
+                TariffBlock(rate=TariffRate(currency="AUD", value=20.0), from_quantity=0.0, to_quantity=float("inf")),
             ),
             unit=TariffUnit(metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive),
             reset_data=None,
@@ -262,9 +261,7 @@ def test_time_of_use_tariff_apply_to():
         tzinfo=ZoneInfo("UTC"),
         charge=TariffCharge(
             blocks=(
-                TariffBlock(
-                    rate=TariffRate(currency=RateCurrency.AUD, value=-1.0), from_quantity=0.0, to_quantity=float("inf")
-                ),
+                TariffBlock(rate=TariffRate(currency="AUD", value=-1.0), from_quantity=0.0, to_quantity=float("inf")),
             ),
             unit=TariffUnit(metric=Consumption.kWh, direction=TradeDirection.Export, convention=SignConvention.Passive),
             reset_data=None,
@@ -296,9 +293,8 @@ def test_time_of_use_tariff_apply_to():
     handler = MeterProfileHandler(meter_profile)
     cost_df = tariff.apply_to(  # noqa
         handler,
-        tariff_unit=TariffUnit(
-            metric=Consumption.kWh, direction=TradeDirection.Export, convention=SignConvention.Passive
-        ),
+        tariff_unit=TariffUnit(metric=Consumption.kWh, convention=SignConvention.Passive),
     )
 
-    # plot(cost_df, include_additional_cost_components=True)
+    cost_handler = TariffCostHandler(cost_df)  # noqa
+    # cost_handler.plot(include_additional_cost_components=False)

@@ -20,7 +20,6 @@ __all__ = [
     "ResetData",
     "ResetPeriod",
     "TariffRate",
-    "RateCurrency",
     "TariffInterval",
     "ConsumptionInterval",
     "DemandInterval",
@@ -36,7 +35,7 @@ from .core.day import DayType, DaysApplied
 from .core.typing import Consumption, Demand
 from .core.unit import TariffUnit, SignConvention, TradeDirection, UsageChargeMethod
 from .core.reset import ResetData, ResetPeriod
-from .core.rate import TariffRate, RateCurrency
+from .core.rate import TariffRate
 from .core.interval import TariffInterval, ConsumptionInterval, DemandInterval
 
 from .core.dataframe.profile import MeterProfileHandler

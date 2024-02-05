@@ -9,7 +9,7 @@ from utal.core.charge import ConsumptionCharge, DemandCharge
 from utal.core.day import DayType, DaysApplied
 from utal.core.typing import Consumption, Demand
 from utal.core.reset import ResetData, ResetPeriod
-from utal.core.rate import TariffRate, RateCurrency
+from utal.core.rate import TariffRate
 
 from utal.core.interval import ConsumptionInterval, DemandInterval
 from utal.core.unit import ConsumptionUnit, DemandUnit, UsageChargeMethod, SignConvention, TradeDirection
@@ -30,12 +30,12 @@ from utal.core.tariff import DemandTariff
                     charge=DemandCharge(
                         blocks=(
                             DemandBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=1.0),
+                                rate=TariffRate(currency="AUD", value=1.0),
                                 from_quantity=0,
                                 to_quantity=100,
                             ),
                             DemandBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=2.0),
+                                rate=TariffRate(currency="AUD", value=2.0),
                                 from_quantity=100,
                                 to_quantity=float("inf"),
                             ),
@@ -64,12 +64,12 @@ from utal.core.tariff import DemandTariff
                     charge=ConsumptionCharge(
                         blocks=(
                             ConsumptionBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=1.0),
+                                rate=TariffRate(currency="AUD", value=1.0),
                                 from_quantity=0,
                                 to_quantity=100,
                             ),
                             ConsumptionBlock(
-                                rate=TariffRate(currency=RateCurrency.AUD, value=2.0),
+                                rate=TariffRate(currency="AUD", value=2.0),
                                 from_quantity=100,
                                 to_quantity=float("inf"),
                             ),
