@@ -49,7 +49,6 @@ jobs:
         run: |
           pip install mypy
           pip install .
-          mypy --install-types  # install all stubs as required by deps
 
       - name: Add mypy annotator
         uses: pr-annotators/mypy-pr-annotator@v1.0.0

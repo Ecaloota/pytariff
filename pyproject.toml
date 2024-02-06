@@ -55,3 +55,8 @@ Issues = "https://github.com/Ecaloota/pytariff/issues"
 [project.optional-dependencies]
 dev = ["flake8", "mypy", "black"]
 test = ["pytest"]
+
+# ignore errors from lack of third party stubs
+[[tool.mypy.overrides]]
+module = "pandas.*"
+ignore_missing_imports = true
