@@ -47,7 +47,6 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install -r src/requirements.txt
           pip install .
 
       - name: Add mypy annotator
@@ -70,7 +69,6 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install -r src/requirements.txt
           pip install .
 
       - name: Run Pytest
@@ -95,7 +93,6 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install -r src/requirements.txt
           pip install .
 
       - name: Run Pytest
