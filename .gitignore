@@ -174,3 +174,7 @@ lib
 
 # Exclude build instructions
 README.build.md
+
+# Exclude sphinx build
+src/pytariff/docs/generated
+src/pytariff/docs/build
