@@ -47,6 +47,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          pip install mypy
           pip install .
 
       - name: Add mypy annotator
@@ -69,6 +70,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          pip install pytest
           pip install .
 
       - name: Run Pytest
