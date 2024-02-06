@@ -23,14 +23,13 @@ namespace_packages = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 
-
 [build-system]
 requires = ["setuptools >= 40.9.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytariff"
-version = "0.0.1"
+version = "0.0.3"
 description = "For representing generic electrical tariffs"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -38,7 +37,16 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dependencies = []
+dependencies = [
+    "holidays>=0.41",
+    "numpy>=1.26.3",
+    "pandas>=2.2.0",
+    "pandera>=0.18.0",
+    "plotly>=5.18.0",
+    "pyarrow>=15.0.0",
+    "pydantic>=2.5.3",
+    "pydantic_core>=2.14.6",
+]
 
 [project.urls]
 Homepage = "https://github.com/Ecaloota/pytariff"
@@ -46,5 +54,9 @@ Issues = "https://github.com/Ecaloota/pytariff/issues"
 
 [project.optional-dependencies]
 dev = ["flake8", "mypy", "black"]
-docs = ["sphinx", "sphinx-click", "sphinx-markdown-builder"]
 test = ["pytest"]
+
+# ignore errors from lack of third party stubs
+[[tool.mypy.overrides]]
+module = "pandas.*"
+ignore_missing_imports = true
