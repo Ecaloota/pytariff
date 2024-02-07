@@ -1,14 +1,12 @@
 from typing import Optional
 from uuid import uuid4
 
-from pydantic import UUID4, Field, model_validator
-from pydantic.dataclasses import dataclass
+from pydantic import UUID4, BaseModel, Field, PrivateAttr, model_validator
 
 from pytariff.core.rate import MarketRate, TariffRate
 
 
-@dataclass
-class TariffBlock:
+class TariffBlock(BaseModel):
     """
     TariffBlocks are right-open intervals over [from_quantity, to_quantity) defined for some unit
     and associated with a rate.
@@ -18,7 +16,7 @@ class TariffBlock:
     from_quantity: float = Field(ge=0)
     to_quantity: float = Field(gt=0)
 
-    uuid: UUID4 = Field(default_factory=uuid4)
+    _uuid: UUID4 = PrivateAttr(default_factory=uuid4)
 
     @model_validator(mode="after")
     def assert_from_lt_to(self) -> "TariffBlock":
@@ -68,7 +66,6 @@ class TariffBlock:
         return self.from_quantity <= other < self.to_quantity
 
 
-@dataclass
 class DemandBlock(TariffBlock):
     ...
 
@@ -93,7 +90,6 @@ class DemandBlock(TariffBlock):
         return super().__hash__()
 
 
-@dataclass
 class ConsumptionBlock(TariffBlock):
     ...
 

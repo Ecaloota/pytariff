@@ -26,6 +26,8 @@ exclude_patterns = []
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 
+# autodoc_typehints = "none"
+autodoc_typehints_format = "fully-qualified"
 
 extensions = [
     "sphinx.ext.duration",

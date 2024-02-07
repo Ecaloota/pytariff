@@ -4,18 +4,30 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 import pandas as pd
 
-from pydantic import UUID4, BaseModel, ConfigDict, Field, model_validator
+from pydantic import UUID4, BaseModel, ConfigDict, PrivateAttr, model_validator
 
 from pytariff._internal import helper
 from pytariff._internal.applied_interval import AppliedInterval
 
 
 class DefinedInterval(BaseModel):
-    """A DefinedInterval is a closed datetime interval from [start, end];
+    """A ``DefinedInterval`` is a closed datetime.datetime interval over ``[start, end]``
+    that must always be timezone-aware, and contains ``children`` :ref:`applied_interval`.
 
-    start <= end; if given naive datetimes or given dates, tzinfo must also be provided;
-    the timezones of start and end must match; if given dates, an assumed time of midnight
-    in the provided timezone is used to create the corresponding start or end value.
+    Args:
+        start: The beginning of the ``DefinedInterval``. If ``start`` is naive,
+            ``tzinfo`` must be provided. If ``start`` is timezone-aware, it's timezone information must match
+            the timezone information provided in ``end``, if present, or the timezone information in ``tzinfo``,
+            if present.
+        end: The end of the ``DefinedInterval``. If ``end`` is naive,
+            ``tzinfo`` must be provided. If ``end`` is timezone-aware, it's timezone information must match
+            the timezone information provided in ``start``, if present, or the timezone information in ``tzinfo``,
+            if present.
+        tzinfo: Timezone information associated with the current interval.
+            Does not need to be provided unless one or both of ``start`` and ``end`` are timezone-aware.
+            Default None.
+        children: Defines when a tariff may be applied within the definition
+            interval. Multiple ``children`` cannot overlap. See :ref:`applied_interval`.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -25,7 +37,7 @@ class DefinedInterval(BaseModel):
     tzinfo: Optional[timezone | ZoneInfo] = None
     children: Optional[tuple[AppliedInterval, ...]] = None
 
-    uuid: UUID4 = Field(default_factory=uuid4)
+    _uuid: UUID4 = PrivateAttr(default_factory=uuid4)
 
     @model_validator(mode="after")
     def validate_model_is_aware(self) -> "DefinedInterval":
@@ -92,13 +104,14 @@ class DefinedInterval(BaseModel):
         return self
 
     def __contains__(self, other: datetime | date | pd.Timestamp, tzinfo: Optional[timezone | ZoneInfo] = None) -> bool:
-        """
-        A DefinedInterval contains a datetime iff the datetime is within
-            self.start <= other <= self.end.
-        A DefinedInterval contains a date iff the date is provided with an associated timezone,
-            and the derived datetime at midnight in that timezone is within
-            self.start <= other <= self.end.
-        """
+        """foo"""
+        # """
+        # A DefinedInterval contains a datetime iff the datetime is within
+        #     self.start <= other <= self.end.
+        # A DefinedInterval contains a date iff the date is provided with an associated timezone,
+        #     and the derived datetime at midnight in that timezone is within
+        #     self.start <= other <= self.end.
+        # """
 
         if not (helper.is_datetime_type(other) or helper.is_date_type(other)):
             raise ValueError

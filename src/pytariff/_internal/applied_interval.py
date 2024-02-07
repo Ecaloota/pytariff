@@ -3,16 +3,33 @@ from typing import Optional
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from pydantic import UUID4, BaseModel, ConfigDict, Field, model_validator
+from pydantic import UUID4, BaseModel, ConfigDict, PrivateAttr, model_validator
 
 from pytariff._internal import helper
 from pytariff.core.day import DaysApplied  # _internal shouldn't import from core...
 
 
 class AppliedInterval(BaseModel):
-    """An AppliedInterval is a right-open time interval over [start_time, end_time) where
-    start_time <= end_time, or over (end_time, start_time] where end_time < start_time.
-    An AppliedInterval must always be timezone aware.
+    """An AppliedInterval is a right-open datetime.time interval over ``[start_time, end_time)``, (or over
+    ``[end_time, start_time)`` if ``end_time`` < ``start_time``) that is defined as active in the period specified
+    in the provided ``DaysApplied``. An ``AppliedInterval`` must always be timezone-aware.
+
+    If ``start_time`` == ``end_time``, the ``AppliedInterval`` is considered active at all times in the
+    provided ``DaysApplied``.
+
+    Args:
+        start_time: datetime.time: The beginning of the ``AppliedInterval``. If ``start_time`` is naive,
+            ``tzinfo`` must be provided. If ``start_time`` is timezone-aware, it's timezone information must match
+            the timezone information provided in ``end_time`` if present, or the timezone information in ``tzinfo``,
+            if provided.
+        end_time: datetime.time: The end of the ``AppliedInterval``. If
+            ``end_time`` is naive, ``tzinfo`` must be provided. If ``end_time`` is timezone-aware, it's
+            timezone information must match the timezone information provided in ``start_time`` if present, or
+            the timezone information in ``tzinfo``, if provided.
+        days_applied: DaysApplied: See :class:`.DaysApplied`
+        tzinfo: datetime.timezone | ZoneInfo | None: Timezone information associated with the current interval.
+            Does not need to be provided unless one or neither of ``start_time`` and ``end_time`` are timezone-aware.
+            Default None.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -22,7 +39,7 @@ class AppliedInterval(BaseModel):
     days_applied: DaysApplied
     tzinfo: Optional[timezone | ZoneInfo] = None
 
-    uuid: UUID4 = Field(default_factory=uuid4)
+    _uuid: UUID4 = PrivateAttr(default_factory=uuid4)
 
     @model_validator(mode="after")
     def validate_start_time_aware(self) -> "AppliedInterval":
@@ -73,14 +90,17 @@ class AppliedInterval(BaseModel):
 
     def __contains__(self, other: time | date | datetime) -> bool:
         """
-        An AppliedInterval contains a time iff that time is within the range [start_time, end_time).
-        An AppliedInterval contains a date iff the date's day appears in the days_applied.
-        An AppliedInterval contains a datetime iff both of the above are true for the time of the
-            datetime and the date of the datetime, respectively.
-
-        An other which is not a time, date, or datetime is not contained within an AppliedInterval.
-        An other which is a naive time or naive datetime is not contained within an AppliedInterval.
+        bar
         """
+        # """
+        # An AppliedInterval contains a time iff that time is within the range [start_time, end_time).
+        # An AppliedInterval contains a date iff the date's day appears in the days_applied.
+        # An AppliedInterval contains a datetime iff both of the above are true for the time of the
+        #     datetime and the date of the datetime, respectively.
+
+        # An other which is not a time, date, or datetime is not contained within an AppliedInterval.
+        # An other which is a naive time or naive datetime is not contained within an AppliedInterval.
+        # """
 
         if self.start_time is None or self.end_time is None:
             return False
@@ -109,17 +129,20 @@ class AppliedInterval(BaseModel):
         return False
 
     def __and__(self, other: "AppliedInterval") -> Optional["AppliedInterval"]:
-        """The intersection between two right-open intervals [a, b) and [c, d) is the set of all values that belong
-        to both, being:
-            [max(a, c), min(b, d))
-
-        And the intersection between two DaysApplied is the result of their intersection operation.
-
-        Then, the intersection between two AppliedIntervals is the AppliedInterval with start_time = max(a, c),
-        end_time = min(b, d), and days_applied = self.days_applied & other.days_applied.
-
-        Two AppliedIntervals must share a timezone, (for my convenience, mostly)
         """
+        foo
+        """
+        # """The intersection between two right-open intervals [a, b) and [c, d) is the set of all values that belong
+        # to both, being:
+        #     [max(a, c), min(b, d))
+
+        # And the intersection between two DaysApplied is the result of their intersection operation.
+
+        # Then, the intersection between two AppliedIntervals is the AppliedInterval with start_time = max(a, c),
+        # end_time = min(b, d), and days_applied = self.days_applied & other.days_applied.
+
+        # Two AppliedIntervals must share a timezone, (for my convenience, mostly)
+        # """
 
         if not isinstance(other, AppliedInterval):
             raise ValueError

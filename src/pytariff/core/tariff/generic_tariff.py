@@ -94,7 +94,7 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
 
             for block in child.charge.blocks:
                 cost_df = pd.DataFrame(index=charge_profile.index, data={"cost": 0})
-                uuid_identifier = str(child.charge.uuid) + str(block.uuid)
+                uuid_identifier = str(child.charge._uuid) + str(block._uuid)
 
                 block_map = getattr(charge_profile, _block_map_name(child.charge)).map(block.__contains__)
                 applied_map = charge_map & block_map
@@ -115,8 +115,8 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
             if len(charge_profile.index) != len(resampled_meter.index):
                 raise ValueError("Tariff misalignment")
 
-            resampled_meter[f"cost_import_{child.uuid}"] = charge_profile.filter(like="cost_import").sum(axis=1)
-            resampled_meter[f"cost_export_{child.uuid}"] = charge_profile.filter(like="cost_export").sum(axis=1)
+            resampled_meter[f"cost_import_{child._uuid}"] = charge_profile.filter(like="cost_import").sum(axis=1)
+            resampled_meter[f"cost_export_{child._uuid}"] = charge_profile.filter(like="cost_export").sum(axis=1)
 
         resampled_meter["import_cost"] = resampled_meter.filter(like="cost_import").sum(axis=1)
         resampled_meter["export_cost"] = resampled_meter.filter(like="cost_export").sum(axis=1)

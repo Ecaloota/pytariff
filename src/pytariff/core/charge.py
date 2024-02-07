@@ -1,8 +1,7 @@
 from typing import Generic, Optional
 from uuid import uuid4
 
-from pydantic import UUID4, Field, model_validator
-from pydantic.dataclasses import dataclass
+from pydantic import UUID4, BaseModel, PrivateAttr, model_validator
 
 
 from pytariff.core.block import ConsumptionBlock, DemandBlock, TariffBlock
@@ -12,8 +11,7 @@ from pytariff.core.reset import ResetData
 from pytariff.core.unit import ConsumptionUnit, DemandUnit, TariffUnit, UsageChargeMethod
 
 
-@dataclass
-class TariffCharge(Generic[MetricType]):
+class TariffCharge(BaseModel, Generic[MetricType]):
     """Not to be used directly"""
 
     blocks: tuple[TariffBlock, ...]
@@ -23,7 +21,7 @@ class TariffCharge(Generic[MetricType]):
     resolution: str = "5T"
     window: Optional[str] = None
 
-    uuid: UUID4 = Field(default_factory=uuid4)
+    _uuid: UUID4 = PrivateAttr(default_factory=uuid4)
 
     @model_validator(mode="after")
     def validate_blocks_cannot_overlap(self) -> "TariffCharge":
@@ -95,7 +93,6 @@ class TariffCharge(Generic[MetricType]):
         )
 
 
-@dataclass
 class ConsumptionCharge(TariffCharge[Consumption]):
     blocks: tuple[ConsumptionBlock, ...]
     unit: ConsumptionUnit
@@ -146,7 +143,6 @@ class ConsumptionCharge(TariffCharge[Consumption]):
         )
 
 
-@dataclass
 class DemandCharge(TariffCharge[Demand]):
     blocks: tuple[DemandBlock, ...]
     unit: DemandUnit
@@ -196,7 +192,6 @@ class DemandCharge(TariffCharge[Demand]):
         )
 
 
-@dataclass
 class ImportConsumptionCharge(ConsumptionCharge):
     unit: ConsumptionUnit
 
@@ -207,7 +202,6 @@ class ImportConsumptionCharge(ConsumptionCharge):
         return self
 
 
-@dataclass
 class ExportConsumptionCharge(ConsumptionCharge):
     unit: ConsumptionUnit
 
