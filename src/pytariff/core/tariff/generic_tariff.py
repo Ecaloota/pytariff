@@ -13,13 +13,12 @@ from pytariff.core.interval import TariffInterval
 
 
 class GenericTariff(DefinedInterval, Generic[MetricType]):
-    """A GenericTariff is a generalised model of an electrical tariff defined as a closed
-    timezone-aware datetime interval. It contains child TariffIntervals, which are right-open
-    timezone-aware time intervals which are levied on their DaysApplied and associated with a
-    single TariffCharge.
+    """A general model of an electrical tariff defined over the closed timezone-aware datetime interval [start, end].
+    See :ref:`defined_interval`.
 
-    A TariffCharge contains a tuple of TariffBlocks, each of which define the right-open interval
-    of some unit over which a given TariffRate is to be applied."""
+    Args:
+        children: tuple[TariffInterval, ...]: See :class:`.TariffInterval`
+    """
 
     children: tuple[TariffInterval[MetricType], ...]
 
