@@ -212,13 +212,11 @@ def test_defined_interval_invalid_construction_raises_value_error(
                     start_time=time(6),
                     end_time=time(7),
                     days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                    tzinfo=ZoneInfo("Australia/Brisbane"),
                 ),
                 AppliedInterval(
                     start_time=time(8),
                     end_time=time(9),
                     days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                    tzinfo=ZoneInfo("Australia/Brisbane"),
                 ),
             )
         ),
@@ -228,13 +226,11 @@ def test_defined_interval_invalid_construction_raises_value_error(
                     start_time=time(6),
                     end_time=time(7),
                     days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                    tzinfo=ZoneInfo("Australia/Brisbane"),
                 ),
                 AppliedInterval(
                     start_time=time(7),
                     end_time=time(8),
                     days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                    tzinfo=ZoneInfo("Australia/Brisbane"),
                 ),
             )
         ),
@@ -244,13 +240,11 @@ def test_defined_interval_invalid_construction_raises_value_error(
                     start_time=time(6),
                     end_time=time(7),
                     days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                    tzinfo=ZoneInfo("Australia/Brisbane"),
                 ),
                 AppliedInterval(
                     start_time=time(6),
                     end_time=time(7),
                     days_applied=DaysApplied(day_types=(DayType.TUESDAY,)),
-                    tzinfo=ZoneInfo("Australia/Brisbane"),
                 ),
             )
         ),
@@ -260,13 +254,11 @@ def test_defined_interval_invalid_construction_raises_value_error(
                     start_time=time(6),
                     end_time=time(7),
                     days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                    tzinfo=ZoneInfo("Australia/Brisbane"),
                 ),
                 AppliedInterval(
                     start_time=time(7),
                     end_time=time(8),
                     days_applied=DaysApplied(day_types=(DayType.TUESDAY,)),
-                    tzinfo=ZoneInfo("Australia/Brisbane"),
                 ),
             )
         ),
@@ -291,13 +283,11 @@ def test_defined_interval_allows_non_overlapping_children(child_intervals: tuple
                     start_time=time(6),
                     end_time=time(7),
                     days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                    tzinfo=ZoneInfo("Australia/Brisbane"),
                 ),
                 AppliedInterval(
                     start_time=time(6),
                     end_time=time(7),
                     days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                    tzinfo=ZoneInfo("Australia/Brisbane"),
                 ),
             )
         ),
@@ -307,52 +297,17 @@ def test_defined_interval_allows_non_overlapping_children(child_intervals: tuple
                     start_time=time(6),
                     end_time=time(7),
                     days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                    tzinfo=ZoneInfo("Australia/Brisbane"),
                 ),
                 AppliedInterval(
                     start_time=time(6, 30),
                     end_time=time(7, 30),
                     days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                    tzinfo=ZoneInfo("Australia/Brisbane"),
                 ),
             )
         ),
     ],
 )
 def test_defined_interval_children_cannot_overlap(child_intervals: tuple[AppliedInterval, ...]):
-    """TODO"""
-
-    with pytest.raises(ValueError):
-        DefinedInterval(
-            start=datetime(2023, 1, 1),
-            end=datetime(2023, 12, 31),
-            tzinfo=ZoneInfo("Australia/Brisbane"),
-            children=child_intervals,
-        )
-
-
-@pytest.mark.parametrize(
-    "child_intervals",
-    [
-        (  # not sharing the same timezone
-            (
-                AppliedInterval(
-                    start_time=time(6),
-                    end_time=time(7),
-                    days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                    tzinfo=ZoneInfo("Australia/Canberra"),
-                ),
-                AppliedInterval(
-                    start_time=time(8),
-                    end_time=time(9),
-                    days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                    tzinfo=ZoneInfo("Australia/Brisbane"),
-                ),
-            )
-        ),
-    ],
-)
-def test_defined_interval_children_must_share_timezones(child_intervals: tuple[AppliedInterval, ...]):
     """TODO"""
 
     with pytest.raises(ValueError):

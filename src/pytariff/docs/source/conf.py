@@ -17,7 +17,7 @@ release = "0.0.3"
 extensions = []
 
 templates_path = ["_templates"]
-exclude_patterns = []
+exclude_patterns = []  # type: ignore
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -36,4 +36,12 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
+    "sphinxcontrib.autodoc_pydantic",
 ]
+
+# settings which control autodoc_pydantic
+autodoc_pydantic_model_show_json = False
+autodoc_pydantic_model_show_config_summary = False
+autodoc_pydantic_model_show_validator_summary = False
+autodoc_pydantic_model_hide_paramlist = False
+autodoc_pydantic_model_member_order = "bysource"

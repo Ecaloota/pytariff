@@ -1,4 +1,4 @@
-from datetime import date, datetime, time
+from datetime import time
 from typing import Generic, Optional
 from uuid import uuid4
 
@@ -37,7 +37,6 @@ class TariffInterval(AppliedInterval, Generic[MetricType]):
             start_time=super_intersection.start_time,
             end_time=super_intersection.end_time,
             days_applied=super_intersection.days_applied,
-            tzinfo=super_intersection.tzinfo,
             charge=charge_intersection,
         )
 
@@ -49,7 +48,7 @@ class TariffInterval(AppliedInterval, Generic[MetricType]):
     def __hash__(self) -> int:
         return super().__hash__() ^ hash(self.charge)
 
-    def __contains__(self, other: time | date | datetime) -> bool:
+    def __contains__(self, other: time) -> bool:
         return super().__contains__(other)
 
 

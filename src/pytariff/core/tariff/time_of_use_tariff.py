@@ -32,8 +32,8 @@ class TimeOfUseTariff(GenericTariff[MetricType]):
                     if child_a.charge.unit != child_b.charge.unit:
                         continue
 
-                    # Tariff intervals must share days_applied and timezone attrs
-                    if not (child_a.days_applied == child_b.days_applied and child_a.tzinfo == child_b.tzinfo):
+                    # Tariff intervals must share days_applied
+                    if not (child_a.days_applied == child_b.days_applied):
                         raise ValueError(
                             "Tariff intervals in TimeOfUseTariff must share DaysApplied and tzinfo attributes"
                         )

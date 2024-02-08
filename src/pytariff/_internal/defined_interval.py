@@ -1,4 +1,4 @@
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time
 from typing import Optional
 from uuid import uuid4
 from zoneinfo import ZoneInfo
@@ -13,29 +13,27 @@ from pytariff._internal.applied_interval import AppliedInterval
 class DefinedInterval(BaseModel):
     """A ``DefinedInterval`` is a closed datetime.datetime interval over ``[start, end]``
     that must always be timezone-aware, and contains ``children`` :ref:`applied_interval`.
-
-    Args:
-        start: The beginning of the ``DefinedInterval``. If ``start`` is naive,
-            ``tzinfo`` must be provided. If ``start`` is timezone-aware, it's timezone information must match
-            the timezone information provided in ``end``, if present, or the timezone information in ``tzinfo``,
-            if present.
-        end: The end of the ``DefinedInterval``. If ``end`` is naive,
-            ``tzinfo`` must be provided. If ``end`` is timezone-aware, it's timezone information must match
-            the timezone information provided in ``start``, if present, or the timezone information in ``tzinfo``,
-            if present.
-        tzinfo: Timezone information associated with the current interval.
-            Does not need to be provided unless one or both of ``start`` and ``end`` are timezone-aware.
-            Default None.
-        children: Defines when a tariff may be applied within the definition
-            interval. Multiple ``children`` cannot overlap. See :ref:`applied_interval`.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     start: datetime
+    """The beginning of the ``DefinedInterval``. If ``start`` is naive, ``tzinfo`` must be provided. If ``start``
+    is timezone-aware, it's timezone information must match the timezone information provided in ``end``, if present,
+    or the timezone information in ``tzinfo``, if present."""
+
     end: datetime
-    tzinfo: Optional[timezone | ZoneInfo] = None
+    """The end of the ``DefinedInterval``. If ``end`` is naive, ``tzinfo`` must be provided. If ``end`` is
+    timezone-aware, it's timezone information must match the timezone information provided in ``start``, if present, or
+    the timezone information in ``tzinfo``, if present."""
+
+    tzinfo: Optional[ZoneInfo] = None
+    """Timezone information associated with the current interval. Does not need to be provided unless one or both of
+    ``start`` and ``end`` are timezone-aware. Default None."""
+
     children: Optional[tuple[AppliedInterval, ...]] = None
+    """Defines when a tariff may be applied within the definition interval. Multiple ``children`` cannot overlap. See
+    :ref:`applied_interval`."""
 
     _uuid: UUID4 = PrivateAttr(default_factory=uuid4)
 
@@ -91,19 +89,7 @@ class DefinedInterval(BaseModel):
 
         return self
 
-    @model_validator(mode="after")
-    def validate_children_share_tzinfo(self) -> "DefinedInterval":
-        if self.children is None:
-            return self
-
-        for i, x in enumerate(self.children):
-            for j, y in enumerate(self.children):
-                if i != j:
-                    if x.tzinfo != y.tzinfo:
-                        raise ValueError
-        return self
-
-    def __contains__(self, other: datetime | date | pd.Timestamp, tzinfo: Optional[timezone | ZoneInfo] = None) -> bool:
+    def __contains__(self, other: datetime | date | pd.Timestamp, tzinfo: Optional[ZoneInfo] = None) -> bool:
         """foo"""
         # """
         # A DefinedInterval contains a datetime iff the datetime is within

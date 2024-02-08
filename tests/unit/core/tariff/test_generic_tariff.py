@@ -1,4 +1,4 @@
-from datetime import datetime, time, timedelta, timezone
+from datetime import datetime, time
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -22,7 +22,7 @@ def test_generic_tariff_valid_construction(DEFAULT_CONSUMPTION_BLOCK):
     GenericTariff(
         start=datetime(2023, 1, 1),
         end=datetime(2023, 12, 31),
-        tzinfo=timezone(timedelta(hours=1)),
+        tzinfo=ZoneInfo("UTC"),
         children=(
             TariffInterval(
                 start_time=time(6),
@@ -37,7 +37,6 @@ def test_generic_tariff_valid_construction(DEFAULT_CONSUMPTION_BLOCK):
                         anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.FIRST_OF_MONTH
                     ),
                 ),
-                tzinfo=timezone(timedelta(hours=1)),
             ),
         ),
     )
@@ -96,7 +95,6 @@ def test_generic_tariff_apply_to(profile, import_cost_series, export_cost_series
             start_time=time(0),
             end_time=time(1),
             days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-            tzinfo=ZoneInfo("UTC"),
             charge=DEFAULT_CHARGE,
         ),
     )
@@ -157,7 +155,6 @@ def test_generic_tariff_plot(profile):
             start_time=time(0),
             end_time=time(1),
             days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-            tzinfo=ZoneInfo("UTC"),
             charge=DEFAULT_CHARGE,
         ),
     )

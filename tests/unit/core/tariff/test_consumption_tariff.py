@@ -1,4 +1,4 @@
-from datetime import datetime, time, timedelta, timezone
+from datetime import datetime, time
 from zoneinfo import ZoneInfo
 import pandas as pd
 
@@ -29,7 +29,6 @@ def test_consumption_tariff_valid_construction(block_fixture: str, raises: bool,
             ConsumptionTariff(
                 start=datetime(2023, 1, 1),
                 end=datetime(2023, 12, 31),
-                tzinfo=timezone(timedelta(hours=1)),
                 children=(
                     ConsumptionInterval(
                         start_time=time(6),
@@ -46,7 +45,6 @@ def test_consumption_tariff_valid_construction(block_fixture: str, raises: bool,
                                 anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY
                             ),
                         ),
-                        tzinfo=timezone(timedelta(hours=1)),
                     ),
                 ),
             )
@@ -55,7 +53,7 @@ def test_consumption_tariff_valid_construction(block_fixture: str, raises: bool,
         assert ConsumptionTariff(
             start=datetime(2023, 1, 1),
             end=datetime(2023, 12, 31),
-            tzinfo=timezone(timedelta(hours=1)),
+            tzinfo=ZoneInfo("UTC"),
             children=(
                 ConsumptionInterval(
                     start_time=time(6),
@@ -70,7 +68,6 @@ def test_consumption_tariff_valid_construction(block_fixture: str, raises: bool,
                             anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY
                         ),
                     ),
-                    tzinfo=timezone(timedelta(hours=1)),
                 ),
             ),
         )
@@ -110,7 +107,6 @@ def test_consumption_tariff_apply_to_method():
                     reset_data=ResetData(anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY),
                     method=UsageChargeMethod.cumsum,
                 ),
-                tzinfo=ZoneInfo("UTC"),
             ),
         ),
     )
@@ -122,4 +118,3 @@ def test_consumption_tariff_apply_to_method():
             metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
         ),
     )  # noqa
-    print("foo")

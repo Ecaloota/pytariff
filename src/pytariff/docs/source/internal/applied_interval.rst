@@ -3,7 +3,6 @@
 AppliedInterval
 ===============
 
-.. autoclass:: pytariff._internal.applied_interval.AppliedInterval
-   :show-inheritance:
-   :exclude-members: model_config, model_fields
+.. autopydantic_model:: pytariff._internal.applied_interval.AppliedInterval
+   :exclude-members: model_post_init
    :special-members: __and__, __contains__

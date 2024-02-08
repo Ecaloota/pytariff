@@ -26,7 +26,6 @@ from pytariff.core.tariff import DemandTariff
                     start_time=time(0, 0),
                     end_time=time(23, 59),
                     days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-                    tzinfo=ZoneInfo("UTC"),
                     charge=DemandCharge(
                         blocks=(
                             DemandBlock(
@@ -60,7 +59,6 @@ from pytariff.core.tariff import DemandTariff
                     start_time=time(0, 0),
                     end_time=time(23, 59),
                     days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-                    tzinfo=ZoneInfo("UTC"),
                     charge=ConsumptionCharge(
                         blocks=(
                             ConsumptionBlock(

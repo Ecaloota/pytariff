@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime
 from typing import Generic, Optional
 from zoneinfo import ZoneInfo
 import pandas as pd
@@ -22,10 +22,14 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
 
     children: tuple[TariffInterval[MetricType], ...]
 
-    def __contains__(self, other: datetime | date, tzinfo: Optional[timezone | ZoneInfo] = None) -> bool:
+    def __contains__(self, other: datetime | date, tzinfo: Optional[ZoneInfo] = None) -> bool:
         is_defined_contained = super(GenericTariff, self).__contains__(other, tzinfo)
-        is_child_contained = any(child.__contains__(other) for child in self.children)
-        return is_defined_contained and is_child_contained
+
+        if isinstance(other, datetime):
+            is_child_contained = any(child.__contains__(other.timetz()) for child in self.children)
+            return is_defined_contained and is_child_contained
+
+        return is_defined_contained
 
     @model_validator(mode="after")
     def validate_children_share_charge_resolution(self) -> "GenericTariff":

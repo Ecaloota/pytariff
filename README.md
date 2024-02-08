@@ -31,7 +31,6 @@ import_charge = pt.TariffInterval(
     start_time=time(0),
     end_time=time(0),
     days_applied=pt.DaysApplied(day_types=pt.DayType.ALL_DAYS),
-    tzinfo=ZoneInfo("UTC"),
     charge=pt.TariffCharge(
         blocks=(
             pt.TariffBlock(
@@ -58,7 +57,6 @@ export_charge = pt.TariffInterval(
     start_time=time(0),
     end_time=time(0),
     days_applied=pt.DaysApplied(day_types=pt.DayType.ALL_DAYS),
-    tzinfo=ZoneInfo("UTC"),
     charge=pt.TariffCharge(
         blocks=(
             pt.TariffBlock(

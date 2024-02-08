@@ -31,7 +31,6 @@ from pytariff.core.dataframe.cost import TariffCostHandler
                     start_time=time(0, 0),
                     end_time=time(12, 0),
                     days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-                    tzinfo=ZoneInfo("UTC"),
                     charge=TariffCharge(
                         blocks=(
                             ConsumptionBlock(
@@ -53,7 +52,6 @@ from pytariff.core.dataframe.cost import TariffCostHandler
                     start_time=time(12, 0),
                     end_time=time(23, 59),
                     days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-                    tzinfo=ZoneInfo("UTC"),
                     charge=TariffCharge(
                         blocks=(
                             ConsumptionBlock(
@@ -80,7 +78,6 @@ from pytariff.core.dataframe.cost import TariffCostHandler
                     start_time=time(0, 0),
                     end_time=time(23, 59),
                     days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-                    tzinfo=ZoneInfo("UTC"),
                     charge=TariffCharge(
                         blocks=(
                             ConsumptionBlock(
@@ -102,56 +99,6 @@ from pytariff.core.dataframe.cost import TariffCostHandler
                     start_time=time(12, 0),
                     end_time=time(23, 59),
                     days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-                    tzinfo=ZoneInfo("UTC"),
-                    charge=TariffCharge(
-                        blocks=(
-                            ConsumptionBlock(
-                                rate=TariffRate(currency="AUD", value=1.0),
-                                from_quantity=0,
-                                to_quantity=float("inf"),
-                            ),
-                        ),
-                        unit=TariffUnit(
-                            metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
-                        ),
-                        reset_data=ResetData(
-                            anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY
-                        ),
-                        window=None,
-                    ),
-                ),
-            ),
-            True,
-        ),
-        (  # child intervals must share timezone attrs
-            (
-                TariffInterval(
-                    start_time=time(0, 0),
-                    end_time=time(12, 0),
-                    days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-                    tzinfo=ZoneInfo("Australia/Brisbane"),
-                    charge=TariffCharge(
-                        blocks=(
-                            ConsumptionBlock(
-                                rate=TariffRate(currency="AUD", value=1.0),
-                                from_quantity=0,
-                                to_quantity=float("inf"),
-                            ),
-                        ),
-                        unit=TariffUnit(
-                            metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
-                        ),
-                        reset_data=ResetData(
-                            anchor=datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), period=ResetPeriod.DAILY
-                        ),
-                        window=None,
-                    ),
-                ),
-                TariffInterval(
-                    start_time=time(12, 0),
-                    end_time=time(23, 59),
-                    days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-                    tzinfo=ZoneInfo("UTC"),
                     charge=TariffCharge(
                         blocks=(
                             ConsumptionBlock(
@@ -178,7 +125,6 @@ from pytariff.core.dataframe.cost import TariffCostHandler
                     start_time=time(0, 0),
                     end_time=time(12, 0),
                     days_applied=DaysApplied(day_types=(DayType.MONDAY,)),
-                    tzinfo=ZoneInfo("UTC"),
                     charge=TariffCharge(
                         blocks=(
                             ConsumptionBlock(
@@ -200,7 +146,6 @@ from pytariff.core.dataframe.cost import TariffCostHandler
                     start_time=time(12, 0),
                     end_time=time(23, 59),
                     days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-                    tzinfo=ZoneInfo("UTC"),
                     charge=TariffCharge(
                         blocks=(
                             ConsumptionBlock(
@@ -243,7 +188,6 @@ def test_time_of_use_tariff_apply_to():
         start_time=time(0),
         end_time=time(0),
         days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-        tzinfo=ZoneInfo("UTC"),
         charge=TariffCharge(
             blocks=(
                 TariffBlock(rate=TariffRate(currency="AUD", value=20.0), from_quantity=0.0, to_quantity=float("inf")),
@@ -258,7 +202,6 @@ def test_time_of_use_tariff_apply_to():
         start_time=time(0),
         end_time=time(0),
         days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-        tzinfo=ZoneInfo("UTC"),
         charge=TariffCharge(
             blocks=(
                 TariffBlock(rate=TariffRate(currency="AUD", value=-1.0), from_quantity=0.0, to_quantity=float("inf")),

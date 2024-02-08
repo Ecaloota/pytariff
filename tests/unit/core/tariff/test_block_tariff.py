@@ -25,7 +25,6 @@ from pytariff.core.tariff import BlockTariff
                     start_time=time(0, 0),
                     end_time=time(23, 59),
                     days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-                    tzinfo=ZoneInfo("UTC"),
                     charge=TariffCharge(
                         blocks=(
                             TariffBlock(
@@ -59,7 +58,6 @@ from pytariff.core.tariff import BlockTariff
                     start_time=time(0, 0),
                     end_time=time(23, 59),
                     days_applied=DaysApplied(day_types=(DayType.ALL_DAYS,)),
-                    tzinfo=ZoneInfo("UTC"),
                     charge=TariffCharge(
                         blocks=(
                             TariffBlock(
