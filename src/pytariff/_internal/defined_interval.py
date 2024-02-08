@@ -4,7 +4,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 import pandas as pd
 
-from pydantic import UUID4, BaseModel, ConfigDict, PrivateAttr, model_validator
+from pydantic import UUID4, BaseModel, ConfigDict, PrivateAttr, ValidationInfo, field_validator, model_validator
 
 from pytariff._internal import helper
 from pytariff._internal.applied_interval import AppliedInterval
@@ -17,19 +17,19 @@ class DefinedInterval(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
+    tzinfo: Optional[ZoneInfo] = None
+    """Timezone information associated with the current interval. Does not need to be provided unless one or both of
+    ``start`` and ``end`` are naive. Default None."""
+
     start: datetime
     """The beginning of the ``DefinedInterval``. If ``start`` is naive, ``tzinfo`` must be provided. If ``start``
-    is timezone-aware, it's timezone information must match the timezone information provided in ``end``, if present,
+    is timezone-aware, its timezone information must match the timezone information provided in ``end``, if present,
     or the timezone information in ``tzinfo``, if present."""
 
     end: datetime
     """The end of the ``DefinedInterval``. If ``end`` is naive, ``tzinfo`` must be provided. If ``end`` is
-    timezone-aware, it's timezone information must match the timezone information provided in ``start``, if present, or
+    timezone-aware, its timezone information must match the timezone information provided in ``start``, if present, or
     the timezone information in ``tzinfo``, if present."""
-
-    tzinfo: Optional[ZoneInfo] = None
-    """Timezone information associated with the current interval. Does not need to be provided unless one or both of
-    ``start`` and ``end`` are timezone-aware. Default None."""
 
     children: Optional[tuple[AppliedInterval, ...]] = None
     """Defines when a tariff may be applied within the definition interval. Multiple ``children`` cannot overlap. See
@@ -37,38 +37,64 @@ class DefinedInterval(BaseModel):
 
     _uuid: UUID4 = PrivateAttr(default_factory=uuid4)
 
-    @model_validator(mode="after")
-    def validate_model_is_aware(self) -> "DefinedInterval":
-        if (helper.is_naive(self.start) or helper.is_naive(self.end)) and self.tzinfo is None:
+    @field_validator("start", "end")
+    @classmethod
+    def validate_datetime_is_aware(cls, v: datetime, info: ValidationInfo) -> datetime:
+        """Validate that ``v`` is timezone-aware, or if it is naive, that the instance has valid ``tzinfo``.
+        Returns the datetime.datetime instance with timezone information.
+
+        Raises:
+            ValueError: If ``v`` is naive and the instance does not contain ``tzinfo``.
+
+        Returns:
+            datetime.datetime
+        """
+
+        if helper.is_naive(v) and info.data.get("tzinfo", None) is None:
             raise ValueError
-        return self
-
-    @model_validator(mode="after")
-    def validate_start_aware(self) -> "DefinedInterval":
-        self.start = helper.convert_to_aware_datetime(obj=self.start, tzinfo=self.tzinfo)
-        return self
-
-    @model_validator(mode="after")
-    def validate_end_aware(self) -> "DefinedInterval":
-        self.end = helper.convert_to_aware_datetime(obj=self.end, tzinfo=self.tzinfo)
-        return self
+        elif helper.is_naive(v):
+            v = helper.convert_to_aware_datetime(obj=v, tzinfo=info.data.get("tzinfo"))
+        return v
 
     @model_validator(mode="after")
     def validate_timezones_match(self) -> "DefinedInterval":
+        """Validate that the timezone of the instance ``self.start`` and ``self.end`` has exactly matching timezone
+        information.
+
+        Raises:
+            ValueError: If ``self.start.tzinfo != self.end.tzinfo``.
+
+        Returns:
+            ``DefinedInterval``
+        """
         if not self.start.tzinfo == self.end.tzinfo:
             raise ValueError
         return self
 
     @model_validator(mode="after")
     def validate_start_le_end(self) -> "DefinedInterval":
+        """Validate that the instance ``self.start`` is less than or equal to ``self.end``
+
+        Raises:
+            ValueError: If ``self.end < self.start``.
+
+        Returns:
+            ``DefinedInterval``
+        """
         if self.end < self.start:
             raise ValueError
         return self
 
     @model_validator(mode="after")
     def validate_children_cannot_overlap(self) -> "DefinedInterval":
-        """An overlap between AppliedIntervals is defined as when:
-        TODO
+        """Validate that no pair of ``AppliedInterval`` children overlaps in the instance ``children`` tuple.
+        For the definition of the overlap between two ``AppliedInterval``, see :ref:`applied_interval`
+
+        Raises:
+            ValueError: If any pair of unique ``AppliedInterval`` overlaps.
+
+        Returns:
+            ``DefinedInterval``
         """
         if self.children is None:
             return self
@@ -90,14 +116,19 @@ class DefinedInterval(BaseModel):
         return self
 
     def __contains__(self, other: datetime | date | pd.Timestamp, tzinfo: Optional[ZoneInfo] = None) -> bool:
-        """foo"""
-        # """
-        # A DefinedInterval contains a datetime iff the datetime is within
-        #     self.start <= other <= self.end.
-        # A DefinedInterval contains a date iff the date is provided with an associated timezone,
-        #     and the derived datetime at midnight in that timezone is within
-        #     self.start <= other <= self.end.
-        # """
+        """
+        * A ``DefinedInterval`` contains a ``datetime.datetime`` ``other`` if and only if the ``datetime.datetime`` is
+          within the range ``self.start <= other <= self.end``.
+        * A ``DefinedInterval`` contains a ``datetime.date`` ``other`` if and only if the ``datetime.date`` is
+          timezone-aware and the derived datetime (created via ``datetime.combine`` with the instance ``tzinfo``)
+          at midnight is within ``self.start <= other <= self.end``
+        * A ``DefinedInterval`` contains a ``pandas.Timestamp`` ``other`` if and only if the ``pandas.Timestamp`` is
+          ``to_pydatetime()``-coercible to a ``datetime.date``, and passes the requirements of a ``datetime.date``
+          above.
+
+        Raises:
+            ValueError: If any of the above conditions fail
+        """
 
         if not (helper.is_datetime_type(other) or helper.is_date_type(other)):
             raise ValueError
