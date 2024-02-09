@@ -8,6 +8,12 @@ from pytariff.core.charge import TariffCharge
 from pytariff.core.dataframe.extra import AwareDateTime
 from pytariff.core.unit import UsageChargeMethod
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pytariff import SignConvention
+    from pytariff.core.typing import Consumption, Demand, MetricType
+
 
 class MeterProfileSchema(pa.DataFrameModel):
     idx: Index[AwareDateTime] = pa.Field(coerce=True)
@@ -15,7 +21,7 @@ class MeterProfileSchema(pa.DataFrameModel):
 
 
 class MeterProfileHandler:
-    def __init__(self, profile: pd.DataFrame) -> None:
+    def __init__(self, profile: pd.DataFrame, metric: "MetricType", convention: "SignConvention") -> None:
 
         # assert that the provided profile is MeterProfileSchema-coercible, but pass only the dataframe itself
         try:
@@ -23,6 +29,8 @@ class MeterProfileHandler:
         except Exception:
             raise
         self.profile = profile
+        self.metric: Demand | Consumption = metric
+        self.convention = convention
 
     # TODO write a decorator which validates types leaving the function?
     @staticmethod

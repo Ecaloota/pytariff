@@ -4,7 +4,6 @@ import pandera as pa
 from pytariff.core.dataframe.profile import MeterProfileHandler
 from pytariff.core.typing import MetricType
 from pytariff.core.interval import TariffInterval
-from pytariff.core.unit import TariffUnit
 from pytariff.core.tariff import GenericTariff
 
 
@@ -29,5 +28,5 @@ class BlockTariff(GenericTariff[MetricType]):
         return self
 
     @pa.check_types
-    def apply_to(self, profile_handler: MeterProfileHandler, profile_unit: TariffUnit) -> pd.DataFrame:
-        return super().apply_to(profile_handler, profile_unit)
+    def apply_to(self, profile_handler: MeterProfileHandler) -> pd.DataFrame:
+        return super().apply_to(profile_handler)

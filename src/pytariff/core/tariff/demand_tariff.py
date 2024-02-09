@@ -3,7 +3,6 @@ from pytariff.core.charge import DemandCharge
 from pytariff.core.dataframe.profile import MeterProfileHandler
 from pytariff.core.typing import Demand
 from pytariff.core.interval import DemandInterval
-from pytariff.core.unit import TariffUnit
 from pytariff.core.tariff import GenericTariff
 import pandas as pd
 
@@ -30,5 +29,5 @@ class DemandTariff(GenericTariff[Demand]):
 
         return self
 
-    def apply_to(self, profile_handler: MeterProfileHandler, profile_unit: TariffUnit) -> pd.DataFrame:
-        return super().apply_to(profile_handler, profile_unit)
+    def apply_to(self, profile_handler: MeterProfileHandler) -> pd.DataFrame:
+        return super().apply_to(profile_handler)

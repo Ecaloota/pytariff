@@ -107,13 +107,8 @@ def test_generic_tariff_apply_to(profile, import_cost_series, export_cost_series
         children=DEFAULT_CHILD,
     )
 
-    handler = MeterProfileHandler(profile)
-    output = DEFAULT_TARIFF.apply_to(  # type: ignore  # noqa
-        handler,
-        profile_unit=TariffUnit(
-            metric=Consumption.kWh, direction=TradeDirection._null, convention=SignConvention.Passive
-        ),
-    )
+    handler = MeterProfileHandler(profile, metric=Consumption.kWh, convention=SignConvention.Active)
+    output = DEFAULT_TARIFF.apply_to(handler)  # type: ignore  # noqa
 
     # assert output.total_cost == "foo"  # TODO
 

@@ -10,7 +10,7 @@ from pytariff.core.day import DayType, DaysApplied
 from pytariff.core.reset import ResetData, ResetPeriod
 from pytariff.core.tariff import ConsumptionTariff
 from pytariff.core.typing import Consumption
-from pytariff.core.unit import ConsumptionUnit, TariffUnit, UsageChargeMethod, SignConvention, TradeDirection
+from pytariff.core.unit import ConsumptionUnit, UsageChargeMethod, SignConvention, TradeDirection
 from pytariff.core.rate import TariffRate
 from pytariff.core.interval import ConsumptionInterval
 import pytest
@@ -111,10 +111,5 @@ def test_consumption_tariff_apply_to_method():
         ),
     )
 
-    handler = MeterProfileHandler(meter_profile)
-    cost_schema = tariff.apply_to(  # noqa
-        handler,
-        profile_unit=TariffUnit(
-            metric=Consumption.kWh, direction=TradeDirection.Import, convention=SignConvention.Passive
-        ),
-    )  # noqa
+    handler = MeterProfileHandler(meter_profile, metric=Consumption.kWh, convention=SignConvention.Passive)
+    cost_schema = tariff.apply_to(handler)  # noqa

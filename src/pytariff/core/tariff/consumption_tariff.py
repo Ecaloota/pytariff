@@ -3,7 +3,6 @@ from pydantic import model_validator
 from pytariff.core.dataframe.profile import MeterProfileHandler
 from pytariff.core.typing import Consumption
 from pytariff.core.interval import ConsumptionInterval
-from pytariff.core.unit import TariffUnit
 from pytariff.core.tariff import GenericTariff
 
 
@@ -25,5 +24,5 @@ class ConsumptionTariff(GenericTariff[Consumption]):
                 raise ValueError
         return self
 
-    def apply_to(self, profile_handler: MeterProfileHandler, profile_unit: TariffUnit) -> pd.DataFrame:
-        return super().apply_to(profile_handler, profile_unit)
+    def apply_to(self, profile_handler: MeterProfileHandler) -> pd.DataFrame:
+        return super().apply_to(profile_handler)

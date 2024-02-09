@@ -233,11 +233,8 @@ def test_time_of_use_tariff_apply_to():
         data={"profile": np.tile(np.array([0.0] * 8 + [5.0] * 8 + [-1.0] * 8), 3)},
     )
 
-    handler = MeterProfileHandler(meter_profile)
-    cost_df = tariff.apply_to(  # noqa
-        handler,
-        tariff_unit=TariffUnit(metric=Consumption.kWh, convention=SignConvention.Passive),
-    )
+    handler = MeterProfileHandler(meter_profile, metric=Consumption.kWh, convention=SignConvention.Passive)
+    cost_df = tariff.apply_to(handler)  # noqa
 
     cost_handler = TariffCostHandler(cost_df)  # noqa
     # cost_handler.plot(include_additional_cost_components=False)

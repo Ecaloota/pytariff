@@ -4,25 +4,29 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 from pydantic import model_validator
+from pytariff.core.block import TariffBlock
 from pytariff.core.charge import TariffCharge
 from pytariff._internal.defined_interval import DefinedInterval
 from pytariff.core.dataframe.profile import MeterProfileHandler
 from pytariff.core.typing import MetricType
-from pytariff.core.unit import TradeDirection, TariffUnit
+from pytariff.core.unit import TradeDirection
 from pytariff.core.interval import TariffInterval
 
 
 class GenericTariff(DefinedInterval, Generic[MetricType]):
     """A general model of an electrical tariff defined over the closed timezone-aware datetime interval [start, end].
     See :ref:`defined_interval`.
-
-    Args:
-        children: tuple[TariffInterval, ...]: See :class:`.TariffInterval`
     """
 
     children: tuple[TariffInterval[MetricType], ...]
+    """See :class:`.TariffInterval`"""
 
     def __contains__(self, other: datetime | date, tzinfo: Optional[ZoneInfo] = None) -> bool:
+        """A ``GenericTariff`` contains a given ``datetime.datetime`` if it is contained in the parent
+        ``DefinedInterval`` and contained within any of the ``self.children``. A ``GenericTariff`` contains
+        a given ``datetime.date`` only if that date is contained in the parent ``DefinedInterval``.
+        """
+
         is_defined_contained = super(GenericTariff, self).__contains__(other, tzinfo)
 
         if isinstance(other, datetime):
@@ -33,54 +37,62 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
 
     @model_validator(mode="after")
     def validate_children_share_charge_resolution(self) -> "GenericTariff":
+        """Validate that each child in ``self.children`` shares the same ``charge.resolution``."""
         if not len(set([x.charge.resolution for x in self.children])) == 1:
             raise ValueError
         return self
 
-    def apply_to(
-        self,
-        profile_handler: MeterProfileHandler,
-        profile_unit: TariffUnit,
-    ) -> pd.DataFrame:
-        """"""
+    @staticmethod
+    def _block_map_name(charge: TariffCharge) -> str:
+        direction = "_null_direction" if not charge.unit.direction else charge.unit.direction.value.lower()
+        prefix = f"_{direction}_profile_usage"
+        suffix = f"_{charge.method.value.lower()}"
+        return prefix + suffix
 
-        def _block_map_name(charge: TariffCharge) -> str:
+    @staticmethod
+    def _cost_import_value(
+        block: TariffBlock,
+        idx: datetime,
+        charge: TariffCharge,
+        applied_map: pd.DataFrame,
+        charge_profile: pd.DataFrame,
+    ) -> float:
+        """Given the index of the cost_df, map that index to the block rate value"""
+        # If the block.rate is a TariffRate, idx is unused, else it defines the
+        # value of the block rate at time idx for a MarketRate
+        # NOTE the cost at time idx is the value of the relevant profile column
+        # at idx * block.rate.get_value(idx)
 
-            direction = "_null_direction" if not charge.unit.direction else charge.unit.direction.value.lower()
-            prefix = f"_{direction}_profile_usage"
-            suffix = f"_{charge.method.value.lower()}"
-            return prefix + suffix
+        if charge.unit.direction == TradeDirection.Import and block.rate and applied_map[idx]:
+            return block.rate.get_value(idx) * getattr(charge_profile, GenericTariff._block_map_name(charge)).loc[idx]
+        return 0.0
 
-        def _cost_import_value(
-            idx: datetime, charge: TariffCharge, applied_map: pd.DataFrame, charge_profile: pd.DataFrame
-        ) -> float:
-            """Given the index of the cost_df, map that index to the block rate value"""
-            # If the block.rate is a TariffRate, idx is unused, else it defines the
-            # value of the block rate at time idx for a MarketRate
-            # NOTE the cost at time idx is the value of the relevant profile column
-            # at idx * block.rate.get_value(idx)
+    @staticmethod
+    def _cost_export_value(
+        block: TariffBlock, idx: datetime, charge: TariffCharge, applied_map: pd.DataFrame, charge_profile: pd.DataFrame
+    ) -> float:
+        """Given the index of the cost_df, map that index to the block rate value"""
+        # if the block.rate is a TariffRate, idx is unused, else it defines the
+        # value of the block rate at time idx for a MarketRate
 
-            if charge.unit.direction == TradeDirection.Import and block.rate and applied_map[idx]:
-                return block.rate.get_value(idx) * getattr(charge_profile, _block_map_name(charge)).loc[idx]
-            return 0.0
+        if charge.unit.direction == TradeDirection.Export and block.rate and applied_map[idx]:
+            return block.rate.get_value(idx) * getattr(charge_profile, GenericTariff._block_map_name(charge)).loc[idx]
+        return 0.0
 
-        def _cost_export_value(
-            idx: datetime, charge: TariffCharge, applied_map: pd.DataFrame, charge_profile: pd.DataFrame
-        ) -> float:
-            """Given the index of the cost_df, map that index to the block rate value"""
-            # if the block.rate is a TariffRate, idx is unused, else it defines the
-            # value of the block rate at time idx for a MarketRate
+    def apply_to(self, profile_handler: MeterProfileHandler) -> pd.DataFrame:
+        """
+        Apply the tariff definition to the provided ``profile_handler``.
 
-            if charge.unit.direction == TradeDirection.Export and block.rate and applied_map[idx]:
-                return block.rate.get_value(idx) * getattr(charge_profile, _block_map_name(charge)).loc[idx]
-            return 0.0
+        Returns:
+            A pandas.DataFrame which conforms to the ``TariffCostSchema`` specification.
+        """
 
         child_resolution = [x.charge.resolution for x in self.children][0]
         resampled_meter = profile_handler._pytariff_resample(profile_handler.profile, child_resolution)
         tariff_start = self.start  # needed to calculate reset_period start
 
         for child in self.children:
-            if child.charge.unit.metric != profile_unit.metric:
+            if child.charge.unit.metric != profile_handler.metric:
                 # TODO return zeroed charge_profile -- no charge can be levied on different metrics
                 pass
 
@@ -88,6 +100,12 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
             charge_profile = profile_handler._pytariff_resample(
                 profile_handler.profile, child_resolution, window=child.charge.window
             )
+
+            # invert the profile sign if the charge convention and profile convention are inverted
+            # Otherwise import at meter with Active convention would otherwise be considered export by charge
+            # with Passive definition, say
+            if child.charge.unit.convention != profile_handler.convention:
+                charge_profile["profile"] = charge_profile["profile"].mul(-1)
 
             # calculate the cumulative profile including reset_period tracking given charge information
             # also split the profile into _import and _export quantities so we can determine cost sign for given charge
@@ -100,16 +118,16 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
                 cost_df = pd.DataFrame(index=charge_profile.index, data={"cost": 0})
                 uuid_identifier = str(child.charge._uuid) + str(block._uuid)
 
-                block_map = getattr(charge_profile, _block_map_name(child.charge)).map(block.__contains__)
+                block_map = getattr(charge_profile, GenericTariff._block_map_name(child.charge)).map(block.__contains__)
                 applied_map = charge_map & block_map
                 cost_df["cost_import"] = cost_df.index.map(
-                    lambda x: _cost_import_value(
-                        x, charge=child.charge, applied_map=applied_map, charge_profile=charge_profile
+                    lambda x: GenericTariff._cost_import_value(
+                        block=block, idx=x, charge=child.charge, applied_map=applied_map, charge_profile=charge_profile
                     )
                 )
                 cost_df["cost_export"] = cost_df.index.map(
-                    lambda x: _cost_export_value(
-                        x, charge=child.charge, applied_map=applied_map, charge_profile=charge_profile
+                    lambda x: GenericTariff._cost_export_value(
+                        block=block, idx=x, charge=child.charge, applied_map=applied_map, charge_profile=charge_profile
                     )
                 )
 

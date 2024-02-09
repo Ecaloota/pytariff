@@ -52,12 +52,12 @@ class UsageChargeMethod(Enum):
 class TariffUnit(Generic[MetricType]):
     metric: MetricType
     convention: SignConvention
-    direction: TradeDirection | None = None
+    direction: TradeDirection
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TariffUnit):
             raise ValueError
-        return self.metric == other.metric and self.direction == other.direction
+        return self.metric == other.metric and self.direction == other.direction and self.convention == other.convention
 
     def __hash__(self) -> int:
         return hash(self.metric) ^ hash(self.direction) ^ hash(self.convention)

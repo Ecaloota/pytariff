@@ -2,7 +2,6 @@ from pydantic import model_validator
 from pytariff.core.dataframe.profile import MeterProfileHandler
 from pytariff.core.typing import MetricType
 from pytariff.core.interval import TariffInterval
-from pytariff.core.unit import TariffUnit
 from pytariff.core.tariff import GenericTariff
 import pandas as pd
 
@@ -53,5 +52,5 @@ class TimeOfUseTariff(GenericTariff[MetricType]):
 
         return self
 
-    def apply_to(self, profile_handler: MeterProfileHandler, tariff_unit: TariffUnit) -> pd.DataFrame:
-        return super().apply_to(profile_handler, tariff_unit)
+    def apply_to(self, profile_handler: MeterProfileHandler) -> pd.DataFrame:
+        return super().apply_to(profile_handler)

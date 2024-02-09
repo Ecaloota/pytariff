@@ -1,7 +1,7 @@
 GenericTariff
 =====================================
 
-.. autoclass:: pytariff.core.tariff.generic_tariff.GenericTariff
-   :members:
-   :show-inheritance:
-   :exclude-members: model_config, model_fields
+.. autopydantic_model:: pytariff.core.tariff.generic_tariff.GenericTariff
+   :exclude-members: model_post_init
+   :special-members: __contains__
+

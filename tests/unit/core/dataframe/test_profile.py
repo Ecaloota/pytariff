@@ -172,7 +172,7 @@ def test_meter_profile_schema_resample_method(
 ) -> None:
     """TODO"""
 
-    handler = MeterProfileHandler(data)
+    handler = MeterProfileHandler(data, metric=Consumption.kWh, convention=SignConvention.Passive)
     resampled = handler._pytariff_resample(handler.profile, charge_resolution)
     assert list(resampled.profile) == expected_resampled_list
 
@@ -296,7 +296,7 @@ def test_meter_profile_schema_transform_method(
 ) -> None:
     """TODO"""
 
-    handler = MeterProfileHandler(data)
+    handler = MeterProfileHandler(data, metric=Consumption.kWh, convention=SignConvention.Passive)
     transformed = handler._pytariff_transform(handler.profile, datetime(2023, 1, 1, tzinfo=ZoneInfo("UTC")), charge)
 
     assert list(transformed._import_profile_usage) == exp_import_profile
