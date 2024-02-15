@@ -9,6 +9,9 @@ from pytariff._internal import helper
 
 
 class DayType(Enum):
+    """Defines the allowed DayType values which can be used to define a ``DaysApplied`` instance, which in turn
+    defines when a given ``TariffCharge`` may be levied."""
+
     MONDAY = auto()
     TUESDAY = auto()
     WEDNESDAY = auto()
@@ -25,7 +28,7 @@ class DayType(Enum):
     HOLIDAYS = auto()
 
     def __contains__(self, value: object) -> bool:
-        """For our purposes, a given value is in self iff the value and self are equal.
+        """A given value is in self iff the value and self are equal.
         This is implemented so we can run comparisons like (DayType.BUSINESS_DAYS in self.day_types) when both
         self.day_types is a typle of DayType or an instance thereof.
         """
@@ -33,31 +36,64 @@ class DayType(Enum):
 
     def __and__(self, other: "DayType") -> Collection["DayType"]:
         """
-        General Rules about DayType intersections:
-            1. DayType.X & DayType.ALL_DAYS = {DayType.X}
-            2. DayType.HOLIDAYS & DayType.BUSINESS_DAYS = {}
-            2. DayType.WEEKDAYS & DayType.WEEKENDS = {}
+        The following are general rules which define the DayType set intersections. The intersection between:
+        * ``DayType.ALL_DAYS`` and any other ``DayType`` member is the set containing the other member
+        * ``DayType.HOLIDAYS`` and ``DayType.BUSINESS_DAYS`` is the empty set
+        * ``DayType.WEEKDAYS`` and ``DayType.WEEKENDS`` is the empty set
 
-        Examples:
-        DayType.MONDAY & DayType.TUESDAY = {}
-        DayType.MONDAY & DayType.ALL_DAYS = {DayType.MONDAY}
-        DayType.MONDAY & DayType.MONDAY = {DayType.MONDAY}
 
-        NOTE that in the general case, a MONDAY could be a BUSINESS_DAY or a HOLIDAY, so the following
-        intersections hold. Compare this behaviour with the intersection of DayTypes in a pair of DaysApplied.day_types
-        DayType.MONDAY & DayType.BUSINESS_DAYS = {DayType.MONDAY}
-        DayType.MONDAY & DayType.HOLIDAYS = {DayType.MONDAY}
+        .. highlight:: python
+        .. code-block:: python
 
-        NOTE using similar logic to above, the following intersection holds. For this intersection
-        to be non-empty, BUSINESS_DAYS would need to at least be a superset of WEEKDAYS
-        (all weekdays would need to be business days).
-        DayType.WEEKDAYS & DayType.BUSINESS_DAYS = {}
+            # examples
+            DayType.MONDAY & DayType.TUESDAY
+            >> {}
 
-        NOTE Some businesses may consider WEEKENDS to be a subset of BUSINESS_DAYS, (e.g. churches),
-        so in the general case:
-        DayType.SATURDAY & DayType.BUSINESS_DAYS = {DayType.SATURDAY}
-        DayType.SUNDAY & DayType.BUSINESS_DAYS = {DayType.SUNDAY}
+            DayType.MONDAY & DayType.ALL_DAYS
+            >> {DayType.MONDAY}
+
+            DayType.MONDAY & DayType.MONDAY
+            >> {DayType.MONDAY}
+
+        .. note::
+            In the general case, a ``MONDAY`` could be a ``BUSINESS_DAY`` or a ``HOLIDAY``, so the following
+            intersections hold. Compare this behaviour with the intersection of ``DayTypes`` in a pair of
+            ``DaysApplied.day_types``, which are different.
+
+            .. highlight:: python
+            .. code-block:: python
+
+                DayType.MONDAY & DayType.BUSINESS_DAYS
+                >> {DayType.MONDAY}
+
+                DayType.MONDAY & DayType.HOLIDAYS
+                >> {DayType.MONDAY}
+
+            Following similar logic, the following intersection also holds. For this intersection to be non-empty,
+            ``BUSINESS_DAYS`` would need to at least be a superset of ``WEEKDAYS`` (that is, all weekdays would need
+            to be business days).
+
+            .. highlight:: python
+            .. code-block:: python
+
+                DayType.WEEKDAYS & DayType.BUSINESS_DAYS
+                >> {}
+
+
+            Finally, some businesses may consider ``WEEKENDS`` to be a subset of ``BUSINESS_DAYS``, (*e.g.* churches),
+            so in the general case:
+
+            .. highlight:: python
+            .. code-block:: python
+
+                DayType.SATURDAY & DayType.BUSINESS_DAYS
+                >> {DayType.SATURDAY}
+
+                DayType.SUNDAY & DayType.BUSINESS_DAYS
+                >> {DayType.SUNDAY}
         """
+
+        # TODO do these details belong in the above docstring? Or in the day.rst?
 
         weekday_intersection = [self, DayType.ALL_DAYS, DayType.WEEKDAYS, DayType.BUSINESS_DAYS, DayType.HOLIDAYS]
         weekend_intersection = [self, DayType.ALL_DAYS, DayType.WEEKENDS, DayType.BUSINESS_DAYS, DayType.HOLIDAYS]

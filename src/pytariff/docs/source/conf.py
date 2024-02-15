@@ -37,6 +37,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinxcontrib.autodoc_pydantic",
+    "enum_tools.autoenum",
 ]
 
 # settings which control autodoc_pydantic
