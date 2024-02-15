@@ -14,8 +14,8 @@ from pytariff.core.interval import TariffInterval
 
 
 class GenericTariff(DefinedInterval, Generic[MetricType]):
-    """A general model of an electrical tariff defined over the closed timezone-aware datetime interval [start, end].
-    See :ref:`defined_interval`.
+    """A general model of an electrical tariff defined over the closed timezone-aware datetime interval
+    ``[start, end]``. See :ref:`defined_interval`.
     """
 
     children: tuple[TariffInterval[MetricType], ...]
@@ -37,7 +37,7 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
 
     @model_validator(mode="after")
     def validate_children_share_charge_resolution(self) -> "GenericTariff":
-        """Validate that each child in ``self.children`` shares the same ``charge.resolution``."""
+        """Validate that each child in ``self.children`` shares the same :ref:`tariff_charge` ``resolution``"""
         if not len(set([x.charge.resolution for x in self.children])) == 1:
             raise ValueError
         return self
@@ -84,7 +84,7 @@ class GenericTariff(DefinedInterval, Generic[MetricType]):
         Apply the tariff definition to the provided ``profile_handler``.
 
         Returns:
-            A pandas.DataFrame which conforms to the ``TariffCostSchema`` specification.
+            A ``pandas.DataFrame`` which conforms to the :ref:`tariff_cost_schema` specification.
         """
 
         child_resolution = [x.charge.resolution for x in self.children][0]

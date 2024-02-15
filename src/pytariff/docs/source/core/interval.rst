@@ -1,23 +1,33 @@
 .. _interval:
 
+#########
 Interval
-========
-
-.. autoclass:: pytariff.core.interval.TariffInterval
-   :members:
-   :show-inheritance:
-   :exclude-members: model_config, model_fields
+#########
 
 
-.. autoclass:: pytariff.core.interval.ConsumptionInterval
-   :members:
-   :show-inheritance:
-   :exclude-members: model_config, model_fields
+.. _tariff_interval:
+
+TariffInterval
+"""""""""""""""
+
+.. autopydantic_model:: pytariff.core.interval.TariffInterval
+   :exclude-members: model_post_init
+   :special-members: __and__, __eq__, __contains__
 
 
-.. autoclass:: pytariff.core.interval.DemandInterval
-   :members:
-   :show-inheritance:
-   :exclude-members: model_config, model_fields
+.. _consumption_interval:
+
+ConsumptionInterval
+"""""""""""""""""""""
+
+.. autopydantic_model:: pytariff.core.interval.ConsumptionInterval
+   :exclude-members: model_post_init
 
 
+.. _demand_interval:
+
+DemandInterval
+"""""""""""""""""""""
+
+.. autopydantic_model:: pytariff.core.interval.DemandInterval
+   :exclude-members: model_post_init

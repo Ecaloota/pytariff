@@ -1,6 +1,9 @@
-BlockTariff
-=====================================
+.. _block_tariff:
 
-.. autoclass:: pytariff.core.tariff.block_tariff.BlockTariff
-   :members:
-   :exclude-members: model_config, model_fields
+############
+BlockTariff
+############
+
+.. autopydantic_model:: pytariff.core.tariff.block_tariff.BlockTariff
+   :exclude-members: model_post_init
+

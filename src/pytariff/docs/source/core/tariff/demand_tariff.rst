@@ -1,6 +1,8 @@
-DemandTariff
-=====================================
+.. _demand_tariff:
 
-.. autoclass:: pytariff.core.tariff.demand_tariff.DemandTariff
-   :members:
-   :exclude-members: model_config, model_fields
+##################
+DemandTariff
+##################
+
+.. autopydantic_model:: pytariff.core.tariff.demand_tariff.DemandTariff
+   :exclude-members: model_post_init

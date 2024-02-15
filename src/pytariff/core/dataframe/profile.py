@@ -16,11 +16,37 @@ if TYPE_CHECKING:
 
 
 class MeterProfileSchema(pa.DataFrameModel):
+    """A ``Pandera.DataFrameModel`` class that contains a DateTimeIndex-like index and profile
+    data against which some ``pytariff`` tariff may be levied. Each parameter is a column in the
+    DataFrame schema.
+
+    Args:
+        idx (AwareDateTime): A pandas.DateTimeIndex equivalent from ``Pandera``, that requires
+                             that each index key must be unique and timezone-aware (not
+                             necessarily possessing the same timezone information in each key).
+                             Data is coerced from the provided format into ``AwareDateTime`` type, if possible.
+        profile (float): The metering data against which a tariff may be levied. Must be strictly a float.
+    """
+
     idx: Index[AwareDateTime] = pa.Field(coerce=True)
     profile: float
 
 
 class MeterProfileHandler:
+    """A Handler class which accepts a ``pandas.DataFrame`` and validates it against the ``MeterProfileSchema``
+    definition, as well as a ``metric`` and ``convention`` argument which dictate measurement units of the
+    provided profile, and the sign conventions that were employed in its defintion.
+
+    Args:
+        profile (pd.DataFrame): Must be coercible to the :class:`MeterPofileSchema` format
+                                (via ``MeterProfileSchema(profile)``)
+        metric (MetricType): A member of either the ``Consumption`` or ``Demand`` Enum types.
+        convention (SignConvention): A member of the ``SignConvention`` Enum type.
+
+    Raises:
+        Exception: If the provided ``pandas.DataFrame`` cannot be coerced into the ``MeterProfileSchema`` format.
+    """
+
     def __init__(self, profile: pd.DataFrame, metric: "MetricType", convention: "SignConvention") -> None:
 
         # assert that the provided profile is MeterProfileSchema-coercible, but pass only the dataframe itself

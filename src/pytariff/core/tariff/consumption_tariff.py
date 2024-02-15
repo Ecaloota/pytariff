@@ -7,18 +7,20 @@ from pytariff.core.tariff import GenericTariff
 
 
 class ConsumptionTariff(GenericTariff[Consumption]):
-    """A ConsumptionTariff is a subclass of a GenericTariff that enforces that, among other things:
-        1. At least one child TariffInterval must be defined
-        2. The child TariffInterval(s) must use Consumption units (e.g. kW)
+    """A ``ConsumptionTariff`` is a subclass of a :ref:`generic_tariff`, with the added restrictions:
 
-    There are no restrictions preventing each child TariffInterval in the ConsumptionTariff from containing multiple
-    blocks, and no restriction on the existence of reset periods on each TariffInterval.
+    * At least one child :ref:`tariff_interval`` must be defined.
+    * The child :ref:`tariff_interval` must use :ref:`consumption` units (*e.g.* kWh)
+
+    There are no restrictions preventing each child ``TariffInterval`` in the ``ConsumptionTariff`` from containing
+    multiple :ref:`tariff_block`, and no restriction on the existence of reset periods.
     """
 
     children: tuple[ConsumptionInterval, ...]
 
     @model_validator(mode="after")
     def validate_children_are_consumption_intervals(self) -> "ConsumptionTariff":
+        """Assert that the ``ConsumptionTariff`` instance abides by the conditions listed above."""
         if self.children is not None:
             if not all(isinstance(x, ConsumptionInterval) for x in self.children):
                 raise ValueError

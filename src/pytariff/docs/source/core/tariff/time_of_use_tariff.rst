@@ -1,6 +1,7 @@
+.. _time_of_use_tariff:
+
 TimeOfUseTariff
 =====================================
 
-.. autoclass:: pytariff.core.tariff.time_of_use_tariff.TimeOfUseTariff
-   :members:
-   :exclude-members: model_config, model_fields
+.. autopydantic_model:: pytariff.core.tariff.TimeOfUseTariff
+   :exclude-members: model_post_init

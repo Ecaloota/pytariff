@@ -7,20 +7,26 @@ import pandas as pd
 
 
 class TimeOfUseTariff(GenericTariff[MetricType]):
-    """A TimeOfUseTariff is a subclass of a GenericTariff that enforces that, among other things:
-        1. More than one unique child TariffInterval must be defined
-        2. These TariffIntervals must share their DaysApplied and timezone attributes, and contain unique,
-            non-overlapping [start, end) intervals
+    """A SingleRateTariff is a subclass of a :ref:`generic_tariff`, with the added restrictions:
 
-    There are no restrictions preventing each child TariffInterval in the TimeOfUseTariff from containing multiple
-    non-overlapping blocks, and no restriction on the existence of reset periods on each TariffInterval. A
-    TimeOfUseTariff can be defined in terms of either Demand or Consumption units (but not both).
+    * It must contain more than one unique child :ref:`tariff_interval`
+    * Those children must share their :ref:`days_applied` and contain unique, non-overlapping ``[start, end)``
+      intervals.
+
+    .. note:: There are no restrictions that prevent each child :ref:`tariff_interval` in the ``TimeOfUseTariff`` from
+       containing multiple non-overlapping :ref:`tariff_block`, and no restrictions on the existence of reset periods
+       on each :ref:`tariff_interval`.
+
+    .. note:: A ``TimeOfUseTariff`` may be defined in terms of either :ref:`demand` or :ref:`consumption` units,
+       but not both.
     """
 
     children: tuple[TariffInterval[MetricType], ...]
 
     @model_validator(mode="after")
     def validate_time_of_use_tariff(self) -> "TimeOfUseTariff":
+        """Asserts that the current instance abides by the restrictions listed above."""
+
         if len(self.children) < 2 or len(set(self.children)) < 2:
             raise ValueError
 

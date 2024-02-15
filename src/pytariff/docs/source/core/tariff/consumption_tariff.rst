@@ -1,6 +1,8 @@
-ConsumptionTariff
-=====================================
+.. _consumption_tariff:
 
-.. autoclass:: pytariff.core.tariff.consumption_tariff.ConsumptionTariff
-   :members:
-   :exclude-members: model_config, model_fields
+##################
+ConsumptionTariff
+##################
+
+.. autopydantic_model:: pytariff.core.tariff.consumption_tariff.ConsumptionTariff
+   :exclude-members: model_post_init

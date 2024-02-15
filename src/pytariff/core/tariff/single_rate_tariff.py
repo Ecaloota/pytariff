@@ -9,17 +9,22 @@ from pytariff.core.tariff import GenericTariff
 
 
 class SingleRateTariff(GenericTariff, Generic[MetricType]):
-    """A SingleRateTariff is distinguished from a GenericTariff by having greater
-    restrictions on its children; specifically, a SingleRateTariff should have
-    at least a single TariffInterval and no more than two TariffIntervals, each of which must contain
-    maximum one TariffBlock. If two TariffIntervals are given, their TariffCharges must
-    be defined on opposite TradeDirections (Import and Export). Each TariffBlock in each
-    TariffInterval must have from_quantity = 0 and to_quantity = float("inf")"""
+    """A SingleRateTariff is a subclass of a :ref:`generic_tariff`, with the added restrictions:
+
+    * It must contain at least one, and no more than two, child :ref:`tariff_interval`
+    * Each child interval must contain at most one :ref:`tariff_block`, which must be defined with ``from_quantity = 0``
+      and ``to_quantity = float("inf")``
+    * If two :ref:`tariff_interval` are given, their :ref:`tariff_charge` must be defined on opposite
+      :ref:`trade_direction` (``TradeDirection.Import`` and ``TradeDirection.Export``).
+    """
 
     children: tuple[TariffInterval[MetricType], ...]
+    """See :ref:`tariff_interval`"""
 
     @model_validator(mode="after")
     def validate_single_rate_tariff(self) -> "SingleRateTariff":
+        """Assert that the ``SingleRateTariff`` instance abides by the conditions listed above."""
+
         # Assert we have at least one and at most 2 TariffIntervals
         if not (1 <= len(self.children) <= 2):
             raise ValueError

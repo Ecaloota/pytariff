@@ -1,6 +1,9 @@
+.. _single_rate_tariff:
+
 SingleRateTariff
 =====================================
 
-.. autoclass:: pytariff.core.tariff.single_rate_tariff.SingleRateTariff
-   :members:
-   :exclude-members: model_config, model_fields
+.. autopydantic_model:: pytariff.core.tariff.single_rate_tariff.SingleRateTariff
+   :exclude-members: model_post_init
+   :special-members: __contains__
+
