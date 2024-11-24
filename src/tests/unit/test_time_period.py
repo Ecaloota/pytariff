@@ -1,6 +1,3 @@
-# ChatGPT crap, use in TimePeriod intersections where TimePeriod may wrap around midnight
-
-
 from typing import Any
 
 from whenever import Time
