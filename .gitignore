@@ -178,3 +178,6 @@ README.build.md
 # Exclude sphinx build
 src/pytariff/docs/generated
 src/pytariff/docs/build
+
+# Exclude notes
+.notes.md
