@@ -5,10 +5,9 @@ from tests.generators import Generators, ParametrizedArgs
 GeneratorRegister: dict[str, ParametrizedArgs] = {
     # test_day.py
     "TestDayType.test_day_type_intersection": Generators.day_type_intersection_cases(),
-    # test_time_period.py
-    "TestTimePeriod.test_time_period_construction": Generators.time_period_construction_cases(),
-    "TestTimePeriod.test_time_period_membership": Generators.time_period_membership_cases(),
-    "TestTimePeriod.test_time_period_normalise_cases": Generators.time_period_normalise_cases(),
+    # test_block.py
+    "TestTariffBlock.test_tariff_block_construction": Generators.tariff_block_cases(),
+    "TestTariffBlock.test_tariff_block_intersection": Generators.tariff_block_intersections(),
 }
 
 

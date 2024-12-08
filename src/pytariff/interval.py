@@ -1,75 +1,100 @@
-from dataclasses import dataclass
+from __future__ import annotations
 
-# tariff interval should include restrictions on time periods applied,
-# day types applied, contain one charge to be applied over some number of
-# blocks on a particular unit at a particular rate. it will be defined over
-# some start and end period in ZonedDateTime
+from dataclasses import dataclass, field
+
+from whenever import Time
+from whenever_time_period import AbstractTimePeriod, InfiniteTimePeriod
+
+from pytariff.block import TariffBlock
+from pytariff.day import DayType
+from pytariff.rate import TariffRate, _NullRate
+from pytariff.unit import Metric, SignConvention, TradeDirection
+
+DEFAULT_TIME_PERIOD = InfiniteTimePeriod(
+    start_time=Time.MIDNIGHT, end_time=Time.MIDNIGHT
+)
+DEFAULT_DAYS_APPLIED = set([DayType.ALL_DAYS])
 
 
 @dataclass
 class TariffInterval:
-    time_period
+    time_period: AbstractTimePeriod = field(default_factory=lambda: DEFAULT_TIME_PERIOD)
+    days_applied: set[DayType] = field(default_factory=lambda: DEFAULT_DAYS_APPLIED)
+    blocks: list[TariffBlock] = field(default_factory=list)
+    rates: list[TariffRate] = field(default_factory=list)
+    trade_direction: TradeDirection = "Import"
+    sign_convention: SignConvention = "Passive"
+    metric: Metric = "Consumption"
 
+    def __post_init__(self) -> None:
+        if len(self.blocks) < 1:
+            raise ValueError("TariffIntervals must contain at least one TariffBlock")
 
-class TariffInterval(AppliedInterval, Generic[MetricType]):
-    """A TariffInterval is a right-open time interval over [start_time, end_time)
-    associated with a single TariffCharge"""
+        if len(self.rates) < 1:
+            raise ValueError("TariffIntervals must contain at least one TariffRate")
 
-    charge: TariffCharge[MetricType]
-    uuid: UUID4 = Field(default_factory=uuid4)
+        if len(self.blocks) != len(self.rates):
+            raise ValueError(
+                "TariffIntervals must contain equal numbers of TariffBlocks and TariffRates"
+            )
 
-    # TODO resolve the type error in line below
-    def __and__(self, other: "TariffInterval") -> Optional["TariffInterval"]:  # type: ignore
-        """The intersection between two TariffIntervals is the superclass intersection and
-        the intersection between self.charge and other.charge
+        self.br_zip = sorted(zip(self.blocks, self.rates), key=lambda x: x[0])
+        for idx, _ in enumerate(self.br_zip[1:]):
+            if self.br_zip[idx - 1][0] & self.br_zip[idx][0]:
+                raise ValueError(
+                    "TariffIntervals cannot contain intersecting TariffBlocks"
+                )
 
-        If the superclass intersection is None, there can be no intersection between the TariffIntervals.
-        Likewise, if there is no charge intersection, there is no intersection between the TariffIntervals.
-        """
-
-        super_intersection = super().__and__(other)
-        if super_intersection is None:
-            return super_intersection
-
-        charge_intersection = self.charge & other.charge
-        if charge_intersection is None:
-            return charge_intersection
-
-        return TariffInterval(
-            start_time=super_intersection.start_time,
-            end_time=super_intersection.end_time,
-            days_applied=super_intersection.days_applied,
-            tzinfo=super_intersection.tzinfo,
-            charge=charge_intersection,
+    def _units_equal(self, other: TariffInterval) -> bool:
+        return (
+            self.trade_direction == other.trade_direction
+            and self.sign_convention == other.sign_convention
+            and self.metric == other.metric
         )
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, TariffInterval):
-            return False
-        return super().__eq__(other) and self.charge == other.charge
+    def __and__(self, other: TariffInterval) -> TariffInterval | None:
+        """The intersection between two TariffIntervals is defined to be non-None
+        iff each of trade_direction, sign_convention, and metric attributes are exactly equal
+        AND each of the intersections between their child time_period, days_applied, and
+        blocks list are non-None."""
 
-    def __hash__(self) -> int:
-        return super().__hash__() ^ hash(self.charge)
+        if not self._units_equal(other):
+            return None
 
-    def __contains__(self, other: time | date | datetime) -> bool:
-        return super().__contains__(other)
+        # block intersection - two-pointer
+        block_inter = []
+        i, j = 0, 0
+        while i < len(self.blocks) and j < len(other.blocks):
+            inter = self.blocks[i] & other.blocks[j]
+            if inter:
+                block_inter.append(inter)
+            elif self.blocks[i] < other.blocks[j]:
+                i += 1
+            else:
+                j += 1
 
+        if len(block_inter) < 1:
+            return None
 
-class ConsumptionInterval(TariffInterval[Consumption]):
-    charge: ConsumptionCharge
+        # time period intersection
+        time_inter = self.time_period & other.time_period
+        if not time_inter:
+            return None
 
-    @model_validator(mode="after")
-    def validate_charges_are_consumption_charges(self) -> "ConsumptionInterval":
-        if not isinstance(self.charge, ConsumptionCharge):
-            raise ValueError
-        return self
+        # days intersection
+        days_inter = self.days_applied & other.days_applied
+        if not days_inter:
+            return None
 
+        # rates from an intersection have no semantic meaning
+        rates_inter = [_NullRate() for _ in range(len(block_inter))]
 
-class DemandInterval(TariffInterval[Demand]):
-    charge: DemandCharge
-
-    @model_validator(mode="after")
-    def validate_charges_are_demand_charges(self) -> "DemandInterval":
-        if not isinstance(self.charge, DemandCharge):
-            raise ValueError
-        return self
+        return TariffInterval(
+            time_period=time_inter,
+            days_applied=days_inter,
+            blocks=block_inter,
+            rates=rates_inter,
+            trade_direction=self.trade_direction,
+            sign_convention=self.sign_convention,
+            metric=self.metric,
+        )

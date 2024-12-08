@@ -1,15 +1,12 @@
 import itertools
-import random
 from contextlib import nullcontext
 from dataclasses import dataclass
 from itertools import permutations, product
 
 import pytest
-from whenever import Time
 
 from pytariff.day import DayType
-from pytariff.time_period import TimePeriod
-from tests.utils import TestUtils
+from tests.utils import RightOpenIntervalCases
 
 
 @dataclass
@@ -83,200 +80,57 @@ class Generators:
             ),
         )
 
-    # TimePeriod Generators
-    def time_period_construction_cases() -> ParametrizedArgs:
-        """Generate relevant cases to assert that TimePeriod construction
-        is valid given valid inputs, or otherwise that the appropriate exception is
-        raised"""
+    # TariffBlock Generators
+    def tariff_block_cases() -> ParametrizedArgs:
+        """Generate relevant cases for TariffBlock bounds (these are general wrt
+        strictly positive right-open intervals); these cases are:
+        1. from_quantity < to_quantity; from_quantity > 0, to_quantity > 0
+        2. from_quantity > to_quantity; from_quantity > 0, to_quantity > 0
+        3. from_quantity = to_quantity; from_quantity > 0, to_quantity > 0
 
-        # relevant cases are:
-        #   1. start_time < end_time
-        #   2. start_time == end_time, finite
-        #   3. start_time == end_time, infinite
-        #   4. start_time != end_time, infinite (ValueError)
-        #   5. start_time > end_time
-        #   6. start_time is invalid type OR end_time is invalid type
+        4. from_quantity < to_quantity; from_quantity < 0, to_quantity < 0
+        5. from_quantity > to_quantity; from_quantity < 0, to_quantity < 0
+        6. from_quantity = to_quantity; from_quantity < 0, to_quantity < 0
 
-        cases = [
-            (Time(0), Time(1), True, nullcontext(None)),
-            (Time(0), Time(0), True, nullcontext(None)),
-            (Time(0), Time(0), False, nullcontext(None)),
-            (Time(1), Time(0), True, nullcontext(None)),
-            (Time(1), Time(0), False, pytest.raises(ValueError)),
-            ("1", Time(0), True, pytest.raises(TypeError)),
-            (Time(1), "0", True, pytest.raises(TypeError)),
-        ]
+        7. from_quantity < to_quantity; from_quantity < 0, to_quantity > 0
+        8. from_quantity > to_quantity; from_quantity > 0, to_quantity < 0
 
-        return ParametrizedArgs(
-            argnames=["start_time", "end_time", "finite", "context"], funcargs=cases
-        )
-
-    def time_period_membership_cases() -> ParametrizedArgs:
-        """Generate relevant cases to assert that a given Time is contained within
-        the period defined by a TimePeriod"""
-
-        start_int, end_int = TestUtils.generate_integers(2, 0, 23, min_gap=3)
-        start_time, end_time = Time(start_int), Time(end_int)
-
-        # given an interval [a, b) where a < b and b-a >= 3 and a,b in [0, 23],
-        # some value C is in [a, b) when a <= C < b. (Cond. 1)
-        # likewise, C is not in [a, b) when 0 <= C < a OR b <= C <= 23 (Cond. 2)
-        member_candidate_a_lt_b = Time(
-            random.randint(start_int, end_int - 1)
-        )  # by Cond. 1
-        non_member_a_lt_b = Time(
-            random.choice(
-                [
-                    random.randint(0, start_int - 1),
-                    random.randint(end_int, Time.MAX.hour),
-                ]
-                if start_int != 0
-                else [random.randint(end_int, Time.MAX.hour)]
-            )
-        )  # by Cond. 2
-
-        # given an interval [a, b) where b < a and (23-a)+b >= 3 and a,b in [0, 23],
-        # some value C is in [a, b) when a <= C <= 23 AND 0 <= C < b (Cond. 3)
-        # likewise, C is not in [a, b) when b <= C < a. (Cond. 4)
-        member_candidate_a_gt_b = Time(
-            random.choice(
-                [
-                    random.randint(end_int, Time.MAX.hour),
-                    random.randint(0, start_int - 1),
-                ]
-                if start_int != 0
-                else [random.randint(end_int, Time.MAX.hour)]
-            )
-        )  # by Cond. 3
-
-        non_member_a_gt_b = Time(
-            random.randint(start_int, end_int - 1)
-        )  # by Cond. 4, end_int != 0
-
-        cases = [
-            (  # start_time < end_time and candidate time in period
-                TimePeriod(start_time, end_time),
-                member_candidate_a_lt_b,
-                True,
-            ),
-            (  # start_time < end_time and !candidate time in period
-                TimePeriod(start_time, end_time),
-                non_member_a_lt_b,
-                False,
-            ),
-            (  # start_time < end_time and c == start_time (True)
-                TimePeriod(start_time, end_time),
-                start_time,
-                True,
-            ),
-            (  # start_time < end_time and c == end_time (False)
-                TimePeriod(start_time, end_time),
-                end_time,
-                False,
-            ),
-            (  # start_time == end_time, period is infinite (all candidate times in period)
-                TimePeriod(start_time, start_time, finite=False),
-                end_time,
-                True,
-            ),
-            (  # start_time == end_time, period is finite
-                TimePeriod(start_time, start_time, finite=True),
-                end_time,
-                False,
-            ),
-            (  # start_time == end_time and c == start_time == end_time,
-                # period is infinite (all candidate times in period)
-                TimePeriod(start_time, start_time, finite=False),
-                start_time,
-                True,
-            ),
-            (  # start_time == end_time and c == start_time == end_time,
-                # period is finite (candidate time equals instant covered by interval)
-                TimePeriod(start_time, start_time, finite=False),
-                start_time,
-                True,
-            ),
-            (  # start_time > end_time and candidate_time in period
-                TimePeriod(end_time, start_time),
-                member_candidate_a_gt_b,
-                True,
-            ),
-            (  # start_time > end_time and !c in period
-                TimePeriod(end_time, start_time),
-                non_member_a_gt_b,
-                False,
-            ),
-            (  # start_time > end_time and c == start_time (False)
-                TimePeriod(end_time, start_time),
-                start_time,
-                False,
-            ),
-            (  # start_time > end_time and c == end_time (True)
-                TimePeriod(end_time, start_time),
-                end_time,
-                True,
-            ),
-        ]
-
-        return ParametrizedArgs(
-            argnames=["period", "candidate_time", "is_expected_member"], funcargs=cases
-        )
-
-    def time_period_normalise_cases() -> ParametrizedArgs:
-        """Generate relevant cases to ensure we correctly normalise all instances of
-        TimePeriod;
-
-        Relevant cases are:
-        1. start_time < end_time
-        2. start_time == end_time, finite
-        3. start_time == end_time, infinite
-        4. start_time > end_time
-        5. start_time == Time.MAX
-        6. end_time == Time.MIDNIGHT
-        7. start_time == Time.MAX && end_time == Time.MIDNIGHT
+        9. from_quantity = to_quantity; from_quantity = 0, to_quantity = 0
+        10. from_quantity = to_quantity; from_quantity = 0, to_quantity = float("inf")
         """
 
+        a_lt_0, a_gt_0 = -5.0, 5.0
+        b_lt_0, b_gt_0 = -4.0, 6.0
+
         cases = [
-            (Time(5), Time(10), True, [TimePeriod(Time(5), Time(10))]),
-            (
-                Time(10),
-                Time(5),
-                True,
-                [TimePeriod(Time.MIDNIGHT, Time(5)), TimePeriod(Time(10), Time.MAX)],
-            ),
-            (
-                Time(10),
-                Time(10),
-                False,
-                [TimePeriod(Time.MIDNIGHT, Time.MIDNIGHT, finite=False)],
-            ),
-            (
-                Time.MAX,
-                Time(5),
-                True,
-                [TimePeriod(Time.MIDNIGHT, Time(5)), TimePeriod(Time.MAX, Time.MAX)],
-            ),
-            (
-                Time(5),
-                Time.MIDNIGHT,
-                True,
-                [
-                    TimePeriod(Time.MIDNIGHT, Time.MIDNIGHT),
-                    TimePeriod(Time(5), Time.MAX),
-                ],
-            ),
-            (
-                Time.MAX,
-                Time.MIDNIGHT,
-                True,
-                [
-                    TimePeriod(Time.MIDNIGHT, Time.MIDNIGHT),
-                    TimePeriod(Time.MAX, Time.MAX),
-                ],
-            ),
+            (a_gt_0, b_gt_0, nullcontext()),  # 1
+            (b_gt_0, a_gt_0, pytest.raises(ValueError)),  # 2
+            (a_gt_0, a_gt_0, pytest.raises(ValueError)),  # 3
+            (a_lt_0, b_lt_0, pytest.raises(ValueError)),  # 4
+            (b_lt_0, a_lt_0, pytest.raises(ValueError)),  # 5
+            (a_lt_0, a_lt_0, pytest.raises(ValueError)),  # 6
+            (a_lt_0, a_gt_0, pytest.raises(ValueError)),  # 7
+            (a_gt_0, a_lt_0, pytest.raises(ValueError)),  # 8
+            (0, 0, pytest.raises(ValueError)),  # 9
+            (0, float("inf"), nullcontext()),  # 10
         ]
 
         return ParametrizedArgs(
-            argnames=["start_time", "end_time", "finite", "expected_periods"],
-            funcargs=cases,
+            argnames=["from_quantity", "to_quantity", "context"], funcargs=cases
+        )
+
+    def tariff_block_intersections() -> ParametrizedArgs:
+        """TODO"""
+
+        return ParametrizedArgs(
+            argnames=["case"],
+            funcargs=[
+                (RightOpenIntervalCases.left_touching(),),
+                (RightOpenIntervalCases.right_touching(),),
+                (RightOpenIntervalCases.left_overlap(),),
+                (RightOpenIntervalCases.right_overlap(),),
+                (RightOpenIntervalCases.null_overlap(),),
+                (RightOpenIntervalCases.complete_overlap(),),
+                (RightOpenIntervalCases.complete_overlap_inf_edge_case(),),
+            ],
         )
