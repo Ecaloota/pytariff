@@ -2,24 +2,24 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from pydantic.dataclasses import dataclass
-from whenever import ZonedDateTime
 
-
-@dataclass
 class TariffRate:
     """A TariffRate is a value (or some callable to obtain a value) in
     some registered currency."""
 
-    currency: str  # TODO makes sense to restrict this to ISO format length
-    value: float | Callable[[ZonedDateTime], float]  # TODO this should be a Decimal?
+    def __init__(
+        self, currency: str | None, value: float | Callable[..., float]
+    ) -> None:
+        self.currency = currency
+        self._value = value
 
-    def get_value(self, *args: Any) -> float:
-        raise NotImplementedError
-        # return self.value
+    @property
+    def value(self) -> None:
+        raise AttributeError(
+            "TariffRate values are accessible through the .get_value method"
+        )
 
-
-@dataclass
-class _NullRate(TariffRate):
-    currency: None = None
-    value: None = None
+    def get_value(self, *args: Any, **kwargs: dict[Any, Any]) -> float:
+        if callable(self._value):
+            return self._value(*args, **kwargs)
+        return self._value

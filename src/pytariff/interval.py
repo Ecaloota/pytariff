@@ -7,8 +7,13 @@ from whenever_time_period import AbstractTimePeriod, InfiniteTimePeriod
 
 from pytariff.block import TariffBlock
 from pytariff.day import DayType
-from pytariff.rate import TariffRate, _NullRate
+from pytariff.rate import TariffRate
+from pytariff.reset import ResetPeriod
 from pytariff.unit import Metric, SignConvention, TradeDirection
+from pytariff.utils import (
+    intersection_search_sorted_sequence,
+    two_pointer_intersection_search,
+)
 
 DEFAULT_TIME_PERIOD = InfiniteTimePeriod(
     start_time=Time.MIDNIGHT, end_time=Time.MIDNIGHT
@@ -22,9 +27,10 @@ class TariffInterval:
     days_applied: set[DayType] = field(default_factory=lambda: DEFAULT_DAYS_APPLIED)
     blocks: list[TariffBlock] = field(default_factory=list)
     rates: list[TariffRate] = field(default_factory=list)
-    trade_direction: TradeDirection = "Import"
-    sign_convention: SignConvention = "Passive"
-    metric: Metric = "Consumption"
+    reset_period: ResetPeriod | None = None
+    trade_direction: TradeDirection = TradeDirection.Import
+    sign_convention: SignConvention = SignConvention.Passive
+    metric: Metric = Metric.Consumption
 
     def __post_init__(self) -> None:
         if len(self.blocks) < 1:
@@ -39,11 +45,9 @@ class TariffInterval:
             )
 
         self.br_zip = sorted(zip(self.blocks, self.rates), key=lambda x: x[0])
-        for idx, _ in enumerate(self.br_zip[1:]):
-            if self.br_zip[idx - 1][0] & self.br_zip[idx][0]:
-                raise ValueError(
-                    "TariffIntervals cannot contain intersecting TariffBlocks"
-                )
+        sorted_blocks = [t[0] for t in self.br_zip]
+        if intersection_search_sorted_sequence(sorted_blocks):
+            raise ValueError("TariffIntervals cannot contain intersecting TariffBlocks")
 
     def _units_equal(self, other: TariffInterval) -> bool:
         return (
@@ -51,6 +55,10 @@ class TariffInterval:
             and self.sign_convention == other.sign_convention
             and self.metric == other.metric
         )
+
+    # this is an arbitrary choice
+    def __lt__(self, other: TariffInterval) -> bool:
+        return self.time_period.start_time < other.time_period.start_time
 
     def __and__(self, other: TariffInterval) -> TariffInterval | None:
         """The intersection between two TariffIntervals is defined to be non-None
@@ -61,18 +69,8 @@ class TariffInterval:
         if not self._units_equal(other):
             return None
 
-        # block intersection - two-pointer
-        block_inter = []
-        i, j = 0, 0
-        while i < len(self.blocks) and j < len(other.blocks):
-            inter = self.blocks[i] & other.blocks[j]
-            if inter:
-                block_inter.append(inter)
-            elif self.blocks[i] < other.blocks[j]:
-                i += 1
-            else:
-                j += 1
-
+        # block intersection
+        block_inter = two_pointer_intersection_search(self.blocks, other.blocks)
         if len(block_inter) < 1:
             return None
 
@@ -86,8 +84,11 @@ class TariffInterval:
         if not days_inter:
             return None
 
-        # rates from an intersection have no semantic meaning
-        rates_inter = [_NullRate() for _ in range(len(block_inter))]
+        # rates from an intersection have no semantic meaning, but a
+        # rate must always be defined for a given TariffInterval
+        rates_inter = [
+            TariffRate(currency=None, value=0.0) for _ in range(len(block_inter))
+        ]
 
         return TariffInterval(
             time_period=time_inter,

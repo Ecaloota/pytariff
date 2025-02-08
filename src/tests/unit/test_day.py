@@ -7,6 +7,7 @@ class TestDayType:
         day_type_a: DayType,
         day_type_b: DayType,
         expected_intersection: set[DayType],
-    ):
-        """TODO"""
+    ) -> None:
+        """Given some pair of DayTypes, assert that their intersection abides
+        the expected rules"""
         assert day_type_a & day_type_b == expected_intersection

@@ -2,8 +2,10 @@ import itertools
 from contextlib import nullcontext
 from dataclasses import dataclass
 from itertools import permutations, product
+from typing import Any
 
 import pytest
+from whenever import ZonedDateTime
 
 from pytariff.day import DayType
 from tests.utils import RightOpenIntervalCases
@@ -15,8 +17,10 @@ class ParametrizedArgs:
     funcargs: list[tuple]
 
 
-class Generators:
-    # DayType Generators
+class DayTypeGenerators:
+    """Generators responsible for generating test cases over the DayType class"""
+
+    @staticmethod
     def day_type_intersection_cases() -> ParametrizedArgs:
         """TODO"""
 
@@ -31,7 +35,7 @@ class Generators:
 
         supercls_inter_identity = [(a, a, {a}) for a in DayType._member_map_.values()]
 
-        supercls_inter_disjoint = [
+        supercls_inter_disjoint: list[tuple[DayType, DayType, dict[Any, Any]]] = [
             (a, b, {}) for a, b in permutations(weekdays + weekends, 2) if a != b
         ]
 
@@ -53,17 +57,21 @@ class Generators:
             (x, y, {x}) for x, y in product(weekdays, [DayType.WEEKDAYS])
         ] + [(y, x, {x}) for x, y in product(weekdays, [DayType.WEEKDAYS])]
 
-        supercls_inter_weekday_week_end = [
-            (x, y, {}) for x, y in product(weekdays, [DayType.WEEKENDS])
-        ] + [(y, x, {}) for x, y in product(weekdays, [DayType.WEEKENDS])]
+        supercls_inter_weekday_week_end: list[
+            tuple[DayType, DayType, dict[Any, Any]]
+        ] = [(x, y, {}) for x, y in product(weekdays, [DayType.WEEKENDS])] + [
+            (y, x, {}) for x, y in product(weekdays, [DayType.WEEKENDS])
+        ]
 
         supercls_inter_weekend_week_end = [
             (x, y, {x}) for x, y in product(weekends, [DayType.WEEKENDS])
         ] + [(y, x, {x}) for x, y in product(weekends, [DayType.WEEKENDS])]
 
-        supercls_inter_weekend_week_day = [
-            (x, y, {}) for x, y in product(weekends, [DayType.WEEKDAYS])
-        ] + [(y, x, {}) for x, y in product(weekends, [DayType.WEEKDAYS])]
+        supercls_inter_weekend_week_day: list[
+            tuple[DayType, DayType, dict[Any, Any]]
+        ] = [(x, y, {}) for x, y in product(weekends, [DayType.WEEKDAYS])] + [
+            (y, x, {}) for x, y in product(weekends, [DayType.WEEKDAYS])
+        ]
 
         return ParametrizedArgs(
             argnames=["day_type_a", "day_type_b", "expected_intersection"],
@@ -80,7 +88,11 @@ class Generators:
             ),
         )
 
-    # TariffBlock Generators
+
+class TariffBlockGenerators:
+    """Generators responsible for generating test cases over the TariffBlock class"""
+
+    @staticmethod
     def tariff_block_cases() -> ParametrizedArgs:
         """Generate relevant cases for TariffBlock bounds (these are general wrt
         strictly positive right-open intervals); these cases are:
@@ -119,6 +131,7 @@ class Generators:
             argnames=["from_quantity", "to_quantity", "context"], funcargs=cases
         )
 
+    @staticmethod
     def tariff_block_intersections() -> ParametrizedArgs:
         """TODO"""
 
@@ -133,4 +146,79 @@ class Generators:
                 (RightOpenIntervalCases.complete_overlap(),),
                 (RightOpenIntervalCases.complete_overlap_inf_edge_case(),),
             ],
+        )
+
+    @staticmethod
+    def tariff_block_ordering_cases() -> ParametrizedArgs:
+        """Generate the relevant cases required to demonstrate that the ordering of a pair of TariffBlocks
+        abides by the expected rule"""
+
+        return ParametrizedArgs(
+            argnames=["case", "expected_ordering"],
+            funcargs=[
+                (RightOpenIntervalCases.left_touching(), True),
+                (RightOpenIntervalCases.right_touching(), False),
+                (RightOpenIntervalCases.left_overlap(), True),
+                (RightOpenIntervalCases.right_overlap(), False),
+                (RightOpenIntervalCases.null_overlap(), True),
+                (RightOpenIntervalCases.complete_overlap(), False),
+                (RightOpenIntervalCases.complete_overlap_inf_edge_case(), False),
+            ],
+        )
+
+
+class DefinedIntervalGenerators:
+    """Generators responsible for generating test cases over the DefinedInterval class"""
+
+    @staticmethod
+    def defined_interval_construction_cases() -> ParametrizedArgs:
+        """Relevant cases are:
+
+        1. start < end
+        2. start = end (ValueError)
+        3. start > end (ValueError)
+        """
+
+        return ParametrizedArgs(
+            argnames=["start", "end", "context"],
+            funcargs=[
+                (
+                    ZonedDateTime(
+                        year=2023, month=1, day=1, hour=12, tz="Australia/Brisbane"
+                    ),
+                    ZonedDateTime(
+                        year=2024, month=1, day=1, hour=12, tz="Australia/Brisbane"
+                    ),
+                    nullcontext(),
+                ),
+                (
+                    ZonedDateTime(
+                        year=2023, month=1, day=1, hour=12, tz="Australia/Brisbane"
+                    ),
+                    ZonedDateTime(
+                        year=2023, month=1, day=1, hour=12, tz="Australia/Brisbane"
+                    ),
+                    pytest.raises(ValueError),
+                ),
+                (
+                    ZonedDateTime(
+                        year=2024, month=1, day=1, hour=12, tz="Australia/Brisbane"
+                    ),
+                    ZonedDateTime(
+                        year=2023, month=1, day=1, hour=12, tz="Australia/Brisbane"
+                    ),
+                    pytest.raises(ValueError),
+                ),
+            ],
+        )
+
+
+class TariffRateGenerators:
+    @staticmethod
+    def tariff_rate_get_value_cases() -> ParametrizedArgs:
+        """Assert that the .get_value() method of TariffRate works as expected"""
+
+        cases = [(1.0, (None,), 1.0), (lambda x, y: x**y, (2, 3), 8.0)]
+        return ParametrizedArgs(
+            argnames=["value", "vargs", "expected_return"], funcargs=cases
         )

@@ -21,7 +21,8 @@ class TariffBlock:
             raise ValueError
 
     def __and__(self, other: TariffBlock) -> TariffBlock | None:
-        """TODO"""
+        """The intersection between two TariffBlocks is the intersection
+        between two right-open intervals"""
 
         from_intersection = max(self.from_quantity, other.from_quantity)
         to_intersection = min(self.to_quantity, other.to_quantity)

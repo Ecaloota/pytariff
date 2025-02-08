@@ -1,6 +1,5 @@
 import random
 from dataclasses import dataclass
-from enum import StrEnum
 
 
 class TestUtils:
@@ -44,10 +43,6 @@ class TestUtils:
             current = next
 
         return sorted(numbers)
-
-    @staticmethod
-    def get_str_enum_members(enum_type: StrEnum) -> list[str]:
-        return [_ for _ in enum_type.__members__.keys()]
 
 
 @dataclass

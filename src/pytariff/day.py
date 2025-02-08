@@ -1,8 +1,6 @@
 from enum import Enum, auto
 from typing import Collection
 
-## PART OF REFACTOR -> DONE
-
 
 class DayType(Enum):
     MONDAY = auto()
