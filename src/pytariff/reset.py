@@ -73,13 +73,19 @@ class ResetPeriod:
     frequency: ResetFrequency
     # charge_method: ChargeMethod # TODO does this belong here?
 
-    # TODO we may need a method here to determine change-over time points
-    # for example, given an anchor of 2021-01-01T00:00:00Z and frequency DAILY,
-    # the next change point is 2021-01-02T00:00:00Z. We could construct this as
-    # a generator and retrieve from it as required when performing a simulation.
-
     def next_reset(self) -> Generator[ZonedDateTime, None, None]:
+        """Obtain the next change-over time point relative to self.anchor
+        with frequency self.frequency
+
+        For example:
+        >>> reset_period = ResetPeriod(
+                anchor=ZonedDateTime(2024, 1, 1, tz="UTC"),
+                frequency=ResetFrequency.DAILY,
+            )
+        >>> next(reset_period.next_reset())
+        >>> ZonedDateTime(2024, 1, 2, tz="UTC")
+        """
         current = self.anchor
         while True:
-            current = current.add(**self.frequency.value)
+            current = current.add(**self.frequency.value, disambiguate="compatible")
             yield current

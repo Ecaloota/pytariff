@@ -1,8 +1,9 @@
 import random
 
 import pytest
+from whenever import ZonedDateTime
 
-from pytariff.reset import ResetFrequency
+from pytariff.reset import ResetFrequency, ResetPeriod
 
 
 class TestReset:
@@ -39,9 +40,60 @@ class TestReset:
         """TODO"""
         pass
 
-    # TODO test the next_reset generator specifically over normal and unintuitive DST
-    # transitions. Assert that the way we are calling the current.add(**self.frequency.value)
-    # is robust w.r.t. each of the ResetFrequency values.
-    def test_reset_period(self) -> None:
-        """TODO"""
-        pass
+    @pytest.mark.parametrize(
+        "anchor, frequency, expected_next_reset",
+        [
+            (  # regular addition of single calendar day; no surprises
+                ZonedDateTime(2024, 1, 1, tz="UTC"),
+                ResetFrequency.DAILY,
+                ZonedDateTime(2024, 1, 2, tz="UTC"),
+            ),
+            (  # regular addition of single calendar week; no surprises
+                ZonedDateTime(2024, 1, 1, tz="UTC"),
+                ResetFrequency.WEEKLY,
+                ZonedDateTime(2024, 1, 8, tz="UTC"),
+            ),
+            (  # addition of calendar month; no date truncation
+                ZonedDateTime(2024, 7, 31, tz="UTC"),
+                ResetFrequency.MONTHLY,
+                ZonedDateTime(2024, 8, 31, tz="UTC"),
+            ),
+            (  # addition of calendar month; date truncation
+                ZonedDateTime(2024, 5, 31, tz="UTC"),
+                ResetFrequency.MONTHLY,
+                ZonedDateTime(2024, 6, 30, tz="UTC"),
+            ),
+            (  # addition of calendar month into ambiguous DST transition
+                # taken from whenever docs
+                ZonedDateTime(2023, 9, 29, 2, 15, tz="Europe/Amsterdam"),
+                ResetFrequency.MONTHLY,
+                ZonedDateTime(
+                    2023,
+                    10,
+                    29,
+                    2,
+                    15,
+                    tz="Europe/Amsterdam",
+                    disambiguate="compatible",
+                ),
+            ),
+            (  # addition of calendar day into ambiguous DST transition
+                # note, we have added 23 (not 24) hours
+                # taken from whenever docs
+                ZonedDateTime(2023, 3, 25, 12, tz="Europe/Amsterdam"),
+                ResetFrequency.DAILY,
+                ZonedDateTime(2023, 3, 26, 12, tz="Europe/Amsterdam"),
+            ),
+        ],
+    )
+    def test_reset_period(
+        self,
+        anchor: ZonedDateTime,
+        frequency: ResetFrequency,
+        expected_next_reset: ZonedDateTime,
+    ) -> None:
+        """Assert that the ResetPeriod next_reset generator behaves as expected,
+        particularly around DST transitions"""
+
+        reset_period = ResetPeriod(anchor=anchor, frequency=frequency)
+        assert next(reset_period.next_reset()) == expected_next_reset
