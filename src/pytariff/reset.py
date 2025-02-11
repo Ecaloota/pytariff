@@ -50,6 +50,8 @@ class ResetFrequency(Enum):
         return None
 
 
+# TODO this should probably be moved out of reset, though the concepts are linked
+# e.g. there is no need for a ChargeMethod without a ResetPeriod
 # TODO as yet unclear what this should do (other than current function of simply
 # providing allowed mapping values). Should it define the lambda which it names?
 # In that case, we would provide a ZonedDateTime interval (from start of ResetPeriod
@@ -65,6 +67,29 @@ class ChargeMethod(str, Enum):
     Max = "Max"
     RollingMax = "RollingMax"
     CumSum = "CumSum"
+
+    def apply(self) -> Any:
+        return
+
+    # TODO
+    def _apply_identity(self, profile: Any) -> Any:  # should return profile type
+        return
+
+    # TODO
+    def _apply_mean(self, profile: Any) -> Any:
+        return
+
+    # TODO
+    def _apply_max(self, profile: Any) -> Any:
+        return
+
+    # TODO
+    def _apply_rolling_max(self, profile: Any) -> Any:
+        return
+
+    # TODO
+    def _apply_cum_sum(self, profile: Any) -> Any:
+        return
 
 
 @dataclass
