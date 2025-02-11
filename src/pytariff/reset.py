@@ -44,7 +44,7 @@ class ResetFrequency(Enum):
             return None
 
         try:
-            return cls.__members__[value]
+            return cls.__members__[value.upper()]
         except KeyError:
             pass
         return None
