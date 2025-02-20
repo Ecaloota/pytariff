@@ -1,3 +1,7 @@
+from typing import Any
+
+import matplotlib.pyplot as plt
+import seaborn as sns
 from whenever import ZonedDateTime
 
 from pytariff.sampling import ResampleFrequency, SamplingMethod
@@ -62,5 +66,20 @@ class Profile:
         end: ZonedDateTime,
         method: SamplingMethod,
         frequency: ResampleFrequency,
-    ) -> dict[ZonedDateTime, float]:
-        return  # type: ignore  # TODO
+        regressor_kwargs: dict[str, Any] = {},
+    ) -> "Profile":
+        """Resample the Profile (between start and end, inclusive) at the given ResampleFrequency
+        using the provided SamplingMethod.
+        """
+        self.data = method(self.data, start, end, frequency, regressor_kwargs)
+        return self
+
+    def plot(self, **kwargs: dict[str, Any]) -> None:
+        """Generate a plot of the Profile using Seaborn `lineplot`."""
+
+        sns.lineplot(
+            x=[_.py_datetime() for _ in self.data.keys()],
+            y=[_ for _ in self.data.values()],
+            **kwargs,
+        )
+        plt.show()
