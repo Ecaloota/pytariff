@@ -24,7 +24,6 @@ class SamplingMethod(Enum):
 
     GaussianProcessRegression = GaussianProcessRegressor
     LinearInterpolation = LinearRegression
-    # PolynomialInterpolation = PolynomialRegression # TODO
     MovingAverage = MovingAverageRegressor
     PiecewiseConstant = PiecewiseConstantRegressor
 
@@ -36,7 +35,7 @@ class SamplingMethod(Enum):
         frequency: ResampleFrequency,
         regressor_kwargs: dict[str, Any] = {},
     ) -> dict[ZonedDateTime, float]:
-        """"""
+        """TODO"""
 
         if not sample_start:
             sample_start = min(profile.keys())

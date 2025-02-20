@@ -4,22 +4,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from whenever import ZonedDateTime
 
+from pytariff.reset import ResetPeriod
 from pytariff.sampling import ResampleFrequency, SamplingMethod
 from pytariff.unit import SignConvention
-
-# the intent is for this to handle user inputs (with some constraints) and transform those inputs
-# into meter profiles which can be understood by pytariff. Specifically, it should take inputs and
-# return information about the quantity and units of some usage profile.
-
-# this could be a pandas dataframe, as we did last time. Or it could be a pair of numpy arrays.
-# the issue will arise, as with last time, if we encounter non-uniform profile sampling, or
-# if the reset periods or billing periods are not aligned with the profile.
-
-# Note, I've decided that we don't actually need a profile to be sampled uniformly.
-# The step size when simulating can just be the
-# min(next_profile_step, next_tariff_rate_change / next_thing_change).
-# NOTE TO SELF: this is actually (only?) true if we use a piecewise-constant
-# approximation
 
 
 class Profile:
@@ -55,11 +42,6 @@ class Profile:
     def data(self, other: dict[ZonedDateTime, float]) -> None:
         self._data = other
 
-    # TODO
-    # This function should basically just pass self.data to the functionality
-    # provided by the sampling method and return a dict containing impulse-samples
-    # at the start + resample_frequency * N while
-    # start + resample_frequency * N <= end.
     def resample(
         self,
         start: ZonedDateTime,
@@ -72,6 +54,12 @@ class Profile:
         using the provided SamplingMethod.
         """
         self.data = method(self.data, start, end, frequency, regressor_kwargs)
+        return self
+
+    # does it make sense to allow resampling following transformation? and vice-versa?
+    def transform(self, reset_data: ResetPeriod) -> "Profile":
+        """Transform the Profile using the given ResetPeriod."""
+        self.data = reset_data.get_transformed_profile(self.data)
         return self
 
     def plot(self, **kwargs: dict[str, Any]) -> None:

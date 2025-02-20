@@ -11,9 +11,9 @@ def test_sampling() -> None:
     f = Profile(SYNTHETIC_PROFILE_A).resample(
         start=ZonedDateTime(2024, 12, 29, tz="UTC"),
         end=ZonedDateTime(2025, 1, 3, tz="UTC"),
-        method=SamplingMethod.MovingAverage,
+        method=SamplingMethod.PiecewiseConstant,
         frequency=ResampleFrequency({"minutes": 10}),
-        regressor_kwargs={"window_size": 100},
+        # regressor_kwargs={"window_size": 100},
     )
 
 

@@ -6,6 +6,14 @@ from typing import Any, Generator
 
 from whenever import ZonedDateTime
 
+from pytariff.transformers import (
+    CumSumTransformer,
+    IdentityTransformer,
+    MaxTransformer,
+    MeanTransformer,
+    RollingMaxTransformer,
+)
+
 
 class ResetFrequency(Enum):
     """The ResetFrequency of some TariffInterval is defined to be the *calendar*
@@ -50,53 +58,50 @@ class ResetFrequency(Enum):
         return None
 
 
-# TODO this should probably be moved out of reset, though the concepts are linked
-# e.g. there is no need for a ChargeMethod without a ResetPeriod
-# TODO as yet unclear what this should do (other than current function of simply
-# providing allowed mapping values). Should it define the lambda which it names?
-# In that case, we would provide a ZonedDateTime interval (from start of ResetPeriod
-# to end), then provide a callable via this Enum which, when applied to a profile over
-# that range, would determine the value at which that period would be levied.
 # For example, ChargeMethod.Mean would take some interval [a, b), and determine the
-# average [Metric] (Consumption / Demand), X_bar over [a, b) and return X_bar.
-# (For this to work, we would need to provide a method to get the value of the Metric
-# over that interval and pass it to the Enum?..)
-class ChargeMethod(str, Enum):
-    Identity = "Identity"
-    Mean = "Mean"
-    Max = "Max"
-    RollingMax = "RollingMax"
-    CumSum = "CumSum"
+# average [Metric] (Consumption / Demand), X_bar over [a, b) and return X_bar with dimension
+# equal to the dimension of [a, b).
+# TODO is this a ChargeMethod? Or a TransformMethod?
+# Seems more generic than working out how to charge a profile
+class ChargeMethod(Enum):
+    Identity = IdentityTransformer
+    Mean = MeanTransformer
+    Max = MaxTransformer
+    RollingMax = RollingMaxTransformer
+    CumSum = CumSumTransformer
 
-    def apply(self) -> Any:
-        return
+    def __call__(
+        cls,
+        profile: dict[ZonedDateTime, float],
+        transform_start: ZonedDateTime,
+        transform_end: ZonedDateTime,
+        transformer_kwargs: dict[str, Any] = {},
+    ) -> dict[ZonedDateTime, float]:
+        """TODO"""
 
-    # TODO
-    def _apply_identity(self, profile: Any) -> Any:  # should return profile type
-        return
+        y_pred = cls.value(**transformer_kwargs).transform(
+            profile, transform_start, transform_end
+        )
 
-    # TODO
-    def _apply_mean(self, profile: Any) -> Any:
-        return
-
-    # TODO
-    def _apply_max(self, profile: Any) -> Any:
-        return
-
-    # TODO
-    def _apply_rolling_max(self, profile: Any) -> Any:
-        return
-
-    # TODO
-    def _apply_cum_sum(self, profile: Any) -> Any:
-        return
+        return dict(zip(profile.keys(), y_pred))
 
 
+# We are expecting that the ResetPeriod defines some method
+# for determining the value of the ChargeMethod over some interval
+# (e.g. mean, max, etc.), calculated via the ResetFrequency
+# The question then becomes: how do we decide whether to use the
+# Profile determined by a ResetPeriod, or the Profile passed to
+# a given Tariff.
+# It might be as simple as defining a `get_transformed_profile`
+# method on ResetPeriod, and calling that if one is defined on the Tariff.
+# This would calculate the entire (transformed) profile, then the Tariff
+# could go through the standard process of simulation using it
+# TODO is this a ResetPeriod? Maybe a ResetDefinition?
 @dataclass
 class ResetPeriod:
     anchor: ZonedDateTime
     frequency: ResetFrequency
-    # charge_method: ChargeMethod # TODO does this belong here?
+    charge_method: ChargeMethod = ChargeMethod.Identity
 
     def next_reset(self) -> Generator[ZonedDateTime, None, None]:
         """Obtain the next change-over time point relative to self.anchor
@@ -114,3 +119,19 @@ class ResetPeriod:
         while True:
             current = current.add(**self.frequency.value, disambiguate="compatible")
             yield current
+
+    def get_transformed_profile(
+        self, profile: dict[ZonedDateTime, float]
+    ) -> dict[ZonedDateTime, float]:
+        """TODO"""
+        # This is likely just a loop over the next_reset generator
+        # with the ChargeMethod applied to the profile over that interval
+        # then the results concatenated into a single profile
+
+        # NOTE consideration of edge effects will be important here; e.g. how
+        # do we handle the case where the anchor is not the start of the profile? (lt? gt?)
+        # in case where anchor > start of profile, we could just return the profile as is until
+        # the anchor kicked in
+        # in case where anchor < start of profile, we have to ensure that edge effects
+        # are handled correctly; e.g. that the transformation is not affected by the left-hanging anchor
+        raise NotImplementedError
