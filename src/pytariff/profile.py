@@ -56,10 +56,14 @@ class Profile:
         self.data = method(self.data, start, end, frequency, regressor_kwargs)
         return self
 
-    # does it make sense to allow resampling following transformation? and vice-versa?
-    def transform(self, reset_data: ResetPeriod) -> "Profile":
-        """Transform the Profile using the given ResetPeriod."""
-        self.data = reset_data.get_transformed_profile(self.data)
+    # TODO does it make sense to allow resampling following transformation? and vice-versa?
+    def transform(
+        self, reset_data: ResetPeriod, transformer_kwargs: dict[str, Any] = {}
+    ) -> "Profile":
+        """Transform the (entire) Profile using the given ResetPeriod."""
+        self.data = reset_data.get_transformed_profile(
+            self.data, transformer_kwargs=transformer_kwargs
+        )
         return self
 
     def plot(self, **kwargs: dict[str, Any]) -> None:

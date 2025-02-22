@@ -3,7 +3,8 @@ import random
 import pytest
 from whenever import ZonedDateTime
 
-from pytariff.reset import ResetFrequency, ResetPeriod
+from pytariff.reset import ChargeMethod, ResetFrequency, ResetPeriod
+from tests.synthetic_profiles import SYNTHETIC_PROFILE_B
 
 
 class TestReset:
@@ -97,3 +98,16 @@ class TestReset:
 
         reset_period = ResetPeriod(anchor=anchor, frequency=frequency)
         assert next(reset_period.next_reset()) == expected_next_reset
+
+
+def test_reset_period_get_transformed_profile() -> None:
+    """TODO"""
+    rp = ResetPeriod(
+        anchor=ZonedDateTime(2024, 1, 1, tz="UTC"),
+        frequency=ResetFrequency._MINUTELY,
+        charge_method=ChargeMethod._Infinity,
+    )
+
+    transformed = rp.get_transformed_profile(
+        SYNTHETIC_PROFILE_B, until=ZonedDateTime(2024, 1, 1, 0, 10, tz="UTC")
+    )

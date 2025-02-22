@@ -12,6 +12,7 @@ from pytariff.transformers import (
     MaxTransformer,
     MeanTransformer,
     RollingMaxTransformer,
+    _InfiniteTransformer,
 )
 
 
@@ -46,6 +47,8 @@ class ResetFrequency(Enum):
     MONTHLY = {"months": 1}
     QUARTERLY = {"months": 3}
 
+    _MINUTELY = {"minutes": 1}  # not intended for public use
+
     @classmethod
     def _missing_(cls, value: object) -> Any:
         if not isinstance(value, str):
@@ -58,9 +61,6 @@ class ResetFrequency(Enum):
         return None
 
 
-# For example, ChargeMethod.Mean would take some interval [a, b), and determine the
-# average [Metric] (Consumption / Demand), X_bar over [a, b) and return X_bar with dimension
-# equal to the dimension of [a, b).
 # TODO is this a ChargeMethod? Or a TransformMethod?
 # Seems more generic than working out how to charge a profile
 class ChargeMethod(Enum):
@@ -69,6 +69,8 @@ class ChargeMethod(Enum):
     Max = MaxTransformer
     RollingMax = RollingMaxTransformer
     CumSum = CumSumTransformer
+
+    _Infinity = _InfiniteTransformer  # not intended for public use
 
     def __call__(
         cls,
@@ -83,19 +85,9 @@ class ChargeMethod(Enum):
             profile, transform_start, transform_end
         )
 
-        return dict(zip(profile.keys(), y_pred))
+        return y_pred
 
 
-# We are expecting that the ResetPeriod defines some method
-# for determining the value of the ChargeMethod over some interval
-# (e.g. mean, max, etc.), calculated via the ResetFrequency
-# The question then becomes: how do we decide whether to use the
-# Profile determined by a ResetPeriod, or the Profile passed to
-# a given Tariff.
-# It might be as simple as defining a `get_transformed_profile`
-# method on ResetPeriod, and calling that if one is defined on the Tariff.
-# This would calculate the entire (transformed) profile, then the Tariff
-# could go through the standard process of simulation using it
 # TODO is this a ResetPeriod? Maybe a ResetDefinition?
 @dataclass
 class ResetPeriod:
@@ -116,22 +108,35 @@ class ResetPeriod:
         >>> ZonedDateTime(2024, 1, 2, tz="UTC")
         """
         current = self.anchor
-        while True:
-            current = current.add(**self.frequency.value, disambiguate="compatible")
-            yield current
+        current = current.add(**self.frequency.value, disambiguate="compatible")
+        yield current
 
+    # TODO we need to be careful how we handle edge effects here
+    # TODO lots of testing required
     def get_transformed_profile(
-        self, profile: dict[ZonedDateTime, float]
+        self,
+        profile: dict[ZonedDateTime, float],
+        until: ZonedDateTime | None = None,
+        transformer_kwargs: dict[str, Any] = {},
     ) -> dict[ZonedDateTime, float]:
         """TODO"""
-        # This is likely just a loop over the next_reset generator
-        # with the ChargeMethod applied to the profile over that interval
-        # then the results concatenated into a single profile
 
-        # NOTE consideration of edge effects will be important here; e.g. how
-        # do we handle the case where the anchor is not the start of the profile? (lt? gt?)
-        # in case where anchor > start of profile, we could just return the profile as is until
-        # the anchor kicked in
-        # in case where anchor < start of profile, we have to ensure that edge effects
-        # are handled correctly; e.g. that the transformation is not affected by the left-hanging anchor
-        raise NotImplementedError
+        # if until is not provided, we transform the entire profile
+        until = until or max(profile.keys())
+
+        # initialise the profile up to the first anchor (exclusive; nothing to do)
+        # and until the end of the `until` period (exclusive; nothing to do)
+        transformed: dict[ZonedDateTime, float] = {
+            k: profile[k] for k in profile if k < self.anchor
+        } | {k: profile[k] for k in profile if k > until}
+
+        while self.anchor <= until:
+            for reset_time in self.next_reset():
+                transformed.update(
+                    self.charge_method(
+                        profile, self.anchor, reset_time, transformer_kwargs
+                    )
+                )
+                self.anchor = reset_time
+
+        return transformed
